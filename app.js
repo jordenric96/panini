@@ -1,4 +1,4 @@
-// app.js - Ultimate Edition (Met Partner-Indicator Links)
+// app.js - Ultimate Edition v5 (Met Zoekbalk)
 
 const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co'; 
 const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; 
@@ -30,6 +30,11 @@ function toggleFilter() {
     renderDashboard();
 }
 
+// Wordt aangeroepen elke keer als je een letter typt in de zoekbalk
+function filterCountries() {
+    renderDashboard();
+}
+
 async function loadUserData() {
     myStickers = {}; otherUserStickers = {};
 
@@ -47,6 +52,10 @@ async function loadUserData() {
 function renderDashboard() {
     const container = document.getElementById('countries-container');
     container.innerHTML = '';
+    
+    // Pak de huidige zoekterm
+    const searchInput = document.getElementById('search-bar');
+    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
     
     let totalJorden = 0;
     let totalWesley = 0;
@@ -82,8 +91,14 @@ function renderDashboard() {
 
         const isCompleteMy = countMy === country.count;
         
+        // Filter op Voltooide landen
         if (showOnlyMissing && isCompleteMy) return;
+        
+        // Zoekfilter: Kijkt of de prefix of landnaam de getypte tekst bevat
+        const matchesSearch = country.name.toLowerCase().includes(searchTerm) || country.prefix.toLowerCase().includes(searchTerm);
+        if (!matchesSearch) return;
 
+        // We bouwen de header PAS als we zeker weten dat dit land (na filters) getoond mag worden
         if (country.group !== currentGroup) {
             currentGroup = country.group;
             let gStat = groupStats[currentGroup];
@@ -141,8 +156,6 @@ function openModal(prefix) {
     modal.style.background = `linear-gradient(135deg, ${primaryColor}, ${accentColor})`;
     document.getElementById('flag-inner-circle').style.backgroundImage = `url('${countryData.flagUrl}')`;
     document.getElementById('modal-title').innerText = countryData.name;
-    
-    // Leg uit wie de andere kleur is
     document.getElementById('modal-subtitle-text').innerText = `Tik +1 • Badge -1 • Bolletje links = ${otherUser}`;
 
     modal.style.display = 'block'; 
@@ -151,10 +164,8 @@ function openModal(prefix) {
 
     for (let i = 1; i <= countryData.count; i++) {
         let code = prefix === 'FWC' && i === 1 ? '00' : prefix === 'FWC' ? `FWC ${i-1}` : `${prefix} ${i}`;
-        
         let amount = myStickers[code] || 0;
-        let otherAmt = otherUserStickers[code] || 0; // Kijkt live wat de ander heeft
-        
+        let otherAmt = otherUserStickers[code] || 0; 
         let statusClass = amount > 1 ? 'double' : amount === 1 ? 'owned' : '';
         
         let displayLabel = prefix === 'FWC' && i === 1 ? 
@@ -163,7 +174,6 @@ function openModal(prefix) {
 
         let playerName = countryData.players ? countryData.players[i-1] : (i === 1 ? "Team Logo" : (i === 13 ? "Teamfoto" : `Speler ${i}`));
 
-        // Bouw de badge voor de andere speler
         let otherColor = currentUser === 'Jorden' ? 'var(--color-wesley)' : 'var(--color-jorden)';
         let otherIndicator = '';
         if (otherAmt > 0) {
@@ -229,7 +239,6 @@ function updateStickerUI(code, amount) {
     const box = document.getElementById(`box-${code}`);
     const badge = document.getElementById(`badge-${code}`);
     
-    // We updaten alleen jouw eigen classes/badges, de 'andere speler badge' blijft gewoon staan
     box.className = 'sticker-box';
     if (amount === 1) { 
         box.classList.add('owned'); 
