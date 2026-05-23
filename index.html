@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panini WK 2026 Tracker</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚽</text></svg>">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
@@ -11,29 +12,36 @@
 <body>
 
     <div id="profile-section" class="container">
-        <h1 style="color: #4f46e5; font-size: 2.2rem; margin-bottom: 10px;">WK 2026 Tracker</h1>
-        <p style="text-align: center; color: var(--text-secondary); font-weight: 700; margin-bottom: 30px;">Kies een profiel om te starten</p>
+        <h1 style="color: #4f46e5; font-size: 2.2rem; margin-bottom: 5px;">WK 2026 Tracker</h1>
+        <p style="text-align: center; color: var(--text-secondary); font-weight: 700; margin-bottom: 25px;">Kies een profiel</p>
         <div class="profile-grid">
             <div class="profile-card" onclick="selectUser('Jorden')">Jorden</div>
             <div class="profile-card" onclick="selectUser('Wesley')">Wesley</div>
         </div>
-        <p id="fallback-notice" style="color: #f59e0b; text-align: center; margin-top: 20px; font-size: 0.85rem; display: none; font-weight: bold;">
-            ⚠️ Supabase niet verbonden. Modus: Lokale Browser Opslag actief.
-        </p>
     </div>
 
     <div id="dashboard-section" class="container" style="display: none;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h2 id="welcome-text" style="text-align: left; margin: 0; font-size: 1.6rem; color: var(--text-primary);">Album van</h2>
-            <button class="btn-secondary" onclick="logout()">Wissel Profiel</button>
+            <h2 id="welcome-text" style="text-align: left; margin: 0; font-size: 1.5rem;">Album van</h2>
+            <button class="btn-secondary" onclick="logout()">Uitloggen</button>
         </div>
         
         <div class="total-card">
-            <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-primary); text-align: left;">Totale Album Progressie</h3>
+            <h3 style="margin: 0; font-size: 1rem; color: var(--text-secondary); text-align: left;">Totale Progressie</h3>
             <div class="progress-bar">
                 <div id="total-progress" class="progress-fill"></div>
             </div>
-            <p id="total-text" style="font-weight: 800; margin: 0; text-align: left; color: #4f46e5; font-size: 1.05rem;">0 / 980 (0%)</p>
+            
+            <div class="legend-container">
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: var(--color-jorden);"></div>
+                    <span>Jorden (<span id="legend-count-jorden">0</span>)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: var(--color-wesley);"></div>
+                    <span>Wesley (<span id="legend-count-wesley">0</span>)</span>
+                </div>
+            </div>
         </div>
 
         <div class="countries-list" id="countries-container"></div>
@@ -49,11 +57,11 @@
                         <div class="flag-inner-circle" id="flag-inner-circle"></div>
                     </div>
                     <div>
-                        <h2 id="modal-title" style="margin: 0; text-align: left; font-size: 1.8rem; text-shadow: 0 2px 4px rgba(0,0,0,0.4);">Land</h2>
-                        <span style="font-size: 0.85rem; opacity: 0.9; font-weight: 700;">1x = In Boek (Groen)  •  2x = Dubbel (Goud Shiny)</span>
+                        <h2 id="modal-title" style="margin: 0; text-align: left; font-size: 1.7rem;">Land</h2>
+                        <span style="font-size: 0.85rem; opacity: 0.85;">1x = Groen • 2x = Goud (Shiny)</span>
                     </div>
                 </div>
-                <button class="btn-secondary" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); backdrop-filter: blur(5px);" onclick="closeModal()">Terug</button>
+                <button class="btn-secondary" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3);" onclick="closeModal()">Terug</button>
             </div>
             
             <div class="sticker-grid" id="sticker-grid"></div>
