@@ -1,9 +1,7 @@
-// app.js - 100% Supabase Cloud Engine
+// app.js - 100% Cloud Engine met Premium Twin-Badge Overzicht
 
-// === 1. SUPABASE CONFIGURATIE ===
 const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co'; 
-const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; // Let op: vul je echte key in!
-
+const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; // Jouw werkende sleutel!
 const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 let currentUser = '';
@@ -11,41 +9,29 @@ let otherUser = '';
 let myStickers = {};
 let otherUserStickers = {}; 
 
-// === 2. PROFIEL & NAVIGATIE ===
 async function selectUser(name) {
     currentUser = name;
     otherUser = currentUser === 'Jorden' ? 'Wesley' : 'Jorden';
-    
     document.getElementById('profile-section').style.display = 'none';
     document.getElementById('dashboard-section').style.display = 'block';
     document.getElementById('welcome-text').innerText = `Album van ${name}`;
-    
     await loadUserData();
 }
 
 function logout() {
-    currentUser = '';
-    otherUser = '';
+    currentUser = ''; otherUser = '';
     document.getElementById('profile-section').style.display = 'flex';
     document.getElementById('dashboard-section').style.display = 'none';
 }
 
-// === 3. DATA OPHALEN UIT DE CLOUD ===
 async function loadUserData() {
-    myStickers = {};
-    otherUserStickers = {};
+    myStickers = {}; otherUserStickers = {};
 
-    // Haal data op van Supabase voor BEIDE spelers tegelijk
     const [myResponse, otherResponse] = await Promise.all([
         supabaseClient.from('user_stickers').select('*').eq('user_name', currentUser),
         supabaseClient.from('user_stickers').select('*').eq('user_name', otherUser)
     ]);
 
-    // Check op fouten (bijv. als RLS nog aan staat)
-    if (myResponse.error) console.error("Supabase Error (Mijn data):", myResponse.error.message);
-    if (otherResponse.error) console.error("Supabase Error (Andere data):", otherResponse.error.message);
-
-    // Vul de lijsten
     if (myResponse.data) {
         myResponse.data.forEach(row => { myStickers[row.sticker_code] = row.amount; });
     }
@@ -56,67 +42,63 @@ async function loadUserData() {
     renderDashboard();
 }
 
-// === 4. DASHBOARD OPBOUWEN ===
+// ==========================================
+// 4. DE ULTRA-CLEAN TWIN-BADGE GRID RENDER
+// ==========================================
 function renderDashboard() {
     const container = document.getElementById('countries-container');
     container.innerHTML = '';
-    let totalOwned = 0;
+    
+    let totalJorden = 0;
+    let totalWesley = 0;
 
-    collections.forEach(country => {
-        let countryOwnedMy = 0;
-        let countryOwnedOther = 0;
+    collections.forEach((country, index) => {
+        let countMy = 0;
+        let countOther = 0;
         
         for (let i = 1; i <= country.count; i++) {
             let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
-            
-            if (myStickers[code] && myStickers[code] >= 1) { countryOwnedMy++; totalOwned++; }
-            if (otherUserStickers[code] && otherUserStickers[code] >= 1) { countryOwnedOther++; }
+            if (myStickers[code]) countMy++;
+            if (otherUserStickers[code]) countOther++;
         }
 
-        let myPercent = Math.round((countryOwnedMy / country.count) * 100);
-        let otherPercent = Math.round((countryOwnedOther / country.count) * 100);
+        // Koppel scores aan de juiste legandakleur op basis van wie er is ingelogd
+        let jordenScore = currentUser === 'Jorden' ? countMy : countOther;
+        let wesleyScore = currentUser === 'Wesley' ? countMy : countOther;
+        
+        totalJorden += jordenScore;
+        totalWesley += wesleyScore;
 
         const primaryColor = country.colors ? country.colors[0] : '#4f46e5';
-        const accentColor = country.colors && country.colors[1] ? country.colors[1] : '#ff005b';
-        
-        const rowStyle = `
-            background: linear-gradient(135deg, ${primaryColor}1A, ${accentColor}1A);
-            border-left: 6px solid ${primaryColor};
-            border-color: ${primaryColor}33;
-        `;
+        const delay = index * 0.015; // Snelle, soepele wave-in animatie
+
+        // Als een speler het land compleet heeft (20/20), krijgt het vlag-ringetje extra glans
+        const isCompleteMy = countMy === country.count;
+        const borderGlow = isCompleteMy ? `border-color: #10b981; box-shadow: 0 0 12px #10b98180;` : `border-color: ${primaryColor}50;`;
 
         container.innerHTML += `
-            <div class="country-row" style="${rowStyle}" onclick="openModal('${country.prefix}')">
-                <div class="country-info">
-                    <div class="flag-circle" style="background-image: url('${country.flagUrl}'); border-color: ${primaryColor};"></div>
-                    <span class="country-name" style="color: ${primaryColor};">${country.name}</span>
-                </div>
-                <div class="status-indicators">
-                    <div class="user-stat">
-                        <span style="color: ${primaryColor}; opacity: 0.9;">${currentUser}:</span>
-                        <span style="color: #1e293b;">${countryOwnedMy}/${country.count}</span>
-                        <div class="user-perc-fill">
-                            <div style="width: ${myPercent}%; background-color: ${primaryColor};"></div>
-                        </div>
-                    </div>
-                    <div class="user-stat">
-                        <span style="color: ${accentColor}; opacity: 0.7;">${otherUser}:</span>
-                        <span style="color: #64748b;">${countryOwnedOther}/${country.count}</span>
-                        <div class="user-perc-fill">
-                            <div style="width: ${otherPercent}%; background-color: ${accentColor}; opacity: 0.5;"></div>
-                        </div>
-                    </div>
+            <div class="country-card" style="animation-delay: ${delay}s;" onclick="openModal('${country.prefix}')">
+                <div class="flag-circle" style="background-image: url('${country.flagUrl}'); ${borderGlow}"></div>
+                <span class="country-prefix">${country.prefix}</span>
+                
+                <div class="grid-score-row">
+                    <div class="grid-badge" style="background: var(--color-jorden);">${jordenScore}</div>
+                    <div class="grid-badge" style="background: var(--color-wesley);">${wesleyScore}</div>
                 </div>
             </div>
         `;
     });
 
-    let totalPercent = Math.round((totalOwned / 980) * 100);
+    // Update de totale scores in de legenda bovenaan
+    document.getElementById('legend-count-jorden').innerText = totalJorden;
+    document.getElementById('legend-count-wesley').innerText = totalWesley;
+
+    // Voortgangsbalk vullen op basis van de ingelogde speler
+    let activeTotal = currentUser === 'Jorden' ? totalJorden : totalWesley;
+    let totalPercent = Math.round((activeTotal / 980) * 100);
     document.getElementById('total-progress').style.width = `${totalPercent}%`;
-    document.getElementById('total-text').innerText = `${totalOwned} / 980 uniek (${totalPercent}%)`;
 }
 
-// === 5. FULL SCREEN DETAIL POP-UP ===
 function openModal(prefix) {
     const countryData = collections.find(c => c.prefix === prefix);
     if (!countryData) return;
@@ -159,29 +141,23 @@ function closeModal() {
     renderDashboard(); 
 }
 
-// === 6. STICKERS AANTIKKEN (100% CLOUD SYNC) ===
 async function toggleSticker(code) {
     let currentAmount = myStickers[code] || 0;
     let newAmount = currentAmount + 1;
     if (newAmount > 2) newAmount = 0; 
 
-    // Update lokale status tijdelijk voor direct visueel effect
     if (newAmount === 0) delete myStickers[code];
     else myStickers[code] = newAmount;
     updateStickerUI(code, newAmount);
 
-    // Push direct naar Supabase
     try {
         if (newAmount === 0) {
-            const { error } = await supabaseClient.from('user_stickers').delete().match({ user_name: currentUser, sticker_code: code });
-            if (error) throw error;
+            await supabaseClient.from('user_stickers').delete().match({ user_name: currentUser, sticker_code: code });
         } else {
-            const { error } = await supabaseClient.from('user_stickers').upsert({ user_name: currentUser, sticker_code: code, amount: newAmount });
-            if (error) throw error;
+            await supabaseClient.from('user_stickers').upsert({ user_name: currentUser, sticker_code: code, amount: newAmount });
         }
     } catch (err) {
         console.error("Fout bij opslaan in de cloud:", err.message);
-        alert("Oeps! Sticker kon niet worden opgeslagen in de cloud. Check je verbinding.");
     }
 }
 
