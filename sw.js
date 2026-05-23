@@ -1,17 +1,30 @@
-// sw.js - Service Worker voor PWA installatie
-const CACHE_NAME = 'panini-tracker-v1';
+// sw.js - Service Worker v2 (Agressieve Cache Update)
+const CACHE_NAME = 'panini-tracker-v2';
 const ASSETS = [
   './index.html',
-  './style.css',
-  './countries.js',
-  './app.js',
+  './style.css?v=2',
+  './countries.js?v=2',
+  './app.js?v=2',
   './manifest.json'
 ];
 
 self.addEventListener('install', (e) => {
+  self.skipWaiting(); // Forceer direct de nieuwe versie
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS);
+    })
+  );
+});
+
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then((keyList) => {
+      return Promise.all(keyList.map((key) => {
+        if (key !== CACHE_NAME) {
+          return caches.delete(key); // Gooi de oude app-versie weg
+        }
+      }));
     })
   );
 });
