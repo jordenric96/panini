@@ -1,65 +1,45 @@
-// 1. Koppel met Supabase
-const supabaseUrl = 'https://JOUW_PROJECT_ID.supabase.co'; // <-- Vul je eigen URL in!
-const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61...'; // <-- Vul je volledige key in!
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+// 7. Data structuur voor de landen
+const collectionConfig = [
+    { prefix: 'FWC', name: 'FIFA World Cup', count: 20, flagUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Logo_de_la_Copa_Mundial_de_f%C3%BAtbol_2026.svg/200px-Logo_de_la_Copa_Mundial_de_f%C3%BAtbol_2026.svg.png' },
+    { prefix: 'MEX', name: 'Mexico', count: 20, flagUrl: 'https://flagcdn.com/w160/mx.png' },
+    { prefix: 'FRA', name: 'Frankrijk', count: 20, flagUrl: 'https://flagcdn.com/w160/fr.png' },
+    { prefix: 'POR', name: 'Portugal', count: 20, flagUrl: 'https://flagcdn.com/w160/pt.png' },
+    { prefix: 'COL', name: 'Colombia', count: 20, flagUrl: 'https://flagcdn.com/w160/co.png' },
+    { prefix: 'COD', name: 'Congo DR', count: 20, flagUrl: 'https://flagcdn.com/w160/cd.png' }
+    // Voeg hier later de andere landen toe...
+];
 
-// 2. Elementen ophalen
-const authSection = document.getElementById('auth-section');
-const dashboardSection = document.getElementById('dashboard-section');
-const authMessage = document.getElementById('auth-message');
+const countriesContainer = document.getElementById('countries-container');
 
-// 3. Registreren
-async function register() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    
-    const { data, error } = await supabase.auth.signUp({
-        email: email,
-        password: password,
+// 8. Functie om de lijst te genereren op het scherm
+function renderDashboard() {
+    countriesContainer.innerHTML = ''; // Maak de container eerst leeg
+
+    collectionConfig.forEach(country => {
+        // Maak de hoofdrij aan
+        const row = document.createElement('div');
+        row.className = 'country-row';
+        row.onclick = () => openCountryDetail(country.prefix); // Voor later
+
+        // HTML structuur voor de rij opbouwen
+        row.innerHTML = `
+            <div class="country-info">
+                <div class="flag-circle" style="background-image: url('${country.flagUrl}');"></div>
+                <span class="country-name">${country.name}</span>
+            </div>
+            <div class="stats">
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 0%;"></div> 
+                </div>
+                <span class="percentage-text">0 / 20 (0%)</span>
+            </div>
+        `;
+
+        countriesContainer.appendChild(row);
     });
-
-    if (error) {
-        authMessage.innerText = "Fout bij registreren: " + error.message;
-    } else {
-        authMessage.innerText = "Check je mailbox om je account te bevestigen!";
-    }
 }
 
-// 4. Inloggen
-async function login() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    
-    const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
-    });
-
-    if (error) {
-        authMessage.innerText = "Fout bij inloggen: " + error.message;
-    } else {
-        checkSession(); // Ga naar dashboard
-    }
+// 9. Tijdelijke functie voor als je op een land klikt
+function openCountryDetail(prefix) {
+    alert(`Binnenkort openen we hier de 20 stickers voor: ${prefix}`);
 }
-
-// 5. Uitloggen
-async function logout() {
-    await supabase.auth.signOut();
-    checkSession(); // Ga terug naar inlogscherm
-}
-
-// 6. Check of gebruiker al is ingelogd
-async function checkSession() {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (session) {
-        authSection.style.display = 'none';
-        dashboardSection.style.display = 'block';
-    } else {
-        authSection.style.display = 'block';
-        dashboardSection.style.display = 'none';
-    }
-}
-
-// Start de check direct bij het inladen van de pagina
-checkSession();
