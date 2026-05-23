@@ -1,4 +1,4 @@
-/* style.css - Ultimate Panini Tracker Edition (Full Restore) */
+/* style.css - Minimal Premium Sports Grid Theme (No-Scroll Modal + Super Strakke Zoekbalk) */
 
 :root {
     --bg-main: #f4f7fc;
@@ -75,7 +75,39 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 .legend-item { display: flex; align-items: center; gap: 6px; }
 .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
 
-/* GAME GRID & POULE HEADERS (4 OP EEN RIJ) */
+/* Styling voor de Zoekbalk */
+.search-container {
+    margin-bottom: 12px;
+    width: 100%;
+}
+
+#search-bar {
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: 16px;
+    border: 2px solid #e2e8f0;
+    background: #f8fafc;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+
+#search-bar:focus {
+    outline: none;
+    border-color: var(--color-jorden);
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
+}
+
+#search-bar::placeholder {
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* GAME GRID & POULE HEADERS (4 OP EEN RIJ GERESTAUREERD) */
 .countries-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .group-header {
     grid-column: 1 / -1; margin: 15px 0 5px 0; padding-bottom: 5px;
@@ -101,7 +133,7 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 .grid-score-row { display: flex; gap: 4px; margin-top: 6px; }
 .grid-badge { padding: 3px 6px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; color: white; min-width: 14px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.08); }
 
-/* MODALS (100% SCREEN HEIGHT NO-SCROLL) */
+/* MODALS (100% SCREEN HEIGHT NO-SCROLL GERESTAUREERD) */
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; overflow: hidden; background: rgba(0,0,0,0.8); }
 .modal-content { width: 100%; max-width: 550px; margin: 0 auto; height: 100dvh; padding: 15px; box-sizing: border-box; display: flex; flex-direction: column; color: white; }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: rgba(0, 0, 0, 0.12); backdrop-filter: blur(15px); padding: 12px 16px; border-radius: 18px; }
