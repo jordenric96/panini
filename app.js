@@ -2,7 +2,7 @@
 
 // === 1. SUPABASE CONFIGURATIE ===
 const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co'; 
-const supabaseKey = 'PLAK_HIER_JOUW_PUBLISHABLE_KEY'; // Let op: vul je echte key in!
+const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; // Let op: vul je echte key in!
 
 const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
