@@ -10,7 +10,7 @@
     <link rel="apple-touch-icon" href="icon.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=4">
+    <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 
@@ -50,6 +50,10 @@
             </div>
         </div>
 
+        <div class="search-container">
+            <input type="text" id="search-bar" placeholder="Zoek op land of code (bijv. BEL of BE)..." onkeyup="filterCountries()">
+        </div>
+
         <div class="countries-list" id="countries-container"></div>
     </div>
 
@@ -84,8 +88,8 @@
         </div>
     </div>
 
-    <script src="countries.js?v=4"></script>
-    <script src="app.js?v=4"></script>
+    <script src="countries.js?v=5"></script>
+    <script src="app.js?v=5"></script>
     
     <script>
         if ('serviceWorker' in navigator) {
