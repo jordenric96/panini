@@ -1,1 +1,78 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f2f5;
+    margin: 0;
+    padding: 20px;
+}
 
+#dashboard-section {
+    max-width: 600px;
+    margin: 0 auto;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.country-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.country-row:hover {
+    background-color: #f8f9fa;
+}
+
+.country-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.flag-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    border: 1px solid #ccc;
+}
+
+.country-name {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.stats {
+    text-align: right;
+}
+
+.progress-bar {
+    width: 100px;
+    height: 8px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: #4CAF50;
+    width: 0%; /* Dit wordt later via JS gevuld */
+    transition: width 0.3s ease;
+}
+
+.percentage-text {
+    font-size: 0.85rem;
+    color: #666;
+}
