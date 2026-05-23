@@ -1,18 +1,17 @@
 // app.js - Applicatielogica met Live Database & Lokale Fallback
 const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co';
 const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; 
-
-let supabase = null;
+// We noemen het 'supabaseClient' om conflicten met de browser te vermijden!
+let supabaseClient = null;
 let isOfflineFallback = false;
 let currentUser = '';
-let myStickers = {}; // Structuur: { 'BEL 1': 1, 'BEL 2': 2 }
+let myStickers = {}; 
 
-// Initialisatie veilig uitvoeren om crashes te voorkomen
 try {
-    if (supabaseUrl.includes('JOUW_PROJECT_ID')) {
+    if (supabaseUrl.includes('JOUW_PROJECT_ID') || supabaseKey.includes('PLAK_HIER')) {
         isOfflineFallback = true;
     } else {
-        supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
     }
 } catch (e) {
     isOfflineFallback = true;
@@ -37,7 +36,7 @@ function logout() {
     document.getElementById('dashboard-section').style.display = 'none';
 }
 
-// 2. Data ophalen (Supabase óf Browser cache)
+// 2. Data ophalen 
 async function loadUserData() {
     myStickers = {};
     
@@ -46,7 +45,7 @@ async function loadUserData() {
         if (localData) myStickers = JSON.parse(localData);
         renderDashboard();
     } else {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('user_stickers')
             .select('*')
             .eq('user_name', currentUser);
@@ -132,7 +131,7 @@ function closeModal() {
 async function toggleSticker(code) {
     let currentAmount = myStickers[code] || 0;
     let newAmount = currentAmount + 1;
-    if (newAmount > 2) newAmount = 0; // Rotatie: 0 -> 1 -> 2 -> 0
+    if (newAmount > 2) newAmount = 0; 
 
     if (newAmount === 0) delete myStickers[code];
     else myStickers[code] = newAmount;
@@ -143,9 +142,9 @@ async function toggleSticker(code) {
         localStorage.setItem(`panini_${currentUser}`, JSON.stringify(myStickers));
     } else {
         if (newAmount === 0) {
-            await supabase.from('user_stickers').delete().match({ user_name: currentUser, sticker_code: code });
+            await supabaseClient.from('user_stickers').delete().match({ user_name: currentUser, sticker_code: code });
         } else {
-            await supabase.from('user_stickers').upsert({ user_name: currentUser, sticker_code: code, amount: newAmount });
+            await supabaseClient.from('user_stickers').upsert({ user_name: currentUser, sticker_code: code, amount: newAmount });
         }
     }
 }
