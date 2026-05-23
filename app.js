@@ -1,17 +1,16 @@
 // app.js - Logic for dual progress & dynamic styling
 const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co'; 
 const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA...'; // Vul hier jouw volledige key in!
-
 let supabaseClient = null;
 let isOfflineFallback = false;
 let currentUser = '';
 let otherUser = '';
 let myStickers = {};
-let otherUserStickers = {}; // Hier slaan we de data van de andere speler op
+let otherUserStickers = {}; 
 
-// Initialisatie veilig uitvoeren om crashes te voorkomen
+// Initialisatie: we vangen fouten op zodat de app altijd blijft werken (offline modus)
 try {
-    if (supabaseUrl.includes('JOUW_PROJECT_ID') || supabaseKey.includes('sb_publishable_JOUW')) {
+    if (supabaseUrl.includes('JOUW_PROJECT_ID') || supabaseKey.includes('PLAK_HIER')) {
         isOfflineFallback = true;
     } else {
         supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -24,29 +23,32 @@ if (isOfflineFallback) {
     document.getElementById('fallback-notice').style.display = 'block';
 }
 
-// 1. Profiel selecteren
+// === 2. PROFIEL & NAVIGATIE ===
 async function selectUser(name) {
     currentUser = name;
-    otherUser = currentUser === 'Jorden' ? 'Wesley' : 'Jorden';
+    otherUser = currentUser === 'Jorden' ? 'Wesley' : 'Jorden'; // Wie is de tegenstander?
+    
     document.getElementById('profile-section').style.display = 'none';
     document.getElementById('dashboard-section').style.display = 'block';
     document.getElementById('welcome-text').innerText = `Album van ${name}`;
+    
     await loadUserData();
 }
 
 function logout() {
     currentUser = '';
+    otherUser = '';
     document.getElementById('profile-section').style.display = 'flex';
     document.getElementById('dashboard-section').style.display = 'none';
 }
 
-// 2. Data ophalen voor BEIDE gebruikers
+// === 3. DATA OPHALEN ===
 async function loadUserData() {
     myStickers = {};
     otherUserStickers = {};
 
     if (isOfflineFallback) {
-        // Lokale Fallback voor beide profielen
+        // Lokale Browser Opslag (Fallback)
         const myLocalData = localStorage.getItem(`panini_${currentUser}`);
         if (myLocalData) myStickers = JSON.parse(myLocalData);
         
@@ -55,7 +57,7 @@ async function loadUserData() {
         
         renderDashboard();
     } else {
-        // Haal data op van Supabase voor BEIDE gebruikers tegelijk
+        // Haal data op van Supabase voor BEIDE spelers tegelijk!
         const [myResponse, otherResponse] = await Promise.all([
             supabaseClient.from('user_stickers').select('*').eq('user_name', currentUser),
             supabaseClient.from('user_stickers').select('*').eq('user_name', otherUser)
@@ -71,22 +73,29 @@ async function loadUserData() {
     }
 }
 
-// 3. Hoofdscherm Tekenen met dubbele progressie en nieuwe styling
+// === 4. DASHBOARD OPBOUWEN (Met dubbele progressiebalken) ===
 function renderDashboard() {
     const container = document.getElementById('countries-container');
     container.innerHTML = '';
     let totalOwned = 0;
 
+    // Loop door alle landen in countries.js
     collections.forEach(country => {
         let countryOwnedMy = 0;
         let countryOwnedOther = 0;
         
-        // Bereken progressie voor beide gebruikers
+        // Tel de stickers voor dit specifieke land
         for (let i = 1; i <= country.count; i++) {
-            let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
+            let code = country.prefix === 'FWC' && i === 1 ? '00' : 
+                       country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
             
-            if (myStickers[code]) { countryOwnedMy++; totalOwned++; }
-            if (otherUserStickers[code]) { countryOwnedOther++; }
+            if (myStickers[code] && myStickers[code] >= 1) { 
+                countryOwnedMy++; 
+                totalOwned++; 
+            }
+            if (otherUserStickers[code] && otherUserStickers[code] >= 1) { 
+                countryOwnedOther++; 
+            }
         }
 
         let myPercent = Math.round((countryOwnedMy / country.count) * 100);
@@ -118,55 +127,53 @@ function renderDashboard() {
         `;
     });
 
-    // Totaal updaten
+    // Totale progressie balk bovenaan updaten
     let totalPercent = Math.round((totalOwned / 980) * 100);
     document.getElementById('total-progress').style.width = `${totalPercent}%`;
     document.getElementById('total-text').innerText = `${totalOwned} / 980 uniek (${totalPercent}%)`;
 }
 
-// 4. Grid pop-up openen met DYNAMISCHE STYLING
+// === 5. FULL-SCREEN DETAIL POP-UP ===
 function openModal(prefix) {
     const countryData = collections.find(c => c.prefix === prefix);
     if (!countryData) return;
 
-    // Pas de dynamic styling toe op basis van de kleuren van het land (countries.js)
+    // Haal de kleuren uit countries.js, of gebruik standaard WK kleuren
     const primaryColor = countryData.colors ? countryData.colors[0] : '#4f46e5';
     const accentColor = countryData.colors && countryData.colors[1] ? countryData.colors[1] : '#ff005b';
     
-    // Update de CSS variabelen van het detailvenster
-    const modalContent = document.querySelector('.modal-content');
-    modalContent.style.setProperty('--border-color', `${primaryColor}aa`);
+    // Kleur het hele scherm in!
+    const modal = document.getElementById('modal');
+    modal.style.background = `linear-gradient(135deg, ${primaryColor}, ${accentColor})`;
+    document.documentElement.style.setProperty('--wk-primary', primaryColor);
     
-    // Update de cirkel indicator
-    document.getElementById('modal-title').style.color = primaryColor;
-    document.getElementById('flag-ring-1').style.borderColor = primaryColor;
-    document.getElementById('flag-ring-2').style.borderColor = accentColor;
+    // Vlag in header updaten
     document.getElementById('flag-inner-circle').style.backgroundImage = `url('${countryData.flagUrl}')`;
-    
-    // Zorg dat de sticker-box hover de themakleur volgt
-    modalContent.style.setProperty('--wk-primary', primaryColor);
-
-    document.getElementById('modal').style.display = 'flex';
     document.getElementById('modal-title').innerText = countryData.name;
+    
+    // Toon modal
+    modal.style.display = 'block'; 
     
     const grid = document.getElementById('sticker-grid');
     grid.innerHTML = '';
 
+    // Bouw de 20 Panini-kaarten
     for (let i = 1; i <= countryData.count; i++) {
-        let code = prefix === 'FWC' && i === 1 ? '00' : prefix === 'FWC' ? `FWC ${i-1}` : `${prefix} ${i}`;
+        let code = prefix === 'FWC' && i === 1 ? '00' : 
+                   prefix === 'FWC' ? `FWC ${i-1}` : `${prefix} ${i}`;
         
         let amount = myStickers[code] || 0;
         let statusClass = amount > 1 ? 'double' : amount === 1 ? 'owned' : '';
         
-        // Label format: 'BEL 1' of '00'
+        // Zorg dat de speciale FWC 00 sticker mooi wordt weergegeven
         let displayLabel = prefix === 'FWC' && i === 1 ? 
-            `<span class="box-num" style="font-size: 1.5rem; font-weight: 800;">00</span>` : 
+            `<span class="box-num" style="font-size: 2rem;">00</span>` : 
             `<span class="box-prefix">${prefix}</span><span class="box-num">${i}</span>`;
 
         grid.innerHTML += `
             <div class="sticker-box ${statusClass}" onclick="toggleSticker('${code}')" id="box-${code}">
                 ${displayLabel}
-                <span class="badge" id="badge-${code}">${amount > 1 ? `(${amount}x)` : ''}</span>
+                <span class="badge" id="badge-${code}" style="${amount < 2 ? 'display: none;' : ''}">+${amount-1}</span>
             </div>
         `;
     }
@@ -174,20 +181,25 @@ function openModal(prefix) {
 
 function closeModal() {
     document.getElementById('modal').style.display = 'none';
-    renderDashboard(); 
+    renderDashboard(); // Herbereken procenten als je terugkeert
 }
 
-// 5. Opslaan bij klik
+// === 6. STICKERS AANTIKKEN (Opslaan & Animaties) ===
 async function toggleSticker(code) {
     let currentAmount = myStickers[code] || 0;
     let newAmount = currentAmount + 1;
+    
+    // Rotatiecyclus: Leeg (0) -> Heb ik (1) -> Dubbel (2+) -> Wis (0)
     if (newAmount > 2) newAmount = 0; 
 
+    // Update de lokale lijst
     if (newAmount === 0) delete myStickers[code];
     else myStickers[code] = newAmount;
 
+    // Pas direct de visuele UI van de sticker aan
     updateStickerUI(code, newAmount);
 
+    // Sla op naar de database
     if (isOfflineFallback) {
         localStorage.setItem(`panini_${currentUser}`, JSON.stringify(myStickers));
     } else {
@@ -203,8 +215,19 @@ function updateStickerUI(code, amount) {
     const box = document.getElementById(`box-${code}`);
     const badge = document.getElementById(`badge-${code}`);
     
+    // Reset klassen
     box.className = 'sticker-box';
-    if (amount === 1) { box.classList.add('owned'); badge.innerText = ''; }
-    else if (amount > 1) { box.classList.add('double'); badge.innerText = `(${amount}x)`; }
-    else { badge.innerText = ''; }
+    
+    if (amount === 1) { 
+        box.classList.add('owned'); 
+        badge.style.display = 'none'; 
+    }
+    else if (amount > 1) { 
+        box.classList.add('double'); 
+        badge.innerText = `+${amount-1}`; 
+        badge.style.display = 'block'; 
+    }
+    else { 
+        badge.style.display = 'none'; 
+    }
 }
