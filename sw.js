@@ -1,15 +1,15 @@
-// sw.js - Service Worker v2 (Agressieve Cache Update)
-const CACHE_NAME = 'panini-tracker-v2';
+// sw.js - Service Worker v3 (Agressieve Cache Update)
+const CACHE_NAME = 'panini-tracker-v3';
 const ASSETS = [
   './index.html',
-  './style.css?v=2',
-  './countries.js?v=2',
-  './app.js?v=2',
+  './style.css?v=3',
+  './countries.js?v=3',
+  './app.js?v=3',
   './manifest.json'
 ];
 
 self.addEventListener('install', (e) => {
-  self.skipWaiting(); // Forceer direct de nieuwe versie
+  self.skipWaiting(); 
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS);
@@ -22,7 +22,7 @@ self.addEventListener('activate', (e) => {
     caches.keys().then((keyList) => {
       return Promise.all(keyList.map((key) => {
         if (key !== CACHE_NAME) {
-          return caches.delete(key); // Gooi de oude app-versie weg
+          return caches.delete(key); 
         }
       }));
     })
