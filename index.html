@@ -11,64 +11,48 @@
 <body>
 
     <div id="profile-section" class="container">
-        <h2 style="text-align: center; color: var(--accent-2); font-size: 2rem;">Kies je profiel</h2>
+        <h1>WK 2026 Tracker</h1>
         <div class="profile-grid">
             <div class="profile-card" onclick="selectUser('Jorden')">Jorden</div>
             <div class="profile-card" onclick="selectUser('Wesley')">Wesley</div>
         </div>
-        <p id="fallback-notice" style="color: var(--color-double); text-align: center; margin-top: 20px; font-size: 0.85rem; display: none;">
-            ⚠️ Supabase niet verbonden. Je speelt lokaal.
+        <p id="fallback-notice" style="color: #f59e0b; text-align: center; margin-top: 20px; font-size: 0.8rem; display: none;">
+            ⚠️ Supabase niet verbonden. Je speelt lokaal op dit toestel.
         </p>
     </div>
 
     <div id="dashboard-section" class="container" style="display: none;">
-        <div class="header-bar">
-            <h2 id="welcome-text">Mijn Album</h2>
-            <div>
-                <button class="btn btn-secondary" onclick="logout()">Wissel</button>
-            </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 id="welcome-text" style="text-align: left; margin: 0;">Album van</h2>
+            <button class="btn-secondary" onclick="logout()">Wissel Profiel</button>
         </div>
         
         <div class="total-card">
-            <h3 style="color: var(--accent-1); margin-bottom: 5px;">Progressie</h3>
-            <div class="progress-bar" style="width: 100%; height: 12px; margin: 12px 0;">
+            <h3>Totaal Album Progressie</h3>
+            <div class="progress-bar">
                 <div id="total-progress" class="progress-fill"></div>
             </div>
-            <p id="total-text" style="margin: 0; font-size: 1rem; color: var(--text-secondary); font-weight: bold;">0 / 980 (0%)</p>
-            
-            <button class="btn" style="margin-top: 15px; width: 100%; font-size: 1.1rem;" onclick="openTradeCenter()">🔁 Open Ruilcentrum</button>
+            <p id="total-text" style="font-weight: bold; margin: 0; color: var(--text-secondary);">0 / 980 (0%)</p>
         </div>
 
-        <div id="countries-container"></div>
+        <div class="countries-list" id="countries-container"></div>
     </div>
 
-    <div id="modal" class="modal-overlay">
+    <div id="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="modal-title" style="margin: 0;">Land</h2>
-                <button class="btn btn-secondary" onclick="closeModal()">X</button>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="modal-flag-wrapper">
+                        <div class="flag-ring-1" id="flag-ring-1"></div>
+                        <div class="flag-ring-2" id="flag-ring-2"></div>
+                        <div class="flag-inner-circle" id="flag-inner-circle"></div>
+                    </div>
+                    <h2 id="modal-title" style="margin: 0; text-align: left;">Land</h2>
+                </div>
+                <button class="btn-secondary" style="background-color: #dc3545; color: white;" onclick="closeModal()">X Sluiten</button>
             </div>
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">1x = Heb ik (Groen), 2x = Dubbel (Oranje), 3x = Wis</p>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">Klik 1x = Heb ik, 2x = Dubbel, 3x = Wis</p>
             <div class="sticker-grid" id="sticker-grid"></div>
-        </div>
-    </div>
-
-    <div id="trade-modal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 style="margin: 0; color: var(--accent-1);">🔁 Ruilcentrum</h2>
-                <button class="btn btn-secondary" onclick="closeTradeCenter()">X</button>
-            </div>
-            
-            <div class="trade-list" id="trade-i-give">
-                <h4>Wat ik aan <span id="trade-other-name-1"></span> kan geven:</h4>
-                <div class="trade-badges" id="badges-i-give">Laden...</div>
-            </div>
-
-            <div class="trade-list" id="trade-i-get">
-                <h4>Wat <span id="trade-other-name-2"></span> aan mij kan geven:</h4>
-                <div class="trade-badges" id="badges-i-get">Laden...</div>
-            </div>
         </div>
     </div>
 
