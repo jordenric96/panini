@@ -1,4 +1,4 @@
-// app.js - Ultimate Edition (Infinite Doubles, Filter, Trade Center, Soccer Bar & Player Names)
+// app.js - Ultimate Edition (Met Partner-Indicator Links)
 
 const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co'; 
 const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; 
@@ -44,9 +44,6 @@ async function loadUserData() {
     renderDashboard();
 }
 
-// ==========================================
-// RENDER DASHBOARD (MET POULE PROGRESSIE & FILTER)
-// ==========================================
 function renderDashboard() {
     const container = document.getElementById('countries-container');
     container.innerHTML = '';
@@ -131,7 +128,7 @@ function renderDashboard() {
 }
 
 // ==========================================
-// MODAL & STICKER LOGICA (MET SPELERSNAMEN)
+// MODAL & STICKER LOGICA
 // ==========================================
 function openModal(prefix) {
     const countryData = collections.find(c => c.prefix === prefix);
@@ -145,13 +142,19 @@ function openModal(prefix) {
     document.getElementById('flag-inner-circle').style.backgroundImage = `url('${countryData.flagUrl}')`;
     document.getElementById('modal-title').innerText = countryData.name;
     
+    // Leg uit wie de andere kleur is
+    document.getElementById('modal-subtitle-text').innerText = `Tik +1 • Badge -1 • Bolletje links = ${otherUser}`;
+
     modal.style.display = 'block'; 
     const grid = document.getElementById('sticker-grid');
     grid.innerHTML = '';
 
     for (let i = 1; i <= countryData.count; i++) {
         let code = prefix === 'FWC' && i === 1 ? '00' : prefix === 'FWC' ? `FWC ${i-1}` : `${prefix} ${i}`;
+        
         let amount = myStickers[code] || 0;
+        let otherAmt = otherUserStickers[code] || 0; // Kijkt live wat de ander heeft
+        
         let statusClass = amount > 1 ? 'double' : amount === 1 ? 'owned' : '';
         
         let displayLabel = prefix === 'FWC' && i === 1 ? 
@@ -160,8 +163,17 @@ function openModal(prefix) {
 
         let playerName = countryData.players ? countryData.players[i-1] : (i === 1 ? "Team Logo" : (i === 13 ? "Teamfoto" : `Speler ${i}`));
 
+        // Bouw de badge voor de andere speler
+        let otherColor = currentUser === 'Jorden' ? 'var(--color-wesley)' : 'var(--color-jorden)';
+        let otherIndicator = '';
+        if (otherAmt > 0) {
+            let dotText = otherAmt > 1 ? `${otherAmt}x` : '✓';
+            otherIndicator = `<div class="other-user-dot" style="background: ${otherColor};">${dotText}</div>`;
+        }
+
         grid.innerHTML += `
             <div class="sticker-box ${statusClass}" onclick="addSticker('${code}')" id="box-${code}">
+                ${otherIndicator}
                 ${displayLabel}
                 
                 <div style="font-size: 0.55rem; text-align: center; margin-top: 2px; line-height: 1.1; padding: 0 2px; opacity: 0.9; pointer-events: none;">
@@ -179,7 +191,6 @@ function closeModal() {
     renderDashboard(); 
 }
 
-// Toevoegen (Oneindig)
 async function addSticker(code) {
     let newAmount = (myStickers[code] || 0) + 1;
     myStickers[code] = newAmount;
@@ -189,7 +200,6 @@ async function addSticker(code) {
     await syncToSupabase(code, newAmount);
 }
 
-// Verwijderen (Via de badge)
 async function removeSticker(event, code) {
     event.stopPropagation(); 
     let newAmount = (myStickers[code] || 0) - 1;
@@ -219,6 +229,7 @@ function updateStickerUI(code, amount) {
     const box = document.getElementById(`box-${code}`);
     const badge = document.getElementById(`badge-${code}`);
     
+    // We updaten alleen jouw eigen classes/badges, de 'andere speler badge' blijft gewoon staan
     box.className = 'sticker-box';
     if (amount === 1) { 
         box.classList.add('owned'); 
@@ -233,9 +244,6 @@ function updateStickerUI(code, amount) {
     }
 }
 
-// ==========================================
-// RUILCENTRUM LOGICA
-// ==========================================
 function openTradeCenter() {
     let giveToOther = [];
     let getFromOther = [];
