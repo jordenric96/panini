@@ -1,45 +1,167 @@
-// 7. Data structuur voor de landen
-const collectionConfig = [
-    { prefix: 'FWC', name: 'FIFA World Cup', count: 20, flagUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Logo_de_la_Copa_Mundial_de_f%C3%BAtbol_2026.svg/200px-Logo_de_la_Copa_Mundial_de_f%C3%BAtbol_2026.svg.png' },
-    { prefix: 'MEX', name: 'Mexico', count: 20, flagUrl: 'https://flagcdn.com/w160/mx.png' },
-    { prefix: 'FRA', name: 'Frankrijk', count: 20, flagUrl: 'https://flagcdn.com/w160/fr.png' },
-    { prefix: 'POR', name: 'Portugal', count: 20, flagUrl: 'https://flagcdn.com/w160/pt.png' },
-    { prefix: 'COL', name: 'Colombia', count: 20, flagUrl: 'https://flagcdn.com/w160/co.png' },
-    { prefix: 'COD', name: 'Congo DR', count: 20, flagUrl: 'https://flagcdn.com/w160/cd.png' }
-    // Voeg hier later de andere landen toe...
-];
+// app.js - Applicatielogica met Live Database & Lokale Fallback
+const supabaseUrl = 'https://JOUW_PROJECT_ID.supabase.co'; 
+const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA...'; 
 
-const countriesContainer = document.getElementById('countries-container');
+let supabase = null;
+let isOfflineFallback = false;
+let currentUser = '';
+let myStickers = {}; // Structuur: { 'BEL 1': 1, 'BEL 2': 2 }
 
-// 8. Functie om de lijst te genereren op het scherm
-function renderDashboard() {
-    countriesContainer.innerHTML = ''; // Maak de container eerst leeg
-
-    collectionConfig.forEach(country => {
-        // Maak de hoofdrij aan
-        const row = document.createElement('div');
-        row.className = 'country-row';
-        row.onclick = () => openCountryDetail(country.prefix); // Voor later
-
-        // HTML structuur voor de rij opbouwen
-        row.innerHTML = `
-            <div class="country-info">
-                <div class="flag-circle" style="background-image: url('${country.flagUrl}');"></div>
-                <span class="country-name">${country.name}</span>
-            </div>
-            <div class="stats">
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: 0%;"></div> 
-                </div>
-                <span class="percentage-text">0 / 20 (0%)</span>
-            </div>
-        `;
-
-        countriesContainer.appendChild(row);
-    });
+// Initialisatie veilig uitvoeren om crashes te voorkomen
+try {
+    if (supabaseUrl.includes('JOUW_PROJECT_ID')) {
+        isOfflineFallback = true;
+    } else {
+        supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    }
+} catch (e) {
+    isOfflineFallback = true;
 }
 
-// 9. Tijdelijke functie voor als je op een land klikt
-function openCountryDetail(prefix) {
-    alert(`Binnenkort openen we hier de 20 stickers voor: ${prefix}`);
+if (isOfflineFallback) {
+    document.getElementById('fallback-notice').style.display = 'block';
+}
+
+// 1. Profiel selecteren
+async function selectUser(name) {
+    currentUser = name;
+    document.getElementById('profile-section').style.display = 'none';
+    document.getElementById('dashboard-section').style.display = 'block';
+    document.getElementById('welcome-text').innerText = `Collectie van ${name}`;
+    await loadUserData();
+}
+
+function logout() {
+    currentUser = '';
+    document.getElementById('profile-section').style.display = 'flex';
+    document.getElementById('dashboard-section').style.display = 'none';
+}
+
+// 2. Data ophalen (Supabase óf Browser cache)
+async function loadUserData() {
+    myStickers = {};
+    
+    if (isOfflineFallback) {
+        const localData = localStorage.getItem(`panini_${currentUser}`);
+        if (localData) myStickers = JSON.parse(localData);
+        renderDashboard();
+    } else {
+        const { data, error } = await supabase
+            .from('user_stickers')
+            .select('*')
+            .eq('user_name', currentUser);
+
+        if (data) {
+            data.forEach(row => { myStickers[row.sticker_code] = row.amount; });
+        }
+        renderDashboard();
+    }
+}
+
+// 3. Hoofdscherm opbouwen
+function renderDashboard() {
+    const container = document.getElementById('countries-container');
+    container.innerHTML = '';
+    let totalOwned = 0;
+
+    collections.forEach(country => {
+        let countryOwned = 0;
+        
+        for (let i = 1; i <= country.count; i++) {
+            let code = country.prefix === 'FWC' && i === 1 ? '00' : 
+                       country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
+            
+            if (myStickers[code] && myStickers[code] >= 1) {
+                countryOwned++;
+                totalOwned++;
+            }
+        }
+
+        let percent = Math.round((countryOwned / country.count) * 100);
+
+        container.innerHTML += `
+            <div class="country-row" onclick="openModal('${country.prefix}', '${country.name}', ${country.count})">
+                <div class="country-info">
+                    <div class="flag-circle" style="background-image: url('${country.flagUrl}');"></div>
+                    <span class="country-name">${country.name}</span>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar"><div class="progress-fill" style="width: ${percent}%;"></div></div>
+                    <span class="percentage-text">${countryOwned}/${country.count} (${percent}%)</span>
+                </div>
+            </div>
+        `;
+    });
+
+    let totalPercent = Math.round((totalOwned / 980) * 100);
+    document.getElementById('total-progress').style.width = `${totalPercent}%`;
+    document.getElementById('total-text').innerText = `${totalOwned} / 980 unieke stickers verzameld (${totalPercent}%)`;
+}
+
+// 4. Grid pop-up openen
+function openModal(prefix, name, count) {
+    document.getElementById('modal').style.display = 'flex';
+    document.getElementById('modal-title').innerText = name;
+    
+    const grid = document.getElementById('sticker-grid');
+    grid.innerHTML = '';
+
+    for (let i = 1; i <= count; i++) {
+        let code = prefix === 'FWC' && i === 1 ? '00' : 
+                   prefix === 'FWC' ? `FWC ${i-1}` : `${prefix} ${i}`;
+        
+        let amount = myStickers[code] || 0;
+        let statusClass = amount > 1 ? 'double' : amount === 1 ? 'owned' : '';
+        let displayNum = code.includes(' ') ? code.split(' ')[1] : code;
+
+        grid.innerHTML += `
+            <div class="sticker-box ${statusClass}" onclick="toggleSticker('${code}')" id="box-${code}">
+                ${displayNum}
+                <span class="badge" id="badge-${code}">${amount > 1 ? `+${amount-1}` : ''}</span>
+            </div>
+        `;
+    }
+}
+
+function closeModal() {
+    document.getElementById('modal').style.display = 'none';
+    renderDashboard();
+}
+
+// 5. Sticker mutatie opslaan
+async function toggleSticker(code) {
+    let currentAmount = myStickers[code] || 0;
+    let newAmount = currentAmount + 1;
+    if (newAmount > 2) newAmount = 0; // Rotatie: 0 -> 1 -> 2 -> 0
+
+    if (newAmount === 0) delete myStickers[code];
+    else myStickers[code] = newAmount;
+
+    updateStickerUI(code, newAmount);
+
+    if (isOfflineFallback) {
+        localStorage.setItem(`panini_${currentUser}`, JSON.stringify(myStickers));
+    } else {
+        if (newAmount === 0) {
+            await supabase.from('user_stickers').delete().match({ user_name: currentUser, sticker_code: code });
+        } else {
+            await supabase.from('user_stickers').upsert({ user_name: currentUser, sticker_code: code, amount: newAmount });
+        }
+    }
+}
+
+function updateStickerUI(code, amount) {
+    const box = document.getElementById(`box-${code}`);
+    const badge = document.getElementById(`badge-${code}`);
+    
+    box.className = 'sticker-box';
+    if (amount === 1) {
+        box.classList.add('owned');
+        badge.innerText = '';
+    } else if (amount > 1) {
+        box.classList.add('double');
+        badge.innerText = `+${amount-1}`;
+    } else {
+        badge.innerText = '';
+    }
 }
