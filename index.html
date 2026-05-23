@@ -41,17 +41,19 @@
     <div id="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 15px;">
                     <div class="modal-flag-wrapper">
                         <div class="flag-ring-1" id="flag-ring-1"></div>
-                        <div class="flag-ring-2" id="flag-ring-2"></div>
                         <div class="flag-inner-circle" id="flag-inner-circle"></div>
                     </div>
-                    <h2 id="modal-title" style="margin: 0; text-align: left;">Land</h2>
+                    <div>
+                        <h2 id="modal-title" style="margin: 0; text-align: left; font-size: 1.8rem; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">Land</h2>
+                        <span style="font-size: 0.8rem; opacity: 0.8;">1x = Groen  •  2x = Goud (Shiny)  •  3x = Wis</span>
+                    </div>
                 </div>
-                <button class="btn-secondary" style="background-color: #dc3545; color: white;" onclick="closeModal()">X Sluiten</button>
+                <button class="btn-secondary" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4);" onclick="closeModal()">Terug</button>
             </div>
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">Klik 1x = Heb ik, 2x = Dubbel, 3x = Wis</p>
+            
             <div class="sticker-grid" id="sticker-grid"></div>
         </div>
     </div>
