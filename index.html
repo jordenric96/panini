@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panini WK 2026 Tracker</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚽</text></svg>">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
@@ -70,5 +72,15 @@
 
     <script src="countries.js"></script>
     <script src="app.js"></script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('App engine succesvol gestart!'))
+                    .catch(err => console.log('App engine kon niet starten', err));
+            });
+        }
+    </script>
 </body>
 </html>
