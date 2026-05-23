@@ -1,4 +1,4 @@
-// app.js - Ultimate Edition v5 (Met Zoekbalk)
+// app.js - Ultimate Edition v6 (No-Scroll + Partner-Indicator + Gecorrigeerde Zoeklogica)
 
 const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co'; 
 const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; 
@@ -60,6 +60,7 @@ function renderDashboard() {
     let totalJorden = 0;
     let totalWesley = 0;
     
+    // Stap 1: Bereken vooraf de Poule totalen voor de Goud-check
     let groupStats = {};
     collections.forEach(c => {
         if(!groupStats[c.group]) groupStats[c.group] = { total: 0, myCount: 0 };
@@ -91,14 +92,14 @@ function renderDashboard() {
 
         const isCompleteMy = countMy === country.count;
         
-        // Filter op Voltooide landen
+        // Filter Check: verberg land als het vol is én de filter aanstaat
         if (showOnlyMissing && isCompleteMy) return;
-        
+
         // Zoekfilter: Kijkt of de prefix of landnaam de getypte tekst bevat
         const matchesSearch = country.name.toLowerCase().includes(searchTerm) || country.prefix.toLowerCase().includes(searchTerm);
         if (!matchesSearch) return;
 
-        // We bouwen de header PAS als we zeker weten dat dit land (na filters) getoond mag worden
+        // Teken de Poule Header
         if (country.group !== currentGroup) {
             currentGroup = country.group;
             let gStat = groupStats[currentGroup];
@@ -130,6 +131,7 @@ function renderDashboard() {
         `;
     });
 
+    // Update Scores & Voetbalbalk
     document.getElementById('legend-count-jorden').innerText = totalJorden;
     document.getElementById('legend-count-wesley').innerText = totalWesley;
 
@@ -138,6 +140,7 @@ function renderDashboard() {
     
     document.getElementById('total-text').innerText = `${activeTotal}/980`;
     
+    // Laat de bal over het scherm rollen (max 90% zodat hij netjes in de goal rolt)
     let ballPos = Math.min(totalPercent, 90);
     document.getElementById('soccer-ball').style.left = `calc(${ballPos}% - 10px)`;
 }
