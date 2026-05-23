@@ -1,6 +1,9 @@
-// app.js - Logic for dual progress & dynamic styling
+// app.js - Volledige logica met dual-progress, Supabase & Full-Screen animaties
+
+// === 1. CONFIGURATIE ===
 const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co'; 
-const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA...'; // Vul hier jouw volledige key in!
+const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA...'; // Vul hier je eigen volledige key in!
+
 let supabaseClient = null;
 let isOfflineFallback = false;
 let currentUser = '';
@@ -9,10 +12,10 @@ let myStickers = {};
 let otherUserStickers = {}; 
 
 try {
-    if (supabaseUrl.includes('JOUW_PROJECT_ID') || supabaseKey.includes('PLAK_HIER')) {
-        isOfflineFallback = true;
-    } else {
+    if (supabaseUrl.includes('JOUW_PROJECT_ID') || supabaseKey.includes('sb_publishable_')) {
         supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+    } else {
+        isOfflineFallback = true;
     }
 } catch (e) {
     isOfflineFallback = true;
@@ -22,7 +25,7 @@ if (isOfflineFallback) {
     document.getElementById('fallback-notice').style.display = 'block';
 }
 
-// 1. Profiel selecteren
+// === 2. PROFIEL & NAVIGATIE ===
 async function selectUser(name) {
     currentUser = name;
     otherUser = currentUser === 'Jorden' ? 'Wesley' : 'Jorden';
@@ -41,18 +44,14 @@ function logout() {
     document.getElementById('dashboard-section').style.display = 'none';
 }
 
-// 2. Data inladen voor beide gebruikers
+// === 3. DATA LADEN ===
 async function loadUserData() {
     myStickers = {};
     otherUserStickers = {};
 
     if (isOfflineFallback) {
-        const myLocalData = localStorage.getItem(`panini_${currentUser}`);
-        if (myLocalData) myStickers = JSON.parse(myLocalData);
-        
-        const otherLocalData = localStorage.getItem(`panini_${otherUser}`);
-        if (otherLocalData) otherUserStickers = JSON.parse(otherLocalData);
-        
+        myStickers = JSON.parse(localStorage.getItem(`panini_${currentUser}`) || '{}');
+        otherUserStickers = JSON.parse(localStorage.getItem(`panini_${otherUser}`) || '{}');
         renderDashboard();
     } else {
         const [myResponse, otherResponse] = await Promise.all([
@@ -60,126 +59,78 @@ async function loadUserData() {
             supabaseClient.from('user_stickers').select('*').eq('user_name', otherUser)
         ]);
 
-        if (myResponse.data) {
-            myResponse.data.forEach(row => { myStickers[row.sticker_code] = row.amount; });
-        }
-        if (otherResponse.data) {
-            otherResponse.data.forEach(row => { otherUserStickers[row.sticker_code] = row.amount; });
-        }
+        if (myResponse.data) myResponse.data.forEach(row => { myStickers[row.sticker_code] = row.amount; });
+        if (otherResponse.data) otherResponse.data.forEach(row => { otherUserStickers[row.sticker_code] = row.amount; });
         renderDashboard();
     }
 }
 
-// 3. Dashboard opbouwen met de zachte vlagkleuren en linkerrand
+// === 4. DASHBOARD RENDEREN ===
 function renderDashboard() {
     const container = document.getElementById('countries-container');
     container.innerHTML = '';
     let totalOwned = 0;
 
     collections.forEach(country => {
-        let countryOwnedMy = 0;
-        let countryOwnedOther = 0;
-        
+        let countryOwnedMy = 0, countryOwnedOther = 0;
         for (let i = 1; i <= country.count; i++) {
             let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
-            
-            if (myStickers[code] && myStickers[code] >= 1) { countryOwnedMy++; totalOwned++; }
-            if (otherUserStickers[code] && otherUserStickers[code] >= 1) { countryOwnedOther++; }
+            if (myStickers[code] >= 1) { countryOwnedMy++; totalOwned++; }
+            if (otherUserStickers[code] >= 1) countryOwnedOther++;
         }
 
-        let myPercent = Math.round((countryOwnedMy / country.count) * 100);
-        let otherPercent = Math.round((countryOwnedOther / country.count) * 100);
-
-        const primaryColor = country.colors ? country.colors[0] : '#4f46e5';
-        const accentColor = country.colors && country.colors[1] ? country.colors[1] : '#ff005b';
-        
-        // Premium Look: 10% opacity achtergrondoverloop met felle dikke linkerrand
-        const rowStyle = `
-            background: linear-gradient(135deg, ${primaryColor}1A, ${accentColor}1A);
-            border-left: 6px solid ${primaryColor};
-            border-color: ${primaryColor}33;
-        `;
+        const primary = country.colors ? country.colors[0] : '#4f46e5';
+        const accent = country.colors ? country.colors[1] : '#ff005b';
+        const rowStyle = `background: linear-gradient(135deg, ${primary}1A, ${accent}1A); border-left: 6px solid ${primary};`;
 
         container.innerHTML += `
             <div class="country-row" style="${rowStyle}" onclick="openModal('${country.prefix}')">
                 <div class="country-info">
-                    <div class="flag-circle" style="background-image: url('${country.flagUrl}'); border-color: ${primaryColor};"></div>
-                    <span class="country-name" style="color: ${primaryColor};">${country.name}</span>
+                    <div class="flag-circle" style="background-image: url('${country.flagUrl}'); border-color: ${primary};"></div>
+                    <span class="country-name" style="color: ${primary};">${country.name}</span>
                 </div>
                 <div class="status-indicators">
-                    <div class="user-stat">
-                        <span style="color: ${primaryColor}; opacity: 0.9;">${currentUser}:</span>
-                        <span style="color: #1e293b;">${countryOwnedMy}/${country.count}</span>
-                        <div class="user-perc-fill">
-                            <div style="width: ${myPercent}%; background-color: ${primaryColor};"></div>
-                        </div>
-                    </div>
-                    <div class="user-stat">
-                        <span style="color: ${accentColor}; opacity: 0.7;">${otherUser}:</span>
-                        <span style="color: #64748b;">${countryOwnedOther}/${country.count}</span>
-                        <div class="user-perc-fill">
-                            <div style="width: ${otherPercent}%; background-color: ${accentColor}; opacity: 0.5;"></div>
-                        </div>
-                    </div>
+                    <div class="user-stat"><span style="color:${primary}">${currentUser}:</span> ${countryOwnedMy}/${country.count}</div>
+                    <div class="user-stat"><span style="color:${accent}">${otherUser}:</span> ${countryOwnedOther}/${country.count}</div>
                 </div>
             </div>
         `;
     });
-
     let totalPercent = Math.round((totalOwned / 980) * 100);
     document.getElementById('total-progress').style.width = `${totalPercent}%`;
     document.getElementById('total-text').innerText = `${totalOwned} / 980 uniek (${totalPercent}%)`;
 }
 
-// 4. Full Screen Pop-up openen met meebewegend kleurenthema
+// === 5. POP-UP LOGICA ===
 function openModal(prefix) {
-    const countryData = collections.find(c => c.prefix === prefix);
-    if (!countryData) return;
-
-    const primaryColor = countryData.colors ? countryData.colors[0] : '#4f46e5';
-    const accentColor = countryData.colors && countryData.colors[1] ? countryData.colors[1] : '#ff005b';
-    
+    const data = collections.find(c => c.prefix === prefix);
     const modal = document.getElementById('modal');
-    modal.style.background = `linear-gradient(135deg, ${primaryColor}, ${accentColor})`;
-    document.documentElement.style.setProperty('--wk-primary', primaryColor);
-    
-    document.getElementById('flag-inner-circle').style.backgroundImage = `url('${countryData.flagUrl}')`;
-    document.getElementById('modal-title').innerText = countryData.name;
-    
-    modal.style.display = 'block'; 
-    
+    modal.style.background = `linear-gradient(135deg, ${data.colors[0]}, ${data.colors[1]})`;
+    document.getElementById('flag-inner-circle').style.backgroundImage = `url('${data.flagUrl}')`;
+    document.getElementById('modal-title').innerText = data.name;
+    modal.style.display = 'block';
+
     const grid = document.getElementById('sticker-grid');
     grid.innerHTML = '';
-
-    for (let i = 1; i <= countryData.count; i++) {
+    for (let i = 1; i <= data.count; i++) {
         let code = prefix === 'FWC' && i === 1 ? '00' : prefix === 'FWC' ? `FWC ${i-1}` : `${prefix} ${i}`;
-        let amount = myStickers[code] || 0;
-        let statusClass = amount > 1 ? 'double' : amount === 1 ? 'owned' : '';
-        
-        let displayLabel = prefix === 'FWC' && i === 1 ? 
-            `<span class="box-num" style="font-size: 2rem;">00</span>` : 
-            `<span class="box-prefix">${prefix}</span><span class="box-num">${i}</span>`;
-
+        let amt = myStickers[code] || 0;
         grid.innerHTML += `
-            <div class="sticker-box ${statusClass}" onclick="toggleSticker('${code}')" id="box-${code}">
-                ${displayLabel}
-                <span class="badge" id="badge-${code}" style="${amount < 2 ? 'display: none;' : ''}">+${amount-1}</span>
+            <div class="sticker-box ${amt==1?'owned':amt>1?'double':''}" onclick="toggleSticker('${code}')" id="box-${code}">
+                <span class="box-prefix">${prefix}</span><span class="box-num">${i}</span>
+                <span class="badge" id="badge-${code}" style="display:${amt<2?'none':'block'}">+${amt-1}</span>
             </div>
         `;
     }
 }
 
-function closeModal() {
-    document.getElementById('modal').style.display = 'none';
-    renderDashboard(); 
-}
+function closeModal() { document.getElementById('modal').style.display = 'none'; renderDashboard(); }
 
-// 5. Sticker toevoegen/aanpassen
+// === 6. STICKER TOGGLE (DATABASE VRIENDELIJK) ===
 async function toggleSticker(code) {
-    let currentAmount = myStickers[code] || 0;
-    let newAmount = currentAmount + 1;
+    let newAmount = (myStickers[code] || 0) + 1;
     if (newAmount > 2) newAmount = 0; 
-
+    
     if (newAmount === 0) delete myStickers[code];
     else myStickers[code] = newAmount;
 
@@ -188,29 +139,19 @@ async function toggleSticker(code) {
     if (isOfflineFallback) {
         localStorage.setItem(`panini_${currentUser}`, JSON.stringify(myStickers));
     } else {
-        if (newAmount === 0) {
-            await supabaseClient.from('user_stickers').delete().match({ user_name: currentUser, sticker_code: code });
-        } else {
-            await supabaseClient.from('user_stickers').upsert({ user_name: currentUser, sticker_code: code, amount: newAmount });
-        }
+        // Eenvoudige opslagmethode
+        await supabaseClient.from('user_stickers').upsert({ 
+            user_name: currentUser, 
+            sticker_code: code, 
+            amount: newAmount 
+        });
     }
 }
 
-function updateStickerUI(code, amount) {
+function updateStickerUI(code, amt) {
     const box = document.getElementById(`box-${code}`);
     const badge = document.getElementById(`badge-${code}`);
-    
-    box.className = 'sticker-box';
-    if (amount === 1) { 
-        box.classList.add('owned'); 
-        badge.style.display = 'none'; 
-    }
-    else if (amount > 1) { 
-        box.classList.add('double'); 
-        badge.innerText = `+${amount-1}`; 
-        badge.style.display = 'block'; 
-    }
-    else { 
-        badge.style.display = 'none'; 
-    }
+    if(!box) return;
+    box.className = `sticker-box ${amt==1?'owned':amt>1?'double':''}`;
+    if(badge) { badge.style.display = amt > 1 ? 'block' : 'none'; badge.innerText = `+${amt-1}`; }
 }
