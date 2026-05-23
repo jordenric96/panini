@@ -1,7 +1,7 @@
-// app.js - 100% Cloud Engine met Premium Twin-Badge Overzicht
+// app.js - 100% Cloud Engine met Poule Headers
 
 const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co'; 
-const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; // Jouw werkende sleutel!
+const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; 
 const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 let currentUser = '';
@@ -43,7 +43,7 @@ async function loadUserData() {
 }
 
 // ==========================================
-// 4. DE ULTRA-CLEAN TWIN-BADGE GRID RENDER
+// 4. DE GRID OPBOUW (NU MET POULES)
 // ==========================================
 function renderDashboard() {
     const container = document.getElementById('countries-container');
@@ -51,6 +51,8 @@ function renderDashboard() {
     
     let totalJorden = 0;
     let totalWesley = 0;
+    
+    let currentGroup = ''; // Houdt bij in welke poule we momenteel zitten
 
     collections.forEach((country, index) => {
         let countMy = 0;
@@ -62,7 +64,6 @@ function renderDashboard() {
             if (otherUserStickers[code]) countOther++;
         }
 
-        // Koppel scores aan de juiste legandakleur op basis van wie er is ingelogd
         let jordenScore = currentUser === 'Jorden' ? countMy : countOther;
         let wesleyScore = currentUser === 'Wesley' ? countMy : countOther;
         
@@ -70,9 +71,18 @@ function renderDashboard() {
         totalWesley += wesleyScore;
 
         const primaryColor = country.colors ? country.colors[0] : '#4f46e5';
-        const delay = index * 0.015; // Snelle, soepele wave-in animatie
+        const delay = index * 0.015;
 
-        // Als een speler het land compleet heeft (20/20), krijgt het vlag-ringetje extra glans
+        // Als we bij een nieuw land zijn met een andere Poule, tekenen we de Header!
+        if (country.group !== currentGroup) {
+            currentGroup = country.group;
+            container.innerHTML += `
+                <div class="group-header">
+                    <h3>${currentGroup}</h3>
+                </div>
+            `;
+        }
+
         const isCompleteMy = countMy === country.count;
         const borderGlow = isCompleteMy ? `border-color: #10b981; box-shadow: 0 0 12px #10b98180;` : `border-color: ${primaryColor}50;`;
 
@@ -89,11 +99,9 @@ function renderDashboard() {
         `;
     });
 
-    // Update de totale scores in de legenda bovenaan
     document.getElementById('legend-count-jorden').innerText = totalJorden;
     document.getElementById('legend-count-wesley').innerText = totalWesley;
 
-    // Voortgangsbalk vullen op basis van de ingelogde speler
     let activeTotal = currentUser === 'Jorden' ? totalJorden : totalWesley;
     let totalPercent = Math.round((activeTotal / 980) * 100);
     document.getElementById('total-progress').style.width = `${totalPercent}%`;
