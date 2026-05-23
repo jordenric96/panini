@@ -1,9 +1,12 @@
-// countries.js - Geordend volgens de officiële WK 2026 poules
+// countries.js - Met Spelersnamen Database
 
 const collections = [
-    // Speciale Stickers
-    { prefix: 'FWC', name: 'FIFA World Cup', count: 20, flagUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Logo_de_la_Copa_Mundial_de_f%C3%BAtbol_2026.svg/200px-Logo_de_la_Copa_Mundial_de_f%C3%BAtbol_2026.svg.png', colors: ['#4f46e5', '#ff005b'], group: 'Introductie' },
-    
+    { 
+        prefix: 'FWC', name: 'FIFA World Cup', count: 20, 
+        flagUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Logo_de_la_Copa_Mundial_de_f%C3%BAtbol_2026.svg/200px-Logo_de_la_Copa_Mundial_de_f%C3%BAtbol_2026.svg.png', 
+        colors: ['#4f46e5', '#ff005b'], group: 'Introductie',
+        players: ["Panini Logo (00)", "Official Emblem 1", "Official Emblem 2", "Official Mascots", "Official Slogan", "Official Match Ball", "Host Canada", "Host Mexico", "Host USA", "Stadium 1", "Stadium 2", "Stadium 3", "Stadium 4", "Stadium 5", "Stadium 6", "Stadium 7", "Stadium 8", "World Cup Trophy 1", "World Cup Trophy 2", "FIFA Legends"] 
+    },
     // Poule A
     { prefix: 'MEX', name: 'Mexico', count: 20, flagUrl: 'https://flagcdn.com/w160/mx.png', colors: ['#006847', '#CE1126'], group: 'Poule A' },
     { prefix: 'RSA', name: 'Zuid-Afrika', count: 20, flagUrl: 'https://flagcdn.com/w160/za.png', colors: ['#007749', '#FFB81C'], group: 'Poule A' },
@@ -35,13 +38,21 @@ const collections = [
     { prefix: 'ECU', name: 'Ecuador', count: 20, flagUrl: 'https://flagcdn.com/w160/ec.png', colors: ['#FFD100', '#00205B'], group: 'Poule E' },
 
     // Poule F
-    { prefix: 'NED', name: 'Nederland', count: 20, flagUrl: 'https://flagcdn.com/w160/nl.png', colors: ['#F36C21', '#21468B'], group: 'Poule F' },
+    { 
+        prefix: 'NED', name: 'Nederland', count: 20, 
+        flagUrl: 'https://flagcdn.com/w160/nl.png', colors: ['#F36C21', '#21468B'], group: 'Poule F',
+        players: ["Team Logo (Foil)", "Bart Verbruggen", "Virgil van Dijk", "Nathan Aké", "Denzel Dumfries", "Matthijs de Ligt", "Stefan de Vrij", "Jeremie Frimpong", "Frenkie de Jong", "Tijjani Reijnders", "Joey Veerman", "Xavi Simons", "Teamfoto (NED)", "Teun Koopmeiners", "Cody Gakpo", "Memphis Depay", "Donyell Malen", "Wout Weghorst", "Brian Brobbey", "Steven Bergwijn"]
+    },
     { prefix: 'JPN', name: 'Japan', count: 20, flagUrl: 'https://flagcdn.com/w160/jp.png', colors: ['#000555', '#BC002D'], group: 'Poule F' },
     { prefix: 'SWE', name: 'Zweden', count: 20, flagUrl: 'https://flagcdn.com/w160/se.png', colors: ['#004B87', '#FFCD00'], group: 'Poule F' },
     { prefix: 'TUN', name: 'Tunesië', count: 20, flagUrl: 'https://flagcdn.com/w160/tn.png', colors: ['#E70013', '#444444'], group: 'Poule F' },
 
     // Poule G
-    { prefix: 'BEL', name: 'België', count: 20, flagUrl: 'https://flagcdn.com/w160/be.png', colors: ['#ED2939', '#FDDA24'], group: 'Poule G' },
+    { 
+        prefix: 'BEL', name: 'België', count: 20, 
+        flagUrl: 'https://flagcdn.com/w160/be.png', colors: ['#ED2939', '#FDDA24'], group: 'Poule G',
+        players: ["Team Logo (Foil)", "Thibaut Courtois", "Arthur Theate", "Timothy Castagne", "Zeno Debast", "Wout Faes", "Axel Witsel", "Thomas Meunier", "Amadou Onana", "Orel Mangala", "Youri Tielemans", "Kevin De Bruyne", "Teamfoto (BEL)", "Jeremy Doku", "Leandro Trossard", "Johan Bakayoko", "Lois Openda", "Romelu Lukaku", "M. Fernandez-Pardo", "Dodi Lukebakio"]
+    },
     { prefix: 'EGY', name: 'Egypte', count: 20, flagUrl: 'https://flagcdn.com/w160/eg.png', colors: ['#CE1126', '#111111'], group: 'Poule G' },
     { prefix: 'IRN', name: 'Iran', count: 20, flagUrl: 'https://flagcdn.com/w160/ir.png', colors: ['#239F40', '#DA0000'], group: 'Poule G' },
     { prefix: 'NZL', name: 'Nieuw-Zeeland', count: 20, flagUrl: 'https://flagcdn.com/w160/nz.png', colors: ['#111111', '#888888'], group: 'Poule G' },
