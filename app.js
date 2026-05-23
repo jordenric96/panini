@@ -1,6 +1,6 @@
 // app.js - Applicatielogica met Live Database & Lokale Fallback
-const supabaseUrl = 'https://JOUW_PROJECT_ID.supabase.co'; 
-const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA...'; 
+const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co';
+const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; 
 
 let supabase = null;
 let isOfflineFallback = false;
