@@ -1,4 +1,4 @@
-/* style.css - Minimal Premium Sports Grid Theme (No-Scroll Modal) */
+/* style.css - Minimal Premium Sports Grid Theme (4 In A Row Update) */
 :root {
     --bg-main: #f4f7fc;
     --bg-card: #ffffff;
@@ -22,8 +22,11 @@ body {
 .container {
     width: 100%; max-width: 520px;
     background: var(--bg-card);
-    padding: 24px; border-radius: 28px;
+    /* Iets minder padding aan de zijkanten zodat de 4 kaarten meer ademruimte hebben */
+    padding: 24px 14px; 
+    border-radius: 28px;
     box-shadow: 0 15px 50px rgba(0, 0, 0, 0.04);
+    box-sizing: border-box;
 }
 
 h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
@@ -54,15 +57,18 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 .legend-item { display: flex; align-items: center; gap: 6px; }
 .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
 
-/* GAME GRID & POULE HEADERS */
+/* =========================================
+   GAME GRID & POULE HEADERS (4 OP EEN RIJ)
+========================================= */
 .countries-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
-    gap: 14px;
+    /* Hier forceren we exact 4 kolommen, ongeacht het scherm! */
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px; /* Kleinere tussenruimte voor mobiel */
 }
 .group-header {
     grid-column: 1 / -1; 
-    margin: 15px 0 0 0;
+    margin: 15px 0 5px 0;
     padding-bottom: 5px;
     border-bottom: 2px dashed #cbd5e1;
 }
@@ -72,7 +78,9 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 }
 .country-card {
     display: flex; flex-direction: column; align-items: center;
-    padding: 16px 10px; border-radius: 20px; cursor: pointer;
+    /* Minder padding aan de zijkant van het kaartje */
+    padding: 12px 4px; 
+    border-radius: 16px; cursor: pointer;
     background: #f8fafc;
     transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     animation: popIn 0.35s ease-out backwards;
@@ -81,10 +89,12 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 
 @keyframes popIn { 0% { transform: scale(0.85); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
-.flag-circle { width: 46px; height: 46px; border-radius: 50%; background-size: cover; background-position: center; box-shadow: 0 4px 10px rgba(0,0,0,0.06); margin-bottom: 8px; }
-.country-prefix { font-weight: 900; font-size: 1.15rem; letter-spacing: 0.5px; color: var(--text-primary); }
-.grid-score-row { display: flex; gap: 8px; margin-top: 8px; }
-.grid-badge { padding: 3px 9px; border-radius: 9px; font-size: 0.8rem; font-weight: 800; color: white; min-width: 14px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.08); }
+/* Vlaggen en tekst iets compacter om ruimte te besparen */
+.flag-circle { width: 40px; height: 40px; border-radius: 50%; background-size: cover; background-position: center; box-shadow: 0 4px 10px rgba(0,0,0,0.06); margin-bottom: 6px; }
+.country-prefix { font-weight: 900; font-size: 0.95rem; letter-spacing: 0.5px; color: var(--text-primary); }
+
+.grid-score-row { display: flex; gap: 4px; margin-top: 6px; }
+.grid-badge { padding: 3px 6px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; color: white; min-width: 14px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.08); }
 
 
 /* =========================================
@@ -93,12 +103,12 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 #modal { 
     display: none; position: fixed; top: 0; left: 0; 
     width: 100vw; height: 100vh; z-index: 9999; 
-    overflow: hidden; /* Blokkeert al het scrollen! */
+    overflow: hidden;
 }
 
 .modal-content { 
     width: 100%; max-width: 550px; margin: 0 auto; 
-    height: 100dvh; /* 100% van de dynamische schermhoogte */
+    height: 100dvh;
     padding: 15px 15px 20px 15px; box-sizing: border-box;
     display: flex; flex-direction: column; color: white; 
 }
@@ -118,18 +128,17 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 .modal-title-text { margin: 0; text-align: left; font-size: 1.4rem; line-height: 1.2; }
 .modal-subtitle { font-size: 0.75rem; opacity: 0.85; }
 
-/* Het 4x5 Grid dat de resterende ruimte opvult */
 .sticker-grid { 
     display: grid; 
     grid-template-columns: repeat(4, 1fr); 
-    grid-template-rows: repeat(5, minmax(0, 1fr)); /* Forceert 5 gelijke rijen */
-    gap: 8px; /* Compactere tussenruimte */
-    flex-grow: 1; /* Pakt exact alle resterende hoogte */
-    min-height: 0; /* Voorkomt overflow naar beneden */
+    grid-template-rows: repeat(5, minmax(0, 1fr)); 
+    gap: 8px; 
+    flex-grow: 1; 
+    min-height: 0; 
 }
 
 .sticker-box { 
-    width: 100%; height: 100%; /* Vult het grid perfect op */
+    width: 100%; height: 100%; 
     display: flex; flex-direction: column; justify-content: center; align-items: center; 
     background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(10px); 
     border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 10px; 
