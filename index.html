@@ -4,13 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panini WK 2026 Tracker</title>
-    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4f46e5">
-    
     <link rel="icon" href="icon.png" type="image/png">
     <link rel="apple-touch-icon" href="icon.png">
-    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
@@ -27,33 +24,36 @@
     </div>
 
     <div id="dashboard-section" class="container" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h2 id="welcome-text" style="text-align: left; margin: 0; font-size: 1.5rem;">Album van</h2>
-            <button class="btn-secondary" onclick="logout()">Uitloggen</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h2 id="welcome-text" style="text-align: left; margin: 0; font-size: 1.5rem;">Album</h2>
+            <div class="dashboard-actions">
+                <button class="btn-action" id="btn-filter" onclick="toggleFilter()" title="Filter Volle Landen">🔍</button>
+                <button class="btn-action" onclick="openTradeCenter()" title="Ruilcentrum">🔄</button>
+                <button class="btn-action" onclick="logout()" title="Uitloggen">🚪</button>
+            </div>
         </div>
         
         <div class="total-card">
-            <h3 style="margin: 0; font-size: 1rem; color: var(--text-secondary); text-align: left;">Totale Progressie</h3>
-            <div class="progress-bar">
-                <div id="total-progress" class="progress-fill"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 1rem; color: var(--text-secondary);">Progressie</h3>
+                <span id="total-text" style="font-weight: 900; color: var(--color-jorden);">0/980</span>
+            </div>
+            
+            <div class="soccer-field">
+                <div class="goal-area"></div>
+                <div class="soccer-ball" id="soccer-ball">⚽</div>
             </div>
             
             <div class="legend-container">
-                <div class="legend-item">
-                    <div class="legend-dot" style="background: var(--color-jorden);"></div>
-                    <span>Jorden (<span id="legend-count-jorden">0</span>)</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-dot" style="background: var(--color-wesley);"></div>
-                    <span>Wesley (<span id="legend-count-wesley">0</span>)</span>
-                </div>
+                <div class="legend-item"><div class="legend-dot" style="background: var(--color-jorden);"></div><span>Jorden (<span id="legend-count-jorden">0</span>)</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background: var(--color-wesley);"></div><span>Wesley (<span id="legend-count-wesley">0</span>)</span></div>
             </div>
         </div>
 
         <div class="countries-list" id="countries-container"></div>
     </div>
 
-    <div id="modal">
+    <div id="modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
                 <div style="display: flex; align-items: center; gap: 12px;">
@@ -64,25 +64,32 @@
                     </div>
                     <div>
                         <h2 id="modal-title" class="modal-title-text">Land</h2>
-                        <span class="modal-subtitle">1x = Groen • 2x = Goud</span>
+                        <span class="modal-subtitle">Tik kaart=+1  •  Tik badge=-1</span>
                     </div>
                 </div>
-                <button class="btn-secondary" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 14px;" onclick="closeModal()">Terug</button>
+                <button class="btn-action" style="background: rgba(255,255,255,0.2); color: white;" onclick="closeModal()">✖</button>
             </div>
-            
             <div class="sticker-grid" id="sticker-grid"></div>
+        </div>
+    </div>
+
+    <div id="trade-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 style="margin:0; font-size: 1.5rem;">🔄 Ruilcentrum</h2>
+                <button class="btn-action" onclick="closeTradeCenter()">✖</button>
+            </div>
+            <div class="trade-section" id="trade-content">
+                </div>
         </div>
     </div>
 
     <script src="countries.js"></script>
     <script src="app.js"></script>
-
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('App engine succesvol gestart!'))
-                    .catch(err => console.log('App engine kon niet starten', err));
+                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW Error', err));
             });
         }
     </script>
