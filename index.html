@@ -10,7 +10,7 @@
     <link rel="apple-touch-icon" href="icon.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=6">
+    <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
 
@@ -25,9 +25,10 @@
 
     <div id="dashboard-section" class="container" style="display: none;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <h2 id="welcome-text" style="text-align: left; margin: 0; font-size: 1.5rem;">Album</h2>
+            <h2 id="welcome-text" style="text-align: left; margin: 0; font-size: 1.5rem; line-height: 1.2;">Album</h2>
             <div class="dashboard-actions">
-                <button class="btn-action" onclick="openTradeCenter()" title="Ruilcentrum">🔄</button>
+                <button class="btn-action" id="btn-filter" onclick="toggleFilter()" title="Filter Volle Landen">🔍 Vol</button>
+                <button class="btn-action" onclick="openTradeCenter()" title="Ruilcentrum">🔄 Ruil</button>
                 <button class="btn-action" onclick="logout()" title="Uitloggen">🚪</button>
             </div>
         </div>
@@ -37,20 +38,23 @@
                 <h3 style="margin: 0; font-size: 1rem; color: var(--text-secondary);">Progressie</h3>
                 <span id="total-text" style="font-weight: 900; color: var(--color-jorden);">0/980</span>
             </div>
-            
             <div class="soccer-field">
                 <div class="goal-area"></div>
                 <div class="soccer-ball" id="soccer-ball">⚽</div>
             </div>
-            
             <div class="legend-container">
                 <div class="legend-item"><div class="legend-dot" style="background: var(--color-jorden);"></div><span>Jorden (<span id="legend-count-jorden">0</span>)</span></div>
                 <div class="legend-item"><div class="legend-dot" style="background: var(--color-wesley);"></div><span>Wesley (<span id="legend-count-wesley">0</span>)</span></div>
             </div>
         </div>
 
-        <div class="search-container">
-            <input type="text" id="search-bar" placeholder="Zoek op land of code (bijv. BEL of BE)..." onkeyup="filterCountries()">
+        <div class="input-group">
+            <input type="text" id="search-bar" class="custom-input" placeholder="🔍 Zoek land (bijv. BEL of België)..." onkeyup="filterCountries()">
+        </div>
+        
+        <div class="input-group" style="display: flex; gap: 8px;">
+            <input type="text" id="quick-add-input" class="custom-input" placeholder="⚡ Snel toevoegen (bijv. BEL 4)" onkeypress="handleQuickAdd(event)">
+            <button class="btn-action" style="background: var(--color-owned); color: white; padding: 0 20px;" onclick="processQuickAdd()">+</button>
         </div>
 
         <div class="countries-list" id="countries-container"></div>
@@ -82,13 +86,14 @@
                 <h2 style="margin:0; font-size: 1.5rem;">🔄 Ruilcentrum</h2>
                 <button class="btn-action" onclick="closeTradeCenter()">✖</button>
             </div>
-            <div class="trade-section" id="trade-content">
-            </div>
+            <div class="trade-section" id="trade-content"></div>
         </div>
     </div>
 
-    <script src="countries.js?v=6"></script>
-    <script src="app.js?v=6"></script>
+    <div id="toast" class="toast">Bericht hier</div>
+
+    <script src="countries.js?v=8"></script>
+    <script src="app.js?v=8"></script>
     
     <script>
         if ('serviceWorker' in navigator) {
