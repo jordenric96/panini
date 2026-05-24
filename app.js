@@ -1,4 +1,4 @@
-// app.js - Ultimate Edition v13 (3 Profielen, Paginanummers & Advanced Trade Center)
+// app.js - Ultimate Edition v14 (Confetti, Dynamic Colors & 10s Toast)
 
 const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co'; 
 const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; 
@@ -7,7 +7,6 @@ const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 const users = ['Lou & Noé', 'Wesley', 'Oliver'];
 const userColors = { 'Lou & Noé': 'var(--color-1)', 'Wesley': 'var(--color-2)', 'Oliver': 'var(--color-3)' };
 
-// TRUC: Koppel 'Lou & Noé' intern aan de oude 'Jorden' database sleutel, zo ben je geen 62 stickers kwijt!
 const dbNames = { 'Lou & Noé': 'Jorden', 'Wesley': 'Wesley', 'Oliver': 'Oliver' };
 
 let currentUser = ''; 
@@ -18,12 +17,9 @@ let showOnlyMissing = false;
 async function selectUser(name) {
     currentUser = name;
     otherUsers = users.filter(u => u !== name);
-    
     document.getElementById('profile-section').style.display = 'none';
     document.getElementById('dashboard-section').style.display = 'block';
-    
     document.getElementById('welcome-text').innerHTML = `Album van <br><span style="color: ${userColors[currentUser]}; font-weight: 900; font-size: 1.8rem;">${currentUser}</span>`;
-    
     await loadUserData();
 }
 
@@ -38,15 +34,10 @@ function filterCountries() { renderDashboard(); }
 
 async function loadUserData() {
     allStickers = { 'Lou & Noé': {}, 'Wesley': {}, 'Oliver': {} };
-    
-    // Haal de data voor ALLE DRIE de spelers tegelijk op
     const promises = users.map(u => supabaseClient.from('user_stickers').select('*').eq('user_name', dbNames[u]));
     const results = await Promise.all(promises);
-    
     users.forEach((u, index) => {
-        if (results[index].data) {
-            results[index].data.forEach(row => { allStickers[u][row.sticker_code] = row.amount; });
-        }
+        if (results[index].data) { results[index].data.forEach(row => { allStickers[u][row.sticker_code] = row.amount; }); }
     });
     renderDashboard();
 }
@@ -56,8 +47,8 @@ function renderDashboard() {
     const searchTerm = (document.getElementById('search-bar') ? document.getElementById('search-bar').value.toLowerCase() : '');
     
     let scores = { 'Lou & Noé': 0, 'Wesley': 0, 'Oliver': 0 };
-    
     let groupStats = {};
+    
     collections.forEach(c => {
         if(!groupStats[c.group]) groupStats[c.group] = { total: 0, myCount: 0 };
         groupStats[c.group].total += c.count;
@@ -70,12 +61,10 @@ function renderDashboard() {
     let currentGroup = ''; let cardIndex = 0;
     collections.forEach(country => {
         let countTracker = { 'Lou & Noé': 0, 'Wesley': 0, 'Oliver': 0 };
-        
         for (let i = 1; i <= country.count; i++) {
             let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
             users.forEach(u => { if (allStickers[u][code]) countTracker[u]++; });
         }
-
         users.forEach(u => { scores[u] += countTracker[u]; });
 
         if (showOnlyMissing && countTracker[currentUser] === country.count) return;
@@ -89,10 +78,8 @@ function renderDashboard() {
 
         const delay = cardIndex * 0.015; cardIndex++;
         const borderGlow = (countTracker[currentUser] === country.count) ? `border-color: #10b981; box-shadow: 0 0 12px #10b98180;` : `border-color: ${(country.colors ? country.colors[0] : '#4f46e5')}50;`;
-        
         let pageInfo = country.page ? `<div style="font-size: 0.7rem; font-weight: 800; color: #94a3b8; margin-top: -2px; margin-bottom: 4px;">Pag. ${country.page}</div>` : '';
 
-        // Bouw de 3 score-badges voor onder het landkaartje
         let badgesHTML = '';
         users.forEach(u => { badgesHTML += `<div class="grid-badge" style="background: ${userColors[u]};">${countTracker[u]}</div>`; });
 
@@ -105,7 +92,6 @@ function renderDashboard() {
             </div>`;
     });
 
-    // Update de Legende dynamisch voor 3 personen
     let legendHTML = '';
     users.forEach(u => { legendHTML += `<div class="legend-item"><div class="legend-dot" style="background: ${userColors[u]};"></div><span>${u} (${scores[u]})</span></div>`; });
     document.getElementById('legend-container').innerHTML = legendHTML;
@@ -115,12 +101,23 @@ function renderDashboard() {
     document.getElementById('soccer-ball').style.left = `calc(${Math.min((scores[currentUser] / 980) * 100, 90)}% - 10px)`;
 }
 
+// TOAST NOTIFICATIES (Nieuwe logica met kleuren & 10 seconden timer)
 let toastTimeout;
-function showToast(message, type) {
+function showToast(message, type, colors = null) {
     const toast = document.getElementById('toast');
-    toast.innerText = message; toast.className = `toast show ${type}`;
+    toast.innerHTML = message; 
+    toast.className = `toast show ${type}`;
+    
+    if (colors && colors.length >= 2) {
+        toast.style.background = `linear-gradient(135deg, ${colors[0]}, ${colors[1]})`;
+    } else if (type === 'error') {
+        toast.style.background = '#ef4444';
+    } else {
+        toast.style.background = 'var(--color-owned)';
+    }
+
     clearTimeout(toastTimeout);
-    toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 4000);
+    toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 10000); // Blijft nu 10 volle seconden!
 }
 
 function handleQuickAdd(event) { if (event.key === 'Enter') processQuickAdd(); }
@@ -152,9 +149,31 @@ function processQuickAdd() {
         if (prefix === 'FWC') { let i = code === '00' ? 1 : num + 1; playerName = country.players ? country.players[i-1] : `Speler ${i}`; } 
         else { playerName = country.players ? country.players[num-1] : (num === 1 ? "Team Logo" : (num === 13 ? "Teamfoto" : `Speler ${num}`)); }
         
-        // Pagina erin verwerkt!
-        let pageText = country.page ? ` (Pag. ${country.page})` : '';
-        showToast(`✅ ${code} opgeslagen! (${playerName})${pageText}`, "success");
+        // Paginanummer genereren
+        let pageText = country.page ? `<div style="margin-top: 5px; font-size: 0.9rem; opacity: 0.9;">Pagina ${country.page}</div>` : '';
+        
+        // Nieuw of Dubbel check!
+        let statusText = newAmount === 1 ? '🌟 NIEUWE STICKER!' : `🔄 DUBBEL (${newAmount}x)`;
+
+        // Confetti Logica!
+        if (typeof confetti === 'function') {
+            if (newAmount === 1) {
+                // Groot confetti kanon voor een nieuwe sticker
+                confetti({ particleCount: 150, spread: 80, origin: { y: 0.8 }, colors: country.colors });
+            } else {
+                // Kleinere "poof" voor een dubbele
+                confetti({ particleCount: 50, spread: 40, origin: { y: 0.8 }, colors: country.colors });
+            }
+        }
+
+        // Bouw het vette HTML bericht
+        let msg = `
+            <div style="font-size: 1.4rem; font-weight: 900; margin-bottom: 5px;">${code} - ${playerName}</div>
+            <div style="font-size: 1.2rem; font-weight: 800; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 8px; display: inline-block;">${statusText}</div>
+            ${pageText}
+        `;
+
+        showToast(msg, "success", country.colors);
         inputField.value = ''; renderDashboard(); 
         if(navigator.vibrate) navigator.vibrate([40, 40]); 
     });
@@ -168,7 +187,6 @@ function openModal(prefix) {
     modal.style.background = `linear-gradient(135deg, ${countryData.colors ? countryData.colors[0] : '#4f46e5'}, ${countryData.colors ? (countryData.colors[1] || '#ff005b') : '#ff005b'})`;
     document.getElementById('flag-inner-circle').style.backgroundImage = `url('${countryData.flagUrl}')`;
     document.getElementById('modal-title').innerText = countryData.name;
-    
     let pageInfo = countryData.page ? ` • Pag. ${countryData.page}` : '';
     document.getElementById('modal-subtitle-text').innerText = `Tik +1 • Badge -1${pageInfo}`;
 
@@ -183,7 +201,6 @@ function openModal(prefix) {
         let displayLabel = prefix === 'FWC' && i === 1 ? `<span class="box-num" style="font-size: 1.8rem;">00</span>` : `<span class="box-prefix">${prefix}</span><span class="box-num">${i}</span>`;
         let playerName = countryData.players ? countryData.players[i-1] : (i === 1 ? "Team Logo" : (i === 13 ? "Teamfoto" : `Speler ${i}`));
 
-        // Meerdere bolletjes tonen als meerdere anderen hem hebben
         let dotsHTML = '';
         otherUsers.forEach(ou => {
             let theirAmt = allStickers[ou][code] || 0;
@@ -236,45 +253,29 @@ function updateStickerUI(code, amount) {
 
 function openTradeCenter() {
     let tradeHTML = '';
-
-    // Loop over de andere twee spelers om te zien of we kunnen ruilen!
     otherUsers.forEach(ou => {
         let give = []; let get = [];
-        
         collections.forEach(country => {
             for (let i = 1; i <= country.count; i++) {
                 let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
                 let myAmt = allStickers[currentUser][code] || 0; 
                 let theirAmt = allStickers[ou][code] || 0;
-                
                 let pageStr = country.page ? ` (Pag.${country.page})` : '';
-
                 if (myAmt > 1 && theirAmt === 0) give.push(code + pageStr);
                 if (theirAmt > 1 && myAmt === 0) get.push(code + pageStr);
             }
         });
-
         tradeHTML += `
             <div class="trade-block" style="border-left: 4px solid ${userColors[ou]};">
                 <h3 style="color: ${userColors[ou]};">Ruilen met ${ou}</h3>
-                
-                <div style="margin-bottom: 12px;">
-                    <strong style="font-size: 0.9rem;">Jij zoekt, ${ou} heeft dubbel (${get.length}):</strong>
-                    <div class="trade-codes" style="margin-top: 6px;">
-                        ${get.length === 0 ? '<span style="color:#94a3b8; font-size:0.8rem;">Niets wat jij mist...</span>' : get.map(c => `<span class="trade-chip get">${c}</span>`).join('')}
-                    </div>
+                <div style="margin-bottom: 12px;"><strong style="font-size: 0.9rem;">Jij zoekt, ${ou} heeft dubbel (${get.length}):</strong>
+                    <div class="trade-codes" style="margin-top: 6px;">${get.length === 0 ? '<span style="color:#94a3b8; font-size:0.8rem;">Niets wat jij mist...</span>' : get.map(c => `<span class="trade-chip get">${c}</span>`).join('')}</div>
                 </div>
-
-                <div>
-                    <strong style="font-size: 0.9rem;">${ou} zoekt, jij hebt dubbel (${give.length}):</strong>
-                    <div class="trade-codes" style="margin-top: 6px;">
-                        ${give.length === 0 ? '<span style="color:#94a3b8; font-size:0.8rem;">Geen dubbele voor ${ou}...</span>' : give.map(c => `<span class="trade-chip give">${c}</span>`).join('')}
-                    </div>
+                <div><strong style="font-size: 0.9rem;">${ou} zoekt, jij hebt dubbel (${give.length}):</strong>
+                    <div class="trade-codes" style="margin-top: 6px;">${give.length === 0 ? '<span style="color:#94a3b8; font-size:0.8rem;">Geen dubbele voor ${ou}...</span>' : give.map(c => `<span class="trade-chip give">${c}</span>`).join('')}</div>
                 </div>
-            </div>
-        `;
+            </div>`;
     });
-
     document.getElementById('trade-content').innerHTML = tradeHTML;
     document.getElementById('trade-modal').style.display = 'block';
 }
