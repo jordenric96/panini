@@ -1,10 +1,10 @@
-// sw.js - Service Worker v6 (Agressieve Cache Update)
-const CACHE_NAME = 'panini-tracker-v6';
+// sw.js - Service Worker v8
+const CACHE_NAME = 'panini-tracker-v8';
 const ASSETS = [
   './index.html',
-  './style.css?v=6',
-  './countries.js?v=6',
-  './app.js?v=6',
+  './style.css?v=8',
+  './countries.js?v=8',
+  './app.js?v=8',
   './manifest.json'
 ];
 
