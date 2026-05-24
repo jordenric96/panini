@@ -1,7 +1,8 @@
-// countries.js - Het officiële begin van de WK 2026 Database
+// countries.js - Het officiële en definitieve WK 2026 Database (Inclusief Paginanummers & History)
+
 const collections = [
     { 
-        prefix: 'FWC', name: 'FIFA World Cup', count: 20, page: '2-5 & 106-109',
+        prefix: 'FWC', name: 'FIFA World Cup History', count: 20, page: '2-5 & 106-109',
         flagUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Logo_de_la_Copa_Mundial_de_f%C3%BAtbol_2026.svg/200px-Logo_de_la_Copa_Mundial_de_f%C3%BAtbol_2026.svg.png', 
         colors: ['#4f46e5', '#ff005b'], group: 'Introductie',
         players: [
@@ -26,17 +27,6 @@ const collections = [
             "History 2014", 
             "History 2018-2022"
         ] 
-    },
-    
-    // POULE A
-    // ... de rest van je landen staan hieronder ...
-
-const collections = [
-    { 
-        prefix: 'FWC', name: 'FIFA World Cup', count: 20, page: '2-7',
-        flagUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Logo_de_la_Copa_Mundial_de_f%C3%BAtbol_2026.svg/200px-Logo_de_la_Copa_Mundial_de_f%C3%BAtbol_2026.svg.png', 
-        colors: ['#4f46e5', '#ff005b'], group: 'Introductie',
-        players: ["Panini Logo (00)", "Official Emblem 1", "Official Emblem 2", "Official Mascots", "Official Slogan", "Official Match Ball", "Host Canada", "Host Mexico", "Host USA", "Stadium 1", "Stadium 2", "Stadium 3", "Stadium 4", "Stadium 5", "Stadium 6", "Stadium 7", "Stadium 8", "World Cup Trophy 1", "World Cup Trophy 2", "FIFA Legends"] 
     },
     
     // POULE A
@@ -79,10 +69,7 @@ const collections = [
     { 
         prefix: 'BRA', name: 'Brazilië', count: 20, page: '24-25', flagUrl: 'https://flagcdn.com/w160/br.png', colors: ['#009739', '#FFDF00'], group: 'Poule C',
         players: ["Team Logo (Foil)", "Alisson", "Bento", "Marquinhos", "Eder Militao", "Gabriel Magalhaes", "Danilo", "Wendell", "Lucas Paqueta", "Casemiro", "Bruno Guimaraes", "Luiz Henrique", "Teamfoto (BRA)", "Vinicius Junior", "Rodrygo", "Joao Pedro", "Matheus Cunha", "Gabriel Martinelli", "Raphinha", "Estevao"] 
-    }
-    // Hier plakken we straks de volgende landen direct onder!
-
-        // REST POULE C
+    },
     { 
         prefix: 'MAR', name: 'Marokko', count: 20, page: '26-27', flagUrl: 'https://flagcdn.com/w160/ma.png', colors: ['#C1272D', '#006233'], group: 'Poule C',
         players: ["Team Logo (Foil)", "Yassine Bounou", "Munir El Kajoui", "Achraf Hakimi", "Noussair Mazraoui", "Nayef Aguerd", "Romain Saïss", "Jawad El Yamiq", "Adam Masina", "Sofyan Amrabat", "Azzedine Ounahi", "Eliesse Ben Seghir", "Teamfoto (MAR)", "Bilal El Khannouss", "Ismael Saibari", "Youssef En-Nesyri", "Abde Ezzalzouli", "Soufiane Rahimi", "Brahim Díaz", "Ayoub El Kaabi"] 
@@ -126,9 +113,7 @@ const collections = [
     { 
         prefix: 'CUW', name: 'Curaçao', count: 20, page: '44-45', flagUrl: 'https://flagcdn.com/w160/cw.png', colors: ['#002B7F', '#F9E814'], group: 'Poule E',
         players: ["Team Logo (Foil)", "Eloy Room", "Armando Obispo", "Sherel Floranus", "Juriën Gaari", "Joshua Brenet", "Roshon van Eijma", "Shurandy Sambo", "Livano Comenencia", "Godfried Roemeratoe", "Juninho Bacuna", "Leandro Bacuna", "Teamfoto (CUW)", "Tahith Chong", "Kenji Gorré", "Jearl Margaritha", "Jürgen Locadia", "Jeremy Antonisse", "Gervane Kastaneer", "Boye Hansen"] 
-    }
-
-    // LAATSTE VAN POULE E
+    },
     { 
         prefix: 'ECU', name: 'Ecuador', count: 20, page: '46-47', flagUrl: 'https://flagcdn.com/w160/ec.png', colors: ['#FFD100', '#00205B'], group: 'Poule E',
         players: ["Team Logo (Foil)", "Hernán Galíndez", "Gonzalo Valle", "Piero Hincapié", "Pervis Estupiñán", "Willian Pacho", "Angelo Preciado", "Joel Ordóñez", "Moisés Caicedo", "Alan Franco", "Kendry Páez", "Pedro Vite", "Teamfoto (ECU)", "John Yeboah", "Leonardo Campana", "Gonzalo Plata", "Nilson Angulo", "Alan Minda", "Kevin Rodríguez", "Enner Valencia"] 
@@ -174,11 +159,51 @@ const collections = [
     { 
         prefix: 'ESP', name: 'Spanje', count: 20, page: '64-65', flagUrl: 'https://flagcdn.com/w160/es.png', colors: ['#AA151B', '#F1BF00'], group: 'Poule H',
         players: ["Team Logo (Foil)", "Unai Simón", "Robin Le Normand", "Aymeric Laporte", "Dean Huijsen", "Pedro Porro", "Dani Carvajal", "Marc Cucurella", "Martín Zubimendi", "Pedri", "Rodri", "Fabián Ruiz", "Teamfoto (ESP)", "Mikel Merino", "Lamine Yamal", "Dani Olmo", "Nico Williams", "Ferran Torres", "Álvaro Morata", "Mikel Oyarzabal"] 
-    }
+    },
+    { 
+        prefix: 'URU', name: 'Uruguay', count: 20, page: '66-67', flagUrl: 'https://flagcdn.com/w160/uy.png', colors: ['#0081C8', '#FCD116'], group: 'Poule H',
+        players: ["Team Logo (Foil)", "Sergio Rochet", "Santiago Mele", "Ronald Araújo", "José María Giménez", "Sebastián Cáceres", "Mathías Olivera", "Guillermo Varela", "Nahitan Nández", "Federico Valverde", "Giorgian De Arrascaeta", "Rodrigo Bentancur", "Teamfoto (URU)", "Manuel Ugarte", "Nicolás De La Cruz", "Maxi Araújo", "Darwin Núñez", "Federico Viñas", "Rodrigo Aguirre", "Facundo Pellistri"] 
+    },
+    { 
+        prefix: 'CPV', name: 'Kaapverdië', count: 20, page: '68-69', flagUrl: 'https://flagcdn.com/w160/cv.png', colors: ['#003893', '#CF2027'], group: 'Poule H',
+        players: ["Team Logo (Foil)", "Vozinha", "Logan Costa", "Pico", "Diney", "Steven Moreira", "Wagner Pina", "João Paulo", "Yannick Semedo", "Kevin Pina", "Patrick Andrade", "Jamiro Monteiro", "Teamfoto (CPV)", "Deroy Duarte", "Garry Rodrigues", "Jovane Cabral", "Ryan Mendes", "Dailon Livramento", "Willy Semedo", "Bebé"] 
+    },
+    { 
+        prefix: 'KSA', name: 'Saoedi-Arabië', count: 20, page: '70-71', flagUrl: 'https://flagcdn.com/w160/sa.png', colors: ['#006C35', '#D4AF37'], group: 'Poule H',
+        players: ["Team Logo (Foil)", "Nawaf Alaqidi", "Abdulelah Alamri", "Saud Abdulhamid", "Yasser Alshahrani", "Ali Lajami", "Moteb Alharbi", "Hassan Tambakti", "Ali Albulayhi", "Ziyad Aljohani", "Abdulelah Almalki", "Mukhtar Ali", "Teamfoto (KSA)", "Ali Alhasan", "Marwan Alsahafi", "Salem Aldawsari", "Abdulrahman Ghareeb", "Firas Alburaikan", "Saleh Alshehri", "Abdullah Alhamddan"] 
+    },
 
+    // POULE I
+    { 
+        prefix: 'FRA', name: 'Frankrijk', count: 20, page: '72-73', flagUrl: 'https://flagcdn.com/w160/fr.png', colors: ['#002395', '#ED2939'], group: 'Poule I',
+        players: ["Team Logo (Foil)", "Mike Maignan", "Théo Hernández", "William Saliba", "Jules Koundé", "Ibrahima Konaté", "Dayot Upamecano", "Lucas Digne", "Aurélien Tchouaméni", "Eduardo Camavinga", "Manu Koné", "Adrien Rabiot", "Teamfoto (FRA)", "Michael Olise", "Ousmane Dembélé", "Bradley Barcola", "Moussa Diaby", "Kingsley Coman", "Hugo Ekitiké", "Kylian Mbappé"] 
+    },
+    { 
+        prefix: 'SEN', name: 'Senegal', count: 20, page: '74-75', flagUrl: 'https://flagcdn.com/w160/sn.png', colors: ['#00853F', '#FDEF42'], group: 'Poule I',
+        players: ["Team Logo (Foil)", "Edouard Mendy", "Seny Dieng", "Moussa Niakhaté", "Abdoulaye Seck", "Ismail Jakobs", "El Hadji Malick Diouf", "Kalidou Koulibaly", "Idrissa Gana Gueye", "Pape Matar Sarr", "Pathé Ciss", "Habib Diarra", "Teamfoto (SEN)", "Lamine Camara", "Sadio Mané", "Ismaila Sarr", "Boulaye Dia", "Iliman Ndiaye", "Nicolas Jackson", "Krépin Diatta"] 
+    },
+    { 
+        prefix: 'IRQ', name: 'Irak', count: 20, page: '76-77', flagUrl: 'https://flagcdn.com/w160/iq.png', colors: ['#CE1126', '#007A3D'], group: 'Poule I',
+        players: ["Team Logo (Foil)", "Jalal Hassan", "Rebin Sulaka", "Hussein Ali", "Saad Natiq", "Merchas Doski", "Zaid Tahseen", "Manaf Younis", "Zidane Iqbal", "Amir Al-Ammari", "Bashar Resan", "Ali Jasim", "Teamfoto (IRQ)", "Youssef Amyn", "Amjad Attwan", "Ibrahim Bayesh", "Osama Rashid", "Ali Al-Hamadi", "Aymen Hussein", "Mohanad Ali"] 
+    },
+    { 
+        prefix: 'NOR', name: 'Noorwegen', count: 20, page: '78-79', flagUrl: 'https://flagcdn.com/w160/no.png', colors: ['#BA0C2F', '#00205B'], group: 'Poule I',
+        players: ["Team Logo (Foil)", "Ørjan Nyland", "Julian Ryerson", "Leo Østigård", "Kristoffer Ajer", "Marcus Holmgren Pedersen", "David Møller Wolfe", "Torbjørn Heggem", "Morten Thorsby", "Martin Ødegaard", "Sander Berge", "Andreas Schjelderup", "Teamfoto (NOR)", "Patrick Berg", "Erling Haaland", "Alexander Sørloth", "Aron Dønnum", "Jørgen Strand Larsen", "Antonio Nusa", "Oscar Bobb"] 
+    },
 
-
-        // REST POULE J
+    // POULE J
+    { 
+        prefix: 'ARG', name: 'Argentinië', count: 20, page: '80-81', flagUrl: 'https://flagcdn.com/w160/ar.png', colors: ['#74ACDF', '#D4AF37'], group: 'Poule J',
+        players: ["Team Logo (Foil)", "Emiliano Martínez", "Nahuel Molina", "Cristian Romero", "Nicolás Otamendi", "Nicolás Tagliafico", "Leonardo Balerdi", "Enzo Fernández", "Alexis Mac Allister", "Rodrigo De Paul", "Exequiel Palacios", "Leandro Paredes", "Teamfoto (ARG)", "Nico Paz", "Franco Mastantuono", "Nico González", "Lionel Messi", "Lautaro Martínez", "Julián Álvarez", "Giuliano Simeone"] 
+    },
+    { 
+        prefix: 'ALG', name: 'Algerije', count: 20, page: '82-83', flagUrl: 'https://flagcdn.com/w160/dz.png', colors: ['#006233', '#D21034'], group: 'Poule J',
+        players: ["Team Logo (Foil)", "Alexis Guendouz", "Ramy Bensebaini", "Youcef Atal", "Rayan Aït-Nouri", "Mohamed Amine Tougai", "Aïssa Mandi", "Ismaël Bennacer", "Houssem Aouar", "Hicham Boudaoui", "Ramiz Zerrouki", "Nabil Bentaleb", "Teamfoto (ALG)", "Farès Chaïbi", "Riyad Mahrez", "Saïd Benrahma", "Anis Hadj-Moussa", "Amine Gouiri", "Baghdad Bounedjah", "Mohamed Amoura"] 
+    },
+    { 
+        prefix: 'AUT', name: 'Oostenrijk', count: 20, page: '84-85', flagUrl: 'https://flagcdn.com/w160/at.png', colors: ['#ED2939', '#222222'], group: 'Poule J',
+        players: ["Team Logo (Foil)", "Alexander Schlager", "Patrick Pentz", "David Alaba", "Kevin Danso", "Philipp Lienhart", "Stefan Posch", "Phillipp Mwene", "Alexander Prass", "Xaver Schlager", "Marcel Sabitzer", "Konrad Laimer", "Teamfoto (AUT)", "Florian Grillitsch", "Nicolas Seiwald", "Romano Schmid", "Patrick Wimmer", "Christoph Baumgartner", "Michael Gregoritsch", "Marko Arnautović"] 
+    },
     { 
         prefix: 'JOR', name: 'Jordanië', count: 20, page: '86-87', flagUrl: 'https://flagcdn.com/w160/jo.png', colors: ['#CE1126', '#000000'], group: 'Poule J',
         players: ["Team Logo (Foil)", "Yazeed Abulaila", "Ihsan Haddad", "Mohammad Abu Hashish", "Yazan Al-Arab", "Abdallah Nasib", "Saleem Obaid", "Mohammad Abualnadi", "Ibrahim Saadeh", "Nizar Al-Rashdan", "Noor Al-Rawabdeh", "Mohammad Abu Taha", "Teamfoto (JOR)", "Amer Jamous", "Musa Al-Taamari", "Yazan Al-Naimat", "Mahmoud Al-Mardi", "Ali Olwan", "Mohammad Abu Zrayq", "Ibrahim Sabra"] 
@@ -219,8 +244,4 @@ const collections = [
         prefix: 'PAN', name: 'Panama', count: 20, page: '102-103', flagUrl: 'https://flagcdn.com/w160/pa.png', colors: ['#DA291C', '#002B7F'], group: 'Poule L',
         players: ["Team Logo (Foil)", "Orlando Mosquera", "Luis Mejía", "Fidel Escobar", "Andrés Andrade", "Michael Amir Murillo", "Eric Davis", "José Córdoba", "César Blackman", "Cristian Martínez", "Aníbal Godoy", "Adalberto Carrasquilla", "Teamfoto (PAN)", "Édgar Bárcenas", "Carlos Harvey", "Ismael Díaz", "José Fajardo", "Cecilio Waterman", "José Luis Rodríguez", "Alberto Quintero"] 
     }
-
 ];
-
-
-
