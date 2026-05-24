@@ -3,44 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WK 2026 Album</title>
-    <link rel="stylesheet" href="design.css?v=14">
+    <title>Panini WK 2026 Tracker</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <link rel="icon" href="icon.png" type="image/png">
+    <link rel="apple-touch-icon" href="icon.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
+
     <div id="profile-section" class="container">
-        <h1>WK 2026 Album</h1>
+        <h1 style="color: #4f46e5; font-size: 2.2rem; margin-bottom: 5px;">WK 2026 Tracker</h1>
+        <p style="text-align: center; color: var(--text-secondary); font-weight: 700; margin-bottom: 25px;">Kies een profiel</p>
         <div class="profile-grid">
-            <div class="profile-card" onclick="selectUser('Lou')">Lou</div>
+            <div class="profile-card" onclick="selectUser('Jorden')">Jorden</div>
             <div class="profile-card" onclick="selectUser('Wesley')">Wesley</div>
-            <div class="profile-card" onclick="selectUser('Oliver')">Oliver</div>
         </div>
     </div>
 
     <div id="dashboard-section" class="container" style="display: none;">
-        <div class="header-box">
-            <h2 id="welcome-text">Album</h2>
-            <button class="btn-action" onclick="logout()">Uitloggen</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h2 id="welcome-text" style="text-align: left; margin: 0; font-size: 1.5rem; line-height: 1.2;">Album</h2>
+            <div class="dashboard-actions">
+                <button class="btn-action" id="btn-filter" onclick="toggleFilter()" title="Filter Volle Landen">🔍 Vol</button>
+                <button class="btn-action" onclick="openTradeCenter()" title="Ruilcentrum">🔄 Ruil</button>
+                <button class="btn-action" onclick="logout()" title="Uitloggen">🚪</button>
+            </div>
         </div>
-        <div class="total-card"><h2 id="total-text">0/980</h2></div>
         
-        <input type="text" id="search-bar" class="custom-input" placeholder="Zoek land..." onkeyup="renderDashboard()">
+        <div class="total-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 1rem; color: var(--text-secondary);">Progressie</h3>
+                <span id="total-text" style="font-weight: 900; color: var(--color-jorden);">0/980</span>
+            </div>
+            <div class="soccer-field">
+                <div class="goal-area"></div>
+                <div class="soccer-ball" id="soccer-ball">⚽</div>
+            </div>
+            <div class="legend-container">
+                <div class="legend-item"><div class="legend-dot" style="background: var(--color-jorden);"></div><span>Jorden (<span id="legend-count-jorden">0</span>)</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background: var(--color-wesley);"></div><span>Wesley (<span id="legend-count-wesley">0</span>)</span></div>
+            </div>
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="search-bar" class="custom-input" placeholder="🔍 Zoek land (bijv. BEL of België)..." onkeyup="filterCountries()">
+        </div>
+        
         <div class="quick-add-container">
-            <input type="text" id="quick-add-input" class="custom-input" placeholder="Snel toevoegen (bijv. BEL 4)" onkeypress="handleQuickAdd(event)">
+            <input type="text" id="quick-add-input" class="custom-input" placeholder="⚡ Snel toevoegen (bijv. BEL 4)" onkeypress="handleQuickAdd(event)">
             <button class="btn-quick-add" onclick="processQuickAdd()">+</button>
         </div>
+
         <div class="countries-list" id="countries-container"></div>
     </div>
 
     <div id="modal" class="modal-overlay">
         <div class="modal-content">
-            <div class="modal-header"><h2 id="modal-title">Land</h2><button class="btn-action" onclick="closeModal()">✖</button></div>
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="modal-flag-wrapper">
+                        <div class="flag-ring-1" id="flag-ring-1"></div>
+                        <div class="flag-ring-2" id="flag-ring-2"></div>
+                        <div class="flag-inner-circle" id="flag-inner-circle"></div>
+                    </div>
+                    <div>
+                        <h2 id="modal-title" class="modal-title-text">Land</h2>
+                        <span class="modal-subtitle" id="modal-subtitle-text">Bolletje links = De ander</span>
+                    </div>
+                </div>
+                <button class="btn-action" style="background: rgba(255,255,255,0.2); color: white;" onclick="closeModal()">✖</button>
+            </div>
             <div class="sticker-grid" id="sticker-grid"></div>
         </div>
     </div>
-    <div id="toast" class="toast"></div>
 
-    <script src="countries.js?v=14"></script>
-    <script src="app.js?v=14"></script>
+    <div id="trade-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 style="margin:0; font-size: 1.5rem;">🔄 Ruilcentrum</h2>
+                <button class="btn-action" onclick="closeTradeCenter()">✖</button>
+            </div>
+            <div class="trade-section" id="trade-content"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">Bericht hier</div>
+
+    <script src="countries.js?v=9"></script>
+    <script src="app.js?v=9"></script>
+    
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW Error', err));
+            });
+        }
+    </script>
 </body>
 </html>
