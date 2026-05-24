@@ -1,4 +1,4 @@
-/* style.css - Minimal Premium Sports Grid Theme (No-Scroll Modal + Super Strakke Zoekbalk) */
+/* style.css - Ultimate Panini Tracker Edition v9 */
 
 :root {
     --bg-main: #f4f7fc;
@@ -31,7 +31,6 @@ body {
 
 h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 
-/* Dashboard Actieknoppen */
 .dashboard-actions { display: flex; gap: 8px; justify-content: flex-end; margin-bottom: 20px; }
 .btn-action {
     background: #f1f5f9; color: var(--text-primary); border: none;
@@ -42,7 +41,6 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 .btn-action:hover { background: #e2e8f0; transform: translateY(-2px); }
 .btn-action.active { background: var(--color-jorden); color: white; }
 
-/* Profielscherm */
 #profile-section { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; }
 .profile-grid { display: flex; gap: 16px; width: 100%; margin-top: 15px; }
 .profile-card {
@@ -53,7 +51,6 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 }
 .profile-card:hover { border-color: var(--color-jorden); color: var(--color-jorden); transform: translateY(-4px); box-shadow: 0 12px 24px rgba(79, 70, 229, 0.1); }
 
-/* Progressie Kaart & Voetbalveld Balk */
 .total-card { background: #f8fafc; padding: 20px; border-radius: 22px; margin-bottom: 25px; text-align: center; }
 .soccer-field {
     position: relative; height: 38px; background: #22c55e;
@@ -75,13 +72,11 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 .legend-item { display: flex; align-items: center; gap: 6px; }
 .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
 
-/* Styling voor de Zoekbalk */
-.search-container {
-    margin-bottom: 12px;
-    width: 100%;
-}
+/* --- ZOEK & SNEL INVOEREN (GEFIXTE LAYOUT) --- */
+.search-container { margin-bottom: 12px; width: 100%; }
+.quick-add-container { display: flex; gap: 8px; margin-bottom: 15px; width: 100%; }
 
-#search-bar {
+.custom-input {
     width: 100%;
     padding: 14px 18px;
     border-radius: 16px;
@@ -94,20 +89,52 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
     box-sizing: border-box;
     transition: all 0.2s ease;
 }
+#quick-add-input { text-transform: uppercase; }
+.custom-input::placeholder { color: #94a3b8; font-weight: 600; text-transform: none; }
+.custom-input:focus { outline: none; border-color: var(--color-jorden); background: #ffffff; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1); }
 
-#search-bar:focus {
-    outline: none;
-    border-color: var(--color-jorden);
-    background: #ffffff;
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1);
+.btn-quick-add {
+    background: var(--color-owned); color: white;
+    border: none; border-radius: 16px;
+    font-weight: 900; font-size: 1.5rem;
+    width: 60px; min-width: 60px; 
+    cursor: pointer; transition: all 0.1s ease;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
 }
+.btn-quick-add:active { transform: scale(0.92); }
 
-#search-bar::placeholder {
-    color: #94a3b8;
-    font-weight: 600;
+/* --- TOAST POP-UP (GEFIXT) --- */
+.toast {
+    display: none;
+    visibility: hidden;
+    min-width: 250px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 12px;
+    padding: 14px 20px;
+    position: fixed;
+    z-index: 10000;
+    left: 50%;
+    bottom: -50px;
+    transform: translateX(-50%);
+    font-weight: 800;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    opacity: 0;
+    transition: opacity 0.3s, bottom 0.3s;
 }
+.toast.show {
+    display: block;
+    visibility: visible;
+    opacity: 1;
+    bottom: 35px;
+}
+.toast.success { background-color: var(--color-owned); }
+.toast.error { background-color: #ef4444; }
 
-/* GAME GRID & POULE HEADERS (4 OP EEN RIJ GERESTAUREERD) */
+
 .countries-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .group-header {
     grid-column: 1 / -1; margin: 15px 0 5px 0; padding-bottom: 5px;
@@ -117,7 +144,6 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 .group-header h3 { margin: 0; color: var(--text-secondary); font-size: 1.15rem; text-transform: uppercase; letter-spacing: 1.5px; }
 .group-score { font-size: 0.85rem; font-weight: 800; color: var(--text-secondary); }
 
-/* Gouden status voor voltooide poules */
 .group-header.gold { border-bottom: 2px solid #ffd700; background: linear-gradient(90deg, #ffd70020, transparent); border-radius: 8px 8px 0 0; padding: 8px 10px; }
 .group-header.gold h3 { color: #d4af37; font-weight: 900; }
 .group-header.gold .group-score { color: #d4af37; }
@@ -133,12 +159,10 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 .grid-score-row { display: flex; gap: 4px; margin-top: 6px; }
 .grid-badge { padding: 3px 6px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; color: white; min-width: 14px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.08); }
 
-/* MODALS (100% SCREEN HEIGHT NO-SCROLL GERESTAUREERD) */
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; overflow: hidden; background: rgba(0,0,0,0.8); }
 .modal-content { width: 100%; max-width: 550px; margin: 0 auto; height: 100dvh; padding: 15px; box-sizing: border-box; display: flex; flex-direction: column; color: white; }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: rgba(0, 0, 0, 0.12); backdrop-filter: blur(15px); padding: 12px 16px; border-radius: 18px; }
 
-/* Specifiek voor Ruilcentrum Modal */
 #trade-modal .modal-content { background: var(--bg-main); color: var(--text-primary); }
 #trade-modal .modal-header { background: white; color: var(--text-primary); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
 .trade-section { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; padding-bottom: 20px; }
@@ -149,7 +173,6 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 .trade-chip.give { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
 .trade-chip.get { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
 
-/* Sticker Modal */
 .modal-flag-wrapper { position: relative; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; }
 .flag-ring-1 { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 3px solid rgba(255,255,255,0.8); }
 .flag-ring-2 { position: absolute; width: 84%; height: 84%; border-radius: 50%; border: 2.5px solid rgba(255,255,255,0.3); }
@@ -167,25 +190,11 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 .box-prefix { font-size: 0.65rem; font-weight: 800; opacity: 0.85; pointer-events: none; }
 .box-num { font-size: 1.15rem; font-weight: 800; margin-top: -2px; pointer-events: none; }
 
-/* Badge voor eigen telling (Min-knopje) */
 .badge { position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; font-size: 0.75rem; width: 22px; height: 22px; display: flex; justify-content: center; align-items: center; border-radius: 50%; font-weight: 900; box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 10; border: 2px solid white; cursor: pointer; }
 .sticker-box.double .badge { background: #4a2500; border-color: #ffd700; color: #ffd700; }
 
-/* Bolletje links voor de partner-status (✓ of 2x) */
 .other-user-dot { 
-    position: absolute; 
-    top: -6px; 
-    left: -6px; 
-    width: 20px; 
-    height: 20px; 
-    border-radius: 50%; 
-    border: 2px solid white; 
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3); 
-    z-index: 5; 
-    font-size: 0.65rem; 
-    font-weight: 900; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    color: white;
+    position: absolute; top: -6px; left: -6px; width: 20px; height: 20px; 
+    border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3); 
+    z-index: 5; font-size: 0.65rem; font-weight: 900; display: flex; align-items: center; justify-content: center; color: white;
 }
