@@ -1,4 +1,4 @@
-// app.js - Ultimate Edition v8 (Album Title Fix)
+// app.js - Ultimate Edition v9
 
 const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co'; 
 const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; 
@@ -16,7 +16,7 @@ async function selectUser(name) {
     document.getElementById('profile-section').style.display = 'none';
     document.getElementById('dashboard-section').style.display = 'block';
     
-    // HIER IS DE FIX: Duidelijk tonen van wie het album is in de juiste kleur!
+    // Jouw naam in jouw kleur, bovenaan het scherm!
     let nameColor = currentUser === 'Jorden' ? 'var(--color-jorden)' : 'var(--color-wesley)';
     document.getElementById('welcome-text').innerHTML = `Album van <br><span style="color: ${nameColor}; font-weight: 900; font-size: 1.8rem;">${currentUser}</span>`;
     
@@ -35,9 +35,7 @@ function toggleFilter() {
     renderDashboard();
 }
 
-function filterCountries() {
-    renderDashboard();
-}
+function filterCountries() { renderDashboard(); }
 
 async function loadUserData() {
     myStickers = {}; otherUserStickers = {};
@@ -53,10 +51,8 @@ async function loadUserData() {
 function renderDashboard() {
     const container = document.getElementById('countries-container');
     container.innerHTML = '';
-    
     const searchInput = document.getElementById('search-bar');
     const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
-    
     let totalJorden = 0; let totalWesley = 0;
     
     let groupStats = {};
@@ -70,10 +66,8 @@ function renderDashboard() {
     });
 
     let currentGroup = ''; let cardIndex = 0;
-
     collections.forEach(country => {
         let countMy = 0; let countOther = 0;
-        
         for (let i = 1; i <= country.count; i++) {
             let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
             if (myStickers[code]) countMy++;
@@ -84,11 +78,8 @@ function renderDashboard() {
         let wesleyScore = currentUser === 'Wesley' ? countMy : countOther;
         totalJorden += jordenScore; totalWesley += wesleyScore;
 
-        const isCompleteMy = countMy === country.count;
-        if (showOnlyMissing && isCompleteMy) return;
-
-        const matchesSearch = country.name.toLowerCase().includes(searchTerm) || country.prefix.toLowerCase().includes(searchTerm);
-        if (!matchesSearch) return;
+        if (showOnlyMissing && countMy === country.count) return;
+        if (!country.name.toLowerCase().includes(searchTerm) && !country.prefix.toLowerCase().includes(searchTerm)) return;
 
         if (country.group !== currentGroup) {
             currentGroup = country.group;
@@ -100,9 +91,8 @@ function renderDashboard() {
                 </div>`;
         }
 
-        const primaryColor = country.colors ? country.colors[0] : '#4f46e5';
         const delay = cardIndex * 0.015; cardIndex++;
-        const borderGlow = isCompleteMy ? `border-color: #10b981; box-shadow: 0 0 12px #10b98180;` : `border-color: ${primaryColor}50;`;
+        const borderGlow = (countMy === country.count) ? `border-color: #10b981; box-shadow: 0 0 12px #10b98180;` : `border-color: ${(country.colors ? country.colors[0] : '#4f46e5')}50;`;
 
         container.innerHTML += `
             <div class="country-card" style="animation-delay: ${delay}s;" onclick="openModal('${country.prefix}')">
@@ -118,14 +108,11 @@ function renderDashboard() {
     document.getElementById('legend-count-jorden').innerText = totalJorden;
     document.getElementById('legend-count-wesley').innerText = totalWesley;
     let activeTotal = currentUser === 'Jorden' ? totalJorden : totalWesley;
-    let totalPercent = (activeTotal / 980) * 100;
     document.getElementById('total-text').innerText = `${activeTotal}/980`;
-    document.getElementById('soccer-ball').style.left = `calc(${Math.min(totalPercent, 90)}% - 10px)`;
+    document.getElementById('soccer-ball').style.left = `calc(${Math.min((activeTotal / 980) * 100, 90)}% - 10px)`;
 }
 
-// ==========================================
-// TOAST NOTIFICATIES (BEVESTIGING)
-// ==========================================
+// TOAST NOTIFICATIES
 let toastTimeout;
 function showToast(message, type) {
     const toast = document.getElementById('toast');
@@ -135,49 +122,27 @@ function showToast(message, type) {
     toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 3000);
 }
 
-// ==========================================
-// PAKJES-MODUS (SNEL INVOEREN)
-// ==========================================
-function handleQuickAdd(event) {
-    if (event.key === 'Enter') processQuickAdd();
-}
+// PAKJES-MODUS
+function handleQuickAdd(event) { if (event.key === 'Enter') processQuickAdd(); }
 
 function processQuickAdd() {
     const inputField = document.getElementById('quick-add-input');
     let input = inputField.value.trim().toUpperCase();
     if (!input) return;
 
-    let code = null;
-    let num = 0;
-    let prefix = '';
-
-    if (input === 'FWC 00' || input === 'FWC00') {
-        code = '00'; prefix = 'FWC'; num = 0;
-    } else {
+    let code = null; let num = 0; let prefix = '';
+    if (input === 'FWC 00' || input === 'FWC00') { code = '00'; prefix = 'FWC'; num = 0; } 
+    else {
         const match = input.match(/^([A-Z]{3})\s*(\d{1,2})$/);
-        if (match) {
-            prefix = match[1];
-            num = parseInt(match[2], 10);
-            code = prefix === 'FWC' ? `${prefix} ${num}` : `${prefix} ${num}`;
-        }
+        if (match) { prefix = match[1]; num = parseInt(match[2], 10); code = `${prefix} ${num}`; }
     }
 
-    if (!code) {
-        showToast("❌ Ongeldige code. Gebruik bijv. BEL 4", "error");
-        return;
-    }
-
+    if (!code) return showToast("❌ Ongeldige code. Gebruik bijv. BEL 4", "error");
     let country = collections.find(c => c.prefix === prefix);
-    if (!country) {
-        showToast(`❌ Landcode '${prefix}' bestaat niet.`, "error");
-        return;
-    }
+    if (!country) return showToast(`❌ Landcode '${prefix}' bestaat niet.`, "error");
 
     let maxNum = prefix === 'FWC' ? 19 : 20; 
-    if (code !== '00' && (num < 1 || num > maxNum)) {
-        showToast(`❌ ${prefix} stopt bij nummer ${maxNum}.`, "error");
-        return;
-    }
+    if (code !== '00' && (num < 1 || num > maxNum)) return showToast(`❌ ${prefix} stopt bij nummer ${maxNum}.`, "error");
 
     let newAmount = (myStickers[code] || 0) + 1;
     myStickers[code] = newAmount;
@@ -190,24 +155,19 @@ function processQuickAdd() {
         } else {
             playerName = country.players ? country.players[num-1] : (num === 1 ? "Team Logo" : (num === 13 ? "Teamfoto" : `Speler ${num}`));
         }
-
         showToast(`✅ ${code} opgeslagen! (${playerName})`, "success");
-        inputField.value = ''; 
-        renderDashboard(); 
+        inputField.value = ''; renderDashboard(); 
         if(navigator.vibrate) navigator.vibrate([40, 40]); 
     });
 }
 
-// ==========================================
 // MODAL LOGICA
-// ==========================================
 function openModal(prefix) {
     const countryData = collections.find(c => c.prefix === prefix);
     if (!countryData) return;
 
     const modal = document.getElementById('modal');
-    const primaryColor = countryData.colors ? countryData.colors[0] : '#4f46e5';
-    modal.style.background = `linear-gradient(135deg, ${primaryColor}, ${countryData.colors[1] || '#ff005b'})`;
+    modal.style.background = `linear-gradient(135deg, ${countryData.colors ? countryData.colors[0] : '#4f46e5'}, ${countryData.colors ? (countryData.colors[1] || '#ff005b') : '#ff005b'})`;
     document.getElementById('flag-inner-circle').style.backgroundImage = `url('${countryData.flagUrl}')`;
     document.getElementById('modal-title').innerText = countryData.name;
     document.getElementById('modal-subtitle-text').innerText = `Tik +1 • Badge -1 • Bolletje = ${otherUser}`;
@@ -218,17 +178,15 @@ function openModal(prefix) {
 
     for (let i = 1; i <= countryData.count; i++) {
         let code = prefix === 'FWC' && i === 1 ? '00' : prefix === 'FWC' ? `FWC ${i-1}` : `${prefix} ${i}`;
-        let amount = myStickers[code] || 0;
-        let otherAmt = otherUserStickers[code] || 0; 
+        let amount = myStickers[code] || 0; let otherAmt = otherUserStickers[code] || 0; 
         let statusClass = amount > 1 ? 'double' : amount === 1 ? 'owned' : '';
         let displayLabel = prefix === 'FWC' && i === 1 ? `<span class="box-num" style="font-size: 1.8rem;">00</span>` : `<span class="box-prefix">${prefix}</span><span class="box-num">${i}</span>`;
         let playerName = countryData.players ? countryData.players[i-1] : (i === 1 ? "Team Logo" : (i === 13 ? "Teamfoto" : `Speler ${i}`));
 
-        let otherColor = currentUser === 'Jorden' ? 'var(--color-wesley)' : 'var(--color-jorden)';
         let otherIndicator = '';
         if (otherAmt > 0) {
             let dotText = otherAmt > 1 ? `${otherAmt}x` : '✓';
-            otherIndicator = `<div class="other-user-dot" style="background: ${otherColor};">${dotText}</div>`;
+            otherIndicator = `<div class="other-user-dot" style="background: ${currentUser === 'Jorden' ? 'var(--color-wesley)' : 'var(--color-jorden)'};">${dotText}</div>`;
         }
 
         grid.innerHTML += `
@@ -244,22 +202,16 @@ function openModal(prefix) {
 function closeModal() { document.getElementById('modal').style.display = 'none'; renderDashboard(); }
 
 async function addSticker(code) {
-    let newAmount = (myStickers[code] || 0) + 1;
-    myStickers[code] = newAmount; updateStickerUI(code, newAmount);
-    if(navigator.vibrate) navigator.vibrate(50); 
-    await syncToSupabase(code, newAmount);
+    myStickers[code] = (myStickers[code] || 0) + 1; updateStickerUI(code, myStickers[code]);
+    if(navigator.vibrate) navigator.vibrate(50); await syncToSupabase(code, myStickers[code]);
 }
-
 async function removeSticker(event, code) {
     event.stopPropagation(); 
-    let newAmount = (myStickers[code] || 0) - 1;
-    if (newAmount < 0) newAmount = 0;
-    if (newAmount === 0) delete myStickers[code]; else myStickers[code] = newAmount;
-    updateStickerUI(code, newAmount);
-    if(navigator.vibrate) navigator.vibrate([30, 50, 30]); 
-    await syncToSupabase(code, newAmount);
+    myStickers[code] = Math.max((myStickers[code] || 0) - 1, 0);
+    if (myStickers[code] === 0) delete myStickers[code]; 
+    updateStickerUI(code, myStickers[code] || 0);
+    if(navigator.vibrate) navigator.vibrate([30, 50, 30]); await syncToSupabase(code, myStickers[code] || 0);
 }
-
 async function syncToSupabase(code, amount) {
     try {
         if (amount === 0) await supabaseClient.from('user_stickers').delete().match({ user_name: currentUser, sticker_code: code });
@@ -287,22 +239,9 @@ function openTradeCenter() {
         }
     });
 
-    let html = `
-        <div class="trade-block">
-            <h3>Geef aan ${otherUser} (${giveToOther.length})</h3>
-            <div class="trade-codes">
-                ${giveToOther.length === 0 ? '<p style="color: #94a3b8; font-size: 0.9rem;">Geen dubbele die hij/zij nodig heeft.</p>' : ''}
-                ${giveToOther.map(c => `<span class="trade-chip give">${c}</span>`).join('')}
-            </div>
-        </div>
-        <div class="trade-block">
-            <h3 style="color: var(--color-wesley);">Krijg van ${otherUser} (${getFromOther.length})</h3>
-            <div class="trade-codes">
-                ${getFromOther.length === 0 ? '<p style="color: #94a3b8; font-size: 0.9rem;">Hij/zij heeft geen dubbele voor jou.</p>' : ''}
-                ${getFromOther.map(c => `<span class="trade-chip get">${c}</span>`).join('')}
-            </div>
-        </div>`;
-    document.getElementById('trade-content').innerHTML = html;
+    document.getElementById('trade-content').innerHTML = `
+        <div class="trade-block"><h3>Geef aan ${otherUser} (${giveToOther.length})</h3><div class="trade-codes">${giveToOther.length === 0 ? '<p style="color: #94a3b8; font-size: 0.9rem;">Geen dubbele die hij/zij nodig heeft.</p>' : ''}${giveToOther.map(c => `<span class="trade-chip give">${c}</span>`).join('')}</div></div>
+        <div class="trade-block"><h3 style="color: var(--color-wesley);">Krijg van ${otherUser} (${getFromOther.length})</h3><div class="trade-codes">${getFromOther.length === 0 ? '<p style="color: #94a3b8; font-size: 0.9rem;">Hij/zij heeft geen dubbele voor jou.</p>' : ''}${getFromOther.map(c => `<span class="trade-chip get">${c}</span>`).join('')}</div></div>`;
     document.getElementById('trade-modal').style.display = 'block';
 }
 
