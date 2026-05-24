@@ -1,10 +1,10 @@
-// sw.js - Service Worker v13
-const CACHE_NAME = 'panini-tracker-v13';
+// sw.js - Service Worker v14
+const CACHE_NAME = 'panini-tracker-v14';
 const ASSETS = [
   './index.html',
-  './style.css?v=13',
-  './countries.js?v=13',
-  './app.js?v=13',
+  './style.css?v=14',
+  './countries.js?v=14',
+  './app.js?v=14',
   './manifest.json'
 ];
 
