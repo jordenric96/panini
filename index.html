@@ -3,16 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panini WK 2026 Tracker</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#4f46e5">
-    <link rel="stylesheet" href="style.css?v=12">
+    <title>WK 2026 Album</title>
+    <link rel="stylesheet" href="design.css?v=14">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-
     <div id="profile-section" class="container">
-        <h1 style="color: #4f46e5; font-size: 2.2rem; margin-bottom: 5px;">WK 2026 Tracker</h1>
-        <p style="text-align: center; color: var(--text-secondary); font-weight: 700; margin-bottom: 25px;">Wie ben jij?</p>
+        <h1>WK 2026 Album</h1>
         <div class="profile-grid">
             <div class="profile-card" onclick="selectUser('Lou')">Lou</div>
             <div class="profile-card" onclick="selectUser('Wesley')">Wesley</div>
@@ -21,41 +18,29 @@
     </div>
 
     <div id="dashboard-section" class="container" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <h2 id="welcome-text" style="text-align: left; margin: 0; font-size: 1.5rem; line-height: 1.2;">Album</h2>
-            <button class="btn-action" onclick="logout()" title="Uitloggen">🚪</button>
+        <div class="header-box">
+            <h2 id="welcome-text">Album</h2>
+            <button class="btn-action" onclick="logout()">Uitloggen</button>
         </div>
+        <div class="total-card"><h2 id="total-text">0/980</h2></div>
         
-        <div class="total-card">
-            <h3 style="margin: 0; font-size: 1rem; color: var(--text-secondary);">Progressie</h3>
-            <span id="total-text" style="font-weight: 900; color: var(--color-jorden); font-size: 1.5rem;">0/980</span>
-        </div>
-
-        <div class="input-group">
-            <input type="text" id="search-bar" class="custom-input" placeholder="🔍 Zoek land (bijv. BEL)..." onkeyup="filterCountries()">
-        </div>
-        
-        <div class="input-group" style="display: flex; gap: 8px;">
-            <input type="text" id="quick-add-input" class="custom-input" placeholder="⚡ Snel (bijv. BEL 4)" onkeypress="handleQuickAdd(event)">
+        <input type="text" id="search-bar" class="custom-input" placeholder="Zoek land..." onkeyup="renderDashboard()">
+        <div class="quick-add-container">
+            <input type="text" id="quick-add-input" class="custom-input" placeholder="Snel toevoegen (bijv. BEL 4)" onkeypress="handleQuickAdd(event)">
             <button class="btn-quick-add" onclick="processQuickAdd()">+</button>
         </div>
-
         <div class="countries-list" id="countries-container"></div>
     </div>
 
     <div id="modal" class="modal-overlay">
         <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modal-title" style="margin:0;">Land</h2>
-                <button class="btn-action" onclick="closeModal()">✖</button>
-            </div>
+            <div class="modal-header"><h2 id="modal-title">Land</h2><button class="btn-action" onclick="closeModal()">✖</button></div>
             <div class="sticker-grid" id="sticker-grid"></div>
         </div>
     </div>
+    <div id="toast" class="toast"></div>
 
-    <div id="toast" class="toast">Bericht hier</div>
-
-    <script src="countries.js?v=12"></script>
-    <script src="app.js?v=12"></script>
+    <script src="countries.js?v=14"></script>
+    <script src="app.js?v=14"></script>
 </body>
 </html>
