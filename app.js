@@ -281,3 +281,131 @@ function openTradeCenter() {
 }
 
 function closeTradeCenter() { document.getElementById('trade-modal').style.display = 'none'; }
+
+// --- TROPHY ROOM LOGICA --- //
+function openStatsCenter() {
+    let statsHTML = '';
+
+    // 1. Rode Duivels Barometer (BEL)
+    let belHTML = '';
+    users.forEach(u => {
+        let belCount = 0;
+        for(let i=1; i<=20; i++){ if(allStickers[u][`BEL ${i}`]) belCount++; }
+        let perc = (belCount / 20) * 100;
+        belHTML += `
+            <div style="font-size: 0.85rem; font-weight: 800; color: ${userColors[u]};">${u} (${belCount}/20)</div>
+            <div class="stat-bar-bg"><div class="stat-bar-fill" style="background: ${userColors[u]}; width: ${perc}%;"></div></div>`;
+    });
+    statsHTML += `<div class="stat-block"><h3>🇧🇪 Rode Duivels Barometer</h3>${belHTML}</div>`;
+
+    // 2. Hall of Fame (Top 10 Most Wanted)
+    const top10 = [
+        { code: 'ARG 17', name: 'Lionel Messi' }, { code: 'POR 15', name: 'Cristiano Ronaldo' },
+        { code: 'FRA 20', name: 'Kylian Mbappé' }, { code: 'ENG 11', name: 'Jude Bellingham' },
+        { code: 'BRA 14', name: 'Vinícius Jr.' }, { code: 'BEL 15', name: 'Kevin De Bruyne' },
+        { code: 'ESP 15', name: 'Lamine Yamal' }, { code: 'NOR 15', n: 'Erling Haaland' },
+        { code: 'GER 15', name: 'Jamal Musiala' }, { code: 'BEL 14', name: 'Hans Vanaken' }
+    ];
+    let top10HTML = '';
+    top10.forEach(p => {
+        let dotsHTML = '';
+        users.forEach(u => {
+            let hasIt = allStickers[u][p.code] > 0;
+            dotsHTML += `<div class="legend-dot" style="background: ${hasIt ? userColors[u] : '#cbd5e1'}; opacity: ${hasIt ? '1' : '0.2'};"></div>`;
+        });
+        top10HTML += `<div class="top10-item"><span>${p.name}</span><div style="display:flex; gap:6px; align-items:center;">${dotsHTML}</div></div>`;
+    });
+    statsHTML += `<div class="stat-block"><h3>⭐ Top 10 Most Wanted</h3>${top10HTML}</div>`;
+
+    // Berekenen van de geavanceerde stats
+    let foilScores = { 'Lou & Noé':0, 'Wesley':0, 'Oliver':0 };
+    let dupScores = { 'Lou & Noé':0, 'Wesley':0, 'Oliver':0 };
+    let exclScores = { 'Lou & Noé':0, 'Wesley':0, 'Oliver':0 };
+    
+    let bestDomUser = ''; let bestDomCountry = ''; let bestDomScore = 0;
+    let mostCollCountry = ''; let mostCollScore = 0;
+
+    collections.forEach(country => {
+        let combinedUnique = 0;
+        let uScores = { 'Lou & Noé':0, 'Wesley':0, 'Oliver':0 };
+
+        for(let i=1; i<=country.count; i++) {
+            let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
+            let isFoil = (i === 1 || country.prefix === 'FWC');
+            
+            let countL = allStickers['Lou & Noé'][code] || 0;
+            let countW = allStickers['Wesley'][code] || 0;
+            let countO = allStickers['Oliver'][code] || 0;
+
+            // Dominantie & Samen
+            if(countL > 0) { uScores['Lou & Noé']++; }
+            if(countW > 0) { uScores['Wesley']++; }
+            if(countO > 0) { uScores['Oliver']++; }
+            if(countL > 0 || countW > 0 || countO > 0) { combinedUnique++; }
+
+            // Foils (Glimmend)
+            if(isFoil) {
+                if(countL > 0) foilScores['Lou & Noé']++;
+                if(countW > 0) foilScores['Wesley']++;
+                if(countO > 0) foilScores['Oliver']++;
+            }
+
+            // Dubbele tellen
+            if(countL > 1) dupScores['Lou & Noé'] += (countL-1);
+            if(countW > 1) dupScores['Wesley'] += (countW-1);
+            if(countO > 1) dupScores['Oliver'] += (countO-1);
+
+            // Exclusieve Club (Alleen JIJ hebt hem)
+            if(countL > 0 && countW === 0 && countO === 0) exclScores['Lou & Noé']++;
+            if(countW > 0 && countL === 0 && countO === 0) exclScores['Wesley']++;
+            if(countO > 0 && countL === 0 && countW === 0) exclScores['Oliver']++;
+        }
+
+        if(country.prefix !== 'FWC') {
+            if(combinedUnique > mostCollScore) { mostCollScore = combinedUnique; mostCollCountry = country.name; }
+            users.forEach(u => {
+                if(uScores[u] > bestDomScore) { bestDomScore = uScores[u]; bestDomUser = u; bestDomCountry = country.name; }
+            });
+        }
+    });
+
+    const getWinnerHTML = (scoresObj, label) => {
+        let winner = Object.keys(scoresObj).reduce((a, b) => scoresObj[a] > scoresObj[b] ? a : b);
+        let score = scoresObj[winner];
+        if (score === 0) return `<div style="font-size: 0.9rem; color: #94a3b8;">Nog niemand...</div>`;
+        return `<div class="winner-text" style="color: ${userColors[winner]};">${winner} <span style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 700;">(${score} ${label})</span></div>`;
+    };
+
+    // 3. Dominantie
+    statsHTML += `
+        <div class="stat-block">
+            <h3>👑 Absolute Dominantie</h3>
+            <div style="font-size: 0.9rem; margin-bottom: 4px;">Hoogste score in één land:</div>
+            <div class="winner-text" style="color: ${userColors[bestDomUser]};">${bestDomUser} <span style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 700;">(${bestDomScore}/20 in ${bestDomCountry})</span></div>
+            <div style="font-size: 0.9rem; margin-top: 10px; margin-bottom: 4px;">Meest verzamelde land samen:</div>
+            <div class="winner-text" style="color: var(--text-primary);">${mostCollCountry} <span style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 700;">(${mostCollScore}/20)</span></div>
+        </div>`;
+
+    // 4. Overige Stats
+    statsHTML += `
+        <div class="stat-block">
+            <h3>✨ De Glimmende Baas</h3>
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 5px;">Meeste teamlogo's en FWC stickers:</div>
+            ${getWinnerHTML(foilScores, "glimmend")}
+        </div>
+        <div class="stat-block">
+            <h3>💰 De Suikeroom</h3>
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 5px;">Meeste dubbele stickers in bezit:</div>
+            ${getWinnerHTML(dupScores, "dubbele")}
+        </div>
+        <div class="stat-block">
+            <h3>😎 De Exclusieve Club</h3>
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 5px;">Unieke stickers die de andere twee niet hebben:</div>
+            ${getWinnerHTML(exclScores, "uniek")}
+        </div>`;
+
+    document.getElementById('stats-content').innerHTML = statsHTML;
+    document.getElementById('stats-modal').style.display = 'block';
+}
+
+function closeStatsCenter() { document.getElementById('stats-modal').style.display = 'none'; }
