@@ -15,15 +15,24 @@ let showOnlyMissing = false;
 
 function getRank(score) {
     if (score >= 980) return "Wereldkampioen! 🏆";
+    if (score >= 950) return "Hall of Famer 🏛️";
     if (score >= 900) return "Legende 👑";
+    if (score >= 850) return "Ballon d'Or ✨";
     if (score >= 800) return "Gouden Schoen 🥇";
+    if (score >= 750) return "Topschutter ⚽";
     if (score >= 700) return "Aanvoerder ©️";
+    if (score >= 650) return "Spelverdeler 🎯";
     if (score >= 600) return "Publiekslieveling 👏";
-    if (score >= 500) return "Sterkhouder 💪";
-    if (score >= 400) return "Basisspeler 🏃‍♂️";
-    if (score >= 300) return "Invaller 🔄";
-    if (score >= 200) return "Bankzitter 🪑";
-    if (score >= 100) return "Jeugdspeler 👦";
+    if (score >= 550) return "Sterkhouder 💪";
+    if (score >= 500) return "Vaste Waarde 🛡️";
+    if (score >= 450) return "Basisspeler 🏃‍♂️";
+    if (score >= 400) return "Super-sub ⚡";
+    if (score >= 350) return "Invaller 🔄";
+    if (score >= 300) return "Bankzitter 🪑";
+    if (score >= 250) return "Selectiespeler 📋";
+    if (score >= 200) return "Belofte 🌟";
+    if (score >= 150) return "Jeugdproduct 👦";
+    if (score >= 100) return "Mascotte 🦁";
     if (score >= 50)  return "Ballenjongen 🧢";
     return "Waterdrager 🚰";
 }
