@@ -199,3 +199,14 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
     margin-right: -6px; position: relative; 
 }
 .other-dot:last-child { margin-right: 0; }
+
+/* --- TROPHY ROOM STYLING --- */
+#stats-modal .modal-content { background: var(--bg-main); color: var(--text-primary); }
+#stats-modal .modal-header { background: white; color: var(--text-primary); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+.stat-block { background: white; border-radius: 16px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); margin-bottom: 12px; }
+.stat-block h3 { text-align: left; margin-bottom: 10px; font-size: 1.1rem; color: var(--text-primary); border-bottom: 2px dashed #f1f5f9; padding-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.stat-bar-bg { background: #e2e8f0; height: 12px; border-radius: 6px; width: 100%; overflow: hidden; margin-top: 4px; margin-bottom: 10px; }
+.stat-bar-fill { height: 100%; border-radius: 6px; transition: width 1s ease-in-out; }
+.top10-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f8fafc; font-size: 0.95rem; font-weight: 700; }
+.top10-item:last-child { border-bottom: none; }
+.winner-text { font-size: 1.1rem; font-weight: 900; }
