@@ -1,4 +1,4 @@
-// app.js - Ultimate Edition v14 (Confetti, Dynamic Colors & 10s Toast)
+// app.js - Ultimate Edition v16
 
 const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co'; 
 const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; 
@@ -6,13 +6,27 @@ const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 const users = ['Lou & Noé', 'Wesley', 'Oliver'];
 const userColors = { 'Lou & Noé': 'var(--color-1)', 'Wesley': 'var(--color-2)', 'Oliver': 'var(--color-3)' };
-
 const dbNames = { 'Lou & Noé': 'Jorden', 'Wesley': 'Wesley', 'Oliver': 'Oliver' };
 
 let currentUser = ''; 
 let otherUsers = []; 
 let allStickers = { 'Lou & Noé': {}, 'Wesley': {}, 'Oliver': {} };
 let showOnlyMissing = false; 
+
+function getRank(score) {
+    if (score >= 980) return "Wereldkampioen! 🏆";
+    if (score >= 900) return "Legende 👑";
+    if (score >= 800) return "Gouden Schoen 🥇";
+    if (score >= 700) return "Aanvoerder ©️";
+    if (score >= 600) return "Publiekslieveling 👏";
+    if (score >= 500) return "Sterkhouder 💪";
+    if (score >= 400) return "Basisspeler 🏃‍♂️";
+    if (score >= 300) return "Invaller 🔄";
+    if (score >= 200) return "Bankzitter 🪑";
+    if (score >= 100) return "Jeugdspeler 👦";
+    if (score >= 50)  return "Ballenjongen 🧢";
+    return "Waterdrager 🚰";
+}
 
 async function selectUser(name) {
     currentUser = name;
@@ -92,32 +106,33 @@ function renderDashboard() {
             </div>`;
     });
 
-    let legendHTML = '';
-    users.forEach(u => { legendHTML += `<div class="legend-item"><div class="legend-dot" style="background: ${userColors[u]};"></div><span>${u} (${scores[u]})</span></div>`; });
-    document.getElementById('legend-container').innerHTML = legendHTML;
-
-    document.getElementById('total-text').innerText = `${scores[currentUser]}/980`;
-    document.getElementById('total-text').style.color = userColors[currentUser];
-    document.getElementById('soccer-ball').style.left = `calc(${Math.min((scores[currentUser] / 980) * 100, 90)}% - 10px)`;
+    let ranksHTML = '';
+    let sortedUsers = [...users].sort((a, b) => scores[b] - scores[a]);
+    sortedUsers.forEach(u => {
+        let rankName = getRank(scores[u]);
+        let isMe = u === currentUser ? `font-weight: 900; background: ${userColors[u]}15; border: 1px solid ${userColors[u]}40; transform: scale(1.02);` : `font-weight: 800; border: 1px solid transparent;`;
+        ranksHTML += `
+            <div class="rank-row" style="border-left: 5px solid ${userColors[u]}; ${isMe}">
+                <div class="rank-info">
+                    <span class="rank-name" style="color: ${userColors[u]};">${u}</span>
+                    <span class="rank-title">${rankName}</span>
+                </div>
+                <div class="rank-score" style="${u === currentUser ? 'font-weight: 900;' : 'font-weight: 700;'}">${scores[u]} <span style="font-size: 0.7rem; color: var(--text-secondary);">/ 980</span></div>
+            </div>`;
+    });
+    document.getElementById('ranks-container').innerHTML = ranksHTML;
 }
 
-// TOAST NOTIFICATIES (Nieuwe logica met kleuren & 10 seconden timer)
 let toastTimeout;
 function showToast(message, type, colors = null) {
     const toast = document.getElementById('toast');
-    toast.innerHTML = message; 
-    toast.className = `toast show ${type}`;
-    
-    if (colors && colors.length >= 2) {
-        toast.style.background = `linear-gradient(135deg, ${colors[0]}, ${colors[1]})`;
-    } else if (type === 'error') {
-        toast.style.background = '#ef4444';
-    } else {
-        toast.style.background = 'var(--color-owned)';
-    }
+    toast.innerHTML = message; toast.className = `toast show ${type}`;
+    if (colors && colors.length >= 2) { toast.style.background = `linear-gradient(135deg, ${colors[0]}, ${colors[1]})`; } 
+    else if (type === 'error') { toast.style.background = '#ef4444'; } 
+    else { toast.style.background = 'var(--color-owned)'; }
 
     clearTimeout(toastTimeout);
-    toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 10000); // Blijft nu 10 volle seconden!
+    toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 10000);
 }
 
 function handleQuickAdd(event) { if (event.key === 'Enter') processQuickAdd(); }
@@ -149,30 +164,19 @@ function processQuickAdd() {
         if (prefix === 'FWC') { let i = code === '00' ? 1 : num + 1; playerName = country.players ? country.players[i-1] : `Speler ${i}`; } 
         else { playerName = country.players ? country.players[num-1] : (num === 1 ? "Team Logo" : (num === 13 ? "Teamfoto" : `Speler ${num}`)); }
         
-        // Paginanummer genereren
         let pageText = country.page ? `<div style="margin-top: 5px; font-size: 0.9rem; opacity: 0.9;">Pagina ${country.page}</div>` : '';
-        
-        // Nieuw of Dubbel check!
         let statusText = newAmount === 1 ? '🌟 NIEUWE STICKER!' : `🔄 DUBBEL (${newAmount}x)`;
 
-        // Confetti Logica!
         if (typeof confetti === 'function') {
-            if (newAmount === 1) {
-                // Groot confetti kanon voor een nieuwe sticker
-                confetti({ particleCount: 150, spread: 80, origin: { y: 0.8 }, colors: country.colors });
-            } else {
-                // Kleinere "poof" voor een dubbele
-                confetti({ particleCount: 50, spread: 40, origin: { y: 0.8 }, colors: country.colors });
-            }
+            if (newAmount === 1) confetti({ particleCount: 150, spread: 80, origin: { y: 0.8 }, colors: country.colors });
+            else confetti({ particleCount: 50, spread: 40, origin: { y: 0.8 }, colors: country.colors });
         }
 
-        // Bouw het vette HTML bericht
         let msg = `
             <div style="font-size: 1.4rem; font-weight: 900; margin-bottom: 5px;">${code} - ${playerName}</div>
             <div style="font-size: 1.2rem; font-weight: 800; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 8px; display: inline-block;">${statusText}</div>
             ${pageText}
         `;
-
         showToast(msg, "success", country.colors);
         inputField.value = ''; renderDashboard(); 
         if(navigator.vibrate) navigator.vibrate([40, 40]); 
@@ -258,8 +262,7 @@ function openTradeCenter() {
         collections.forEach(country => {
             for (let i = 1; i <= country.count; i++) {
                 let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
-                let myAmt = allStickers[currentUser][code] || 0; 
-                let theirAmt = allStickers[ou][code] || 0;
+                let myAmt = allStickers[currentUser][code] || 0; let theirAmt = allStickers[ou][code] || 0;
                 let pageStr = country.page ? ` (Pag.${country.page})` : '';
                 if (myAmt > 1 && theirAmt === 0) give.push(code + pageStr);
                 if (theirAmt > 1 && myAmt === 0) get.push(code + pageStr);
@@ -282,11 +285,8 @@ function openTradeCenter() {
 
 function closeTradeCenter() { document.getElementById('trade-modal').style.display = 'none'; }
 
-// --- TROPHY ROOM LOGICA --- //
 function openStatsCenter() {
     let statsHTML = '';
-
-    // 1. Rode Duivels Barometer (BEL)
     let belHTML = '';
     users.forEach(u => {
         let belCount = 0;
@@ -298,12 +298,11 @@ function openStatsCenter() {
     });
     statsHTML += `<div class="stat-block"><h3>🇧🇪 Rode Duivels Barometer</h3>${belHTML}</div>`;
 
-    // 2. Hall of Fame (Top 10 Most Wanted)
     const top10 = [
         { code: 'ARG 17', name: 'Lionel Messi' }, { code: 'POR 15', name: 'Cristiano Ronaldo' },
         { code: 'FRA 20', name: 'Kylian Mbappé' }, { code: 'ENG 11', name: 'Jude Bellingham' },
         { code: 'BRA 14', name: 'Vinícius Jr.' }, { code: 'BEL 15', name: 'Kevin De Bruyne' },
-        { code: 'ESP 15', name: 'Lamine Yamal' }, { code: 'NOR 15', n: 'Erling Haaland' },
+        { code: 'ESP 15', name: 'Lamine Yamal' }, { code: 'NOR 15', name: 'Erling Haaland' },
         { code: 'GER 15', name: 'Jamal Musiala' }, { code: 'BEL 14', name: 'Hans Vanaken' }
     ];
     let top10HTML = '';
@@ -317,18 +316,14 @@ function openStatsCenter() {
     });
     statsHTML += `<div class="stat-block"><h3>⭐ Top 10 Most Wanted</h3>${top10HTML}</div>`;
 
-    // Berekenen van de geavanceerde stats
     let foilScores = { 'Lou & Noé':0, 'Wesley':0, 'Oliver':0 };
     let dupScores = { 'Lou & Noé':0, 'Wesley':0, 'Oliver':0 };
     let exclScores = { 'Lou & Noé':0, 'Wesley':0, 'Oliver':0 };
-    
     let bestDomUser = ''; let bestDomCountry = ''; let bestDomScore = 0;
     let mostCollCountry = ''; let mostCollScore = 0;
 
     collections.forEach(country => {
-        let combinedUnique = 0;
-        let uScores = { 'Lou & Noé':0, 'Wesley':0, 'Oliver':0 };
-
+        let combinedUnique = 0; let uScores = { 'Lou & Noé':0, 'Wesley':0, 'Oliver':0 };
         for(let i=1; i<=country.count; i++) {
             let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
             let isFoil = (i === 1 || country.prefix === 'FWC');
@@ -337,35 +332,21 @@ function openStatsCenter() {
             let countW = allStickers['Wesley'][code] || 0;
             let countO = allStickers['Oliver'][code] || 0;
 
-            // Dominantie & Samen
             if(countL > 0) { uScores['Lou & Noé']++; }
             if(countW > 0) { uScores['Wesley']++; }
             if(countO > 0) { uScores['Oliver']++; }
             if(countL > 0 || countW > 0 || countO > 0) { combinedUnique++; }
 
-            // Foils (Glimmend)
-            if(isFoil) {
-                if(countL > 0) foilScores['Lou & Noé']++;
-                if(countW > 0) foilScores['Wesley']++;
-                if(countO > 0) foilScores['Oliver']++;
-            }
+            if(isFoil) { if(countL > 0) foilScores['Lou & Noé']++; if(countW > 0) foilScores['Wesley']++; if(countO > 0) foilScores['Oliver']++; }
+            if(countL > 1) dupScores['Lou & Noé'] += (countL-1); if(countW > 1) dupScores['Wesley'] += (countW-1); if(countO > 1) dupScores['Oliver'] += (countO-1);
 
-            // Dubbele tellen
-            if(countL > 1) dupScores['Lou & Noé'] += (countL-1);
-            if(countW > 1) dupScores['Wesley'] += (countW-1);
-            if(countO > 1) dupScores['Oliver'] += (countO-1);
-
-            // Exclusieve Club (Alleen JIJ hebt hem)
             if(countL > 0 && countW === 0 && countO === 0) exclScores['Lou & Noé']++;
             if(countW > 0 && countL === 0 && countO === 0) exclScores['Wesley']++;
             if(countO > 0 && countL === 0 && countW === 0) exclScores['Oliver']++;
         }
-
         if(country.prefix !== 'FWC') {
             if(combinedUnique > mostCollScore) { mostCollScore = combinedUnique; mostCollCountry = country.name; }
-            users.forEach(u => {
-                if(uScores[u] > bestDomScore) { bestDomScore = uScores[u]; bestDomUser = u; bestDomCountry = country.name; }
-            });
+            users.forEach(u => { if(uScores[u] > bestDomScore) { bestDomScore = uScores[u]; bestDomUser = u; bestDomCountry = country.name; } });
         }
     });
 
@@ -376,7 +357,6 @@ function openStatsCenter() {
         return `<div class="winner-text" style="color: ${userColors[winner]};">${winner} <span style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 700;">(${score} ${label})</span></div>`;
     };
 
-    // 3. Dominantie
     statsHTML += `
         <div class="stat-block">
             <h3>👑 Absolute Dominantie</h3>
@@ -384,10 +364,7 @@ function openStatsCenter() {
             <div class="winner-text" style="color: ${userColors[bestDomUser]};">${bestDomUser} <span style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 700;">(${bestDomScore}/20 in ${bestDomCountry})</span></div>
             <div style="font-size: 0.9rem; margin-top: 10px; margin-bottom: 4px;">Meest verzamelde land samen:</div>
             <div class="winner-text" style="color: var(--text-primary);">${mostCollCountry} <span style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 700;">(${mostCollScore}/20)</span></div>
-        </div>`;
-
-    // 4. Overige Stats
-    statsHTML += `
+        </div>
         <div class="stat-block">
             <h3>✨ De Glimmende Baas</h3>
             <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 5px;">Meeste teamlogo's en FWC stickers:</div>
@@ -407,5 +384,4 @@ function openStatsCenter() {
     document.getElementById('stats-content').innerHTML = statsHTML;
     document.getElementById('stats-modal').style.display = 'block';
 }
-
 function closeStatsCenter() { document.getElementById('stats-modal').style.display = 'none'; }
