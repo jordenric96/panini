@@ -1,13 +1,13 @@
-/* style.css - Ultimate Panini Tracker Edition v14 (3 Spelers + Premium Toast) */
+/* style.css - Ultimate Panini Tracker Edition v16 */
 
 :root {
     --bg-main: #f4f7fc;
     --bg-card: #ffffff;
     --text-primary: #0f172a;
     --text-secondary: #64748b;
-    --color-1: #4f46e5; /* Lou & Noé (Blauw/Paars) */
-    --color-2: #ff005b; /* Wesley (Roze) */
-    --color-3: #f59e0b; /* Oliver (Goud/Oranje) */
+    --color-1: #4f46e5; /* Lou & Noé */
+    --color-2: #ff005b; /* Wesley */
+    --color-3: #f59e0b; /* Oliver */
     --color-owned: #10b981; 
     --color-double: #ffd700; 
 }
@@ -32,7 +32,6 @@ body {
 
 h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 
-/* Dashboard Actieknoppen */
 .dashboard-actions { display: flex; gap: 8px; justify-content: flex-end; margin-bottom: 20px; }
 .btn-action {
     background: #f1f5f9; color: var(--text-primary); border: none;
@@ -43,7 +42,6 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 .btn-action:hover { background: #e2e8f0; transform: translateY(-2px); }
 .btn-action.active { background: var(--color-1); color: white; }
 
-/* Profielscherm (Nu voor 3 spelers) */
 #profile-section { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; }
 .profile-grid { display: flex; flex-wrap: wrap; gap: 12px; width: 100%; margin-top: 15px; justify-content: center; }
 .profile-card {
@@ -55,29 +53,18 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 }
 .profile-card:hover { border-color: var(--color-1); color: var(--color-1); transform: translateY(-4px); box-shadow: 0 12px 24px rgba(79, 70, 229, 0.1); }
 
-/* Progressie Kaart & Voetbalveld Balk */
 .total-card { background: #f8fafc; padding: 20px; border-radius: 22px; margin-bottom: 25px; text-align: center; }
-.soccer-field {
-    position: relative; height: 38px; background: #22c55e;
-    border-radius: 19px; margin: 15px 0; border: 3px solid #16a34a;
-    overflow: hidden; display: flex; align-items: center;
-    box-shadow: inset 0 3px 6px rgba(0,0,0,0.15);
+.ranks-container { display: flex; flex-direction: column; gap: 8px; }
+.rank-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px; background: #ffffff; border-radius: 14px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.02); transition: all 0.2s;
 }
-.goal-area {
-    position: absolute; right: 0; width: 45px; height: 100%;
-    background: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(255,255,255,0.6) 4px, rgba(255,255,255,0.6) 8px);
-    border-left: 3px solid white;
-}
-.soccer-ball {
-    position: absolute; font-size: 24px; left: 0%;
-    transition: left 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-    z-index: 10; margin-left: 4px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-}
-.legend-container { display: flex; justify-content: center; gap: 12px; margin-top: 5px; font-weight: 800; font-size: 0.8rem; flex-wrap: wrap; }
-.legend-item { display: flex; align-items: center; gap: 4px; }
-.legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+.rank-info { display: flex; flex-direction: column; text-align: left; }
+.rank-name { font-size: 1.05rem; letter-spacing: 0.5px; }
+.rank-title { font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px; }
+.rank-score { font-size: 1.2rem; color: var(--text-primary); }
 
-/* --- ZOEK & SNEL INVOEREN --- */
 .search-container { margin-bottom: 12px; width: 100%; }
 .quick-add-container { display: flex; gap: 8px; margin-bottom: 15px; width: 100%; }
 
@@ -98,41 +85,20 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 }
 .btn-quick-add:active { transform: scale(0.92); }
 
-/* --- TOAST POP-UP (PREMIUM EDITION) --- */
 .toast {
-    display: none;
-    visibility: hidden;
-    min-width: 300px;
-    max-width: 90vw;
-    color: #fff;
-    text-align: center;
-    border-radius: 20px;
-    padding: 22px 25px;
-    position: fixed;
-    z-index: 10000;
-    left: 50%;
-    bottom: -100px;
-    transform: translateX(-50%);
-    font-weight: 800;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-    opacity: 0;
+    display: none; visibility: hidden; min-width: 300px; max-width: 90vw; color: #fff;
+    text-align: center; border-radius: 20px; padding: 22px 25px; position: fixed; z-index: 10000;
+    left: 50%; bottom: -100px; transform: translateX(-50%); font-weight: 800;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5); opacity: 0;
     transition: opacity 0.4s, bottom 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-    border: 3px solid rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(10px);
+    border: 3px solid rgba(255, 255, 255, 0.4); backdrop-filter: blur(10px);
 }
-.toast.show {
-    display: block;
-    visibility: visible;
-    opacity: 1;
-    bottom: 40px;
-}
+.toast.show { display: block; visibility: visible; opacity: 1; bottom: 40px; }
 
-/* GAME GRID & POULE HEADERS */
 .countries-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .group-header {
     grid-column: 1 / -1; margin: 15px 0 5px 0; padding-bottom: 5px;
-    border-bottom: 2px dashed #cbd5e1; display: flex; justify-content: space-between; align-items: flex-end;
-    transition: all 0.4s ease;
+    border-bottom: 2px dashed #cbd5e1; display: flex; justify-content: space-between; align-items: flex-end; transition: all 0.4s ease;
 }
 .group-header h3 { margin: 0; color: var(--text-secondary); font-size: 1.15rem; text-transform: uppercase; letter-spacing: 1.5px; }
 .group-score { font-size: 0.85rem; font-weight: 800; color: var(--text-secondary); }
@@ -141,9 +107,7 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 .group-header.gold h3 { color: #d4af37; font-weight: 900; }
 .group-header.gold .group-score { color: #d4af37; }
 
-.country-card {
-    display: flex; flex-direction: column; align-items: center; padding: 12px 4px; border-radius: 16px; cursor: pointer; background: #f8fafc; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); animation: popIn 0.35s ease-out backwards;
-}
+.country-card { display: flex; flex-direction: column; align-items: center; padding: 12px 4px; border-radius: 16px; cursor: pointer; background: #f8fafc; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); animation: popIn 0.35s ease-out backwards; }
 .country-card:hover { transform: scale(1.06) translateY(-3px); box-shadow: 0 12px 25px rgba(0,0,0,0.06); background: #ffffff; }
 @keyframes popIn { 0% { transform: scale(0.85); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
@@ -152,14 +116,12 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 .grid-score-row { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; justify-content: center; }
 .grid-badge { padding: 2px 5px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; color: white; min-width: 12px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.08); }
 
-/* MODALS */
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; overflow: hidden; background: rgba(0,0,0,0.8); }
 .modal-content { width: 100%; max-width: 550px; margin: 0 auto; height: 100dvh; padding: 15px; box-sizing: border-box; display: flex; flex-direction: column; color: white; }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: rgba(0, 0, 0, 0.12); backdrop-filter: blur(15px); padding: 12px 16px; border-radius: 18px; }
 
-/* RUILCENTRUM MODAL */
-#trade-modal .modal-content { background: var(--bg-main); color: var(--text-primary); }
-#trade-modal .modal-header { background: white; color: var(--text-primary); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+#trade-modal .modal-content, #stats-modal .modal-content { background: var(--bg-main); color: var(--text-primary); }
+#trade-modal .modal-header, #stats-modal .modal-header { background: white; color: var(--text-primary); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
 .trade-section { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; padding-bottom: 20px; }
 .trade-block { background: white; border-radius: 16px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); margin-bottom: 10px; }
 .trade-block h3 { text-align: left; margin-bottom: 10px; font-size: 1.2rem; }
@@ -168,7 +130,6 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 .trade-chip.give { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
 .trade-chip.get { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
 
-/* STICKER MODAL */
 .modal-flag-wrapper { position: relative; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; }
 .flag-ring-1 { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 3px solid rgba(255,255,255,0.8); }
 .flag-ring-2 { position: absolute; width: 84%; height: 84%; border-radius: 50%; border: 2.5px solid rgba(255,255,255,0.3); }
@@ -185,24 +146,14 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 
 .box-prefix { font-size: 0.65rem; font-weight: 800; opacity: 0.85; pointer-events: none; }
 .box-num { font-size: 1.15rem; font-weight: 800; margin-top: -2px; pointer-events: none; }
-
-/* Verwijder Badge (Min-knopje) */
 .badge { position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; font-size: 0.75rem; width: 22px; height: 22px; display: flex; justify-content: center; align-items: center; border-radius: 50%; font-weight: 900; box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 10; border: 2px solid white; cursor: pointer; }
 .sticker-box.double .badge { background: #4a2500; border-color: #ffd700; color: #ffd700; }
 
-/* Nieuwe styling voor overlappende bolletjes (Als 2 anderen de sticker dubbel hebben) */
 .dots-container { position: absolute; top: -6px; left: -6px; display: flex; z-index: 5; }
-.other-dot { 
-    width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; 
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3); font-size: 0.5rem; font-weight: 900; 
-    display: flex; align-items: center; justify-content: center; color: white; 
-    margin-right: -6px; position: relative; 
-}
+.other-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3); font-size: 0.5rem; font-weight: 900; display: flex; align-items: center; justify-content: center; color: white; margin-right: -6px; position: relative; }
 .other-dot:last-child { margin-right: 0; }
 
-/* --- TROPHY ROOM STYLING --- */
-#stats-modal .modal-content { background: var(--bg-main); color: var(--text-primary); }
-#stats-modal .modal-header { background: white; color: var(--text-primary); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+/* Trophy Room Styles */
 .stat-block { background: white; border-radius: 16px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); margin-bottom: 12px; }
 .stat-block h3 { text-align: left; margin-bottom: 10px; font-size: 1.1rem; color: var(--text-primary); border-bottom: 2px dashed #f1f5f9; padding-bottom: 8px; display: flex; align-items: center; gap: 8px; }
 .stat-bar-bg { background: #e2e8f0; height: 12px; border-radius: 6px; width: 100%; overflow: hidden; margin-top: 4px; margin-bottom: 10px; }
