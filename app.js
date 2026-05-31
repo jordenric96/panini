@@ -1,4 +1,4 @@
-// app.js - Ultimate Edition v16
+// app.js - Ultimate Edition v18 (Mijn Dubbele filter + Luxe Ruilcentrum met vlaggen)
 
 const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co'; 
 const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; 
@@ -11,7 +11,7 @@ const dbNames = { 'Lou & Noé': 'Jorden', 'Wesley': 'Wesley', 'Oliver': 'Oliver'
 let currentUser = ''; 
 let otherUsers = []; 
 let allStickers = { 'Lou & Noé': {}, 'Wesley': {}, 'Oliver': {} };
-let showOnlyMissing = false; 
+let showOnlyDoubles = false; // Filter aangepast van 'Missing' naar 'Doubles'
 
 function getRank(score) {
     if (score >= 980) return "Wereldkampioen! 🏆";
@@ -52,7 +52,13 @@ function logout() {
     document.getElementById('dashboard-section').style.display = 'none';
 }
 
-function toggleFilter() { showOnlyMissing = !showOnlyMissing; document.getElementById('btn-filter').classList.toggle('active', showOnlyMissing); renderDashboard(); }
+// Aangepaste filter: Wisselen tussen Alles en 'Mijn Dubbele'
+function toggleFilter() { 
+    showOnlyDoubles = !showOnlyDoubles; 
+    document.getElementById('btn-filter').classList.toggle('active', showOnlyDoubles); 
+    renderDashboard(); 
+}
+
 function filterCountries() { renderDashboard(); }
 
 async function loadUserData() {
@@ -84,13 +90,21 @@ function renderDashboard() {
     let currentGroup = ''; let cardIndex = 0;
     collections.forEach(country => {
         let countTracker = { 'Lou & Noé': 0, 'Wesley': 0, 'Oliver': 0 };
+        let hasAnyDoubleInCountry = false;
+
         for (let i = 1; i <= country.count; i++) {
             let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
             users.forEach(u => { if (allStickers[u][code]) countTracker[u]++; });
+            
+            // Check of ingelogde gebruiker hier een dubbele heeft liggen
+            if ((allStickers[currentUser][code] || 0) > 1) {
+                hasAnyDoubleInCountry = true;
+            }
         }
         users.forEach(u => { scores[u] += countTracker[u]; });
 
-        if (showOnlyMissing && countTracker[currentUser] === country.count) return;
+        // NIEUW: Als 'Mijn Dubbele' aan staat, verberg landen zonder dubbele
+        if (showOnlyDoubles && !hasAnyDoubleInCountry) return;
         if (!country.name.toLowerCase().includes(searchTerm) && !country.prefix.toLowerCase().includes(searchTerm)) return;
 
         if (country.group !== currentGroup) {
@@ -264,6 +278,30 @@ function updateStickerUI(code, amount) {
     else { badge.style.display = 'none'; }
 }
 
+async function executeInstantTrade(code, targetUser) {
+    let myNewAmt = Math.max((allStickers[currentUser][code] || 0) - 1, 0);
+    let theirNewAmt = (allStickers[targetUser][code] || 0) + 1;
+
+    allStickers[currentUser][code] = myNewAmt;
+    if(myNewAmt === 0) delete allStickers[currentUser][code];
+    allStickers[targetUser][code] = theirNewAmt;
+
+    if(navigator.vibrate) navigator.vibrate([50, 30, 50]);
+
+    await Promise.all([
+        supabaseClient.from('user_stickers').upsert({ user_name: dbNames[currentUser], sticker_code: code, amount: myNewAmt }),
+        supabaseClient.from('user_stickers').upsert({ user_name: dbNames[targetUser], sticker_code: code, amount: theirNewAmt })
+    ]);
+
+    if(myNewAmt === 0) {
+        await supabaseClient.from('user_stickers').delete().match({ user_name: dbNames[currentUser], sticker_code: code });
+    }
+
+    showToast(`🔄 Sticker overgedragen naar ${targetUser}!`, "success");
+    openTradeCenter(); 
+    renderDashboard();
+}
+
 function openTradeCenter() {
     let tradeHTML = '';
     otherUsers.forEach(ou => {
@@ -272,19 +310,42 @@ function openTradeCenter() {
             for (let i = 1; i <= country.count; i++) {
                 let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
                 let myAmt = allStickers[currentUser][code] || 0; let theirAmt = allStickers[ou][code] || 0;
-                let pageStr = country.page ? ` (Pag.${country.page})` : '';
-                if (myAmt > 1 && theirAmt === 0) give.push(code + pageStr);
-                if (theirAmt > 1 && myAmt === 0) get.push(code + pageStr);
+                
+                let pName = country.players ? country.players[i-1] : `Speler ${i}`;
+                let numDisplay = country.prefix === 'FWC' && i === 1 ? "00" : `${i}`;
+                let pageStr = country.page ? ` (P.${country.page})` : '';
+
+                // NIEUW: Stop de objecten met vlag, naam en nummer in de arrays in plaats van pure tekst
+                if (myAmt > 1 && theirAmt === 0) give.push({code: code, flag: country.flagUrl, num: numDisplay, name: pName, page: pageStr});
+                if (theirAmt > 1 && myAmt === 0) get.push({code: code, flag: country.flagUrl, num: numDisplay, name: pName, page: pageStr});
             }
         });
         tradeHTML += `
             <div class="trade-block" style="border-left: 4px solid ${userColors[ou]};">
                 <h3 style="color: ${userColors[ou]};">Ruilen met ${ou}</h3>
-                <div style="margin-bottom: 12px;"><strong style="font-size: 0.9rem;">Jij zoekt, ${ou} heeft dubbel (${get.length}):</strong>
-                    <div class="trade-codes" style="margin-top: 6px;">${get.length === 0 ? '<span style="color:#94a3b8; font-size:0.8rem;">Niets wat jij mist...</span>' : get.map(c => `<span class="trade-chip get">${c}</span>`).join('')}</div>
+                <div style="margin-bottom: 16px;"><strong style="font-size: 0.95rem;">Jij zoekt, ${ou} heeft dubbel (${get.length}):</strong>
+                    <div class="trade-codes" style="margin-top: 8px;">${get.length === 0 ? '<span style="color:#94a3b8; font-size:0.8rem;">Niets wat jij mist...</span>' : get.map(item => `
+                        <div class="trade-chip-wrapper">
+                            <div class="trade-item-left">
+                                <div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div>
+                                <span class="trade-num-badge">${item.num}</span>
+                                <span class="trade-player-name">${item.name} <span style="font-size:0.75rem; color:var(--text-secondary);">${item.page}</span></span>
+                            </div>
+                            <span class="trade-status-box get">Jij Mist</span>
+                        </div>
+                    `).join('')}</div>
                 </div>
-                <div><strong style="font-size: 0.9rem;">${ou} zoekt, jij hebt dubbel (${give.length}):</strong>
-                    <div class="trade-codes" style="margin-top: 6px;">${give.length === 0 ? '<span style="color:#94a3b8; font-size:0.8rem;">Geen dubbele voor ${ou}...</span>' : give.map(c => `<span class="trade-chip give">${c}</span>`).join('')}</div>
+                <div><strong style="font-size: 0.95rem;">${ou} zoekt, jij hebt dubbel (${give.length}):</strong>
+                    <div class="trade-codes" style="margin-top: 8px;">${give.length === 0 ? '<span style="color:#94a3b8; font-size:0.8rem;">Geen dubbele voor ${ou}...</span>' : give.map(item => `
+                        <div class="trade-chip-wrapper">
+                            <div class="trade-item-left">
+                                <div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div>
+                                <span class="trade-num-badge">${item.num}</span>
+                                <span class="trade-player-name">${item.name} <span style="font-size:0.75rem; color:var(--text-secondary);">${item.page}</span></span>
+                            </div>
+                            <button class="btn-instant-trade" onclick="executeInstantTrade('${item.code}', '${ou}')">⚡ Ruil</button>
+                        </div>
+                    `).join('')}</div>
                 </div>
             </div>`;
     });
@@ -307,6 +368,36 @@ function openStatsCenter() {
     });
     statsHTML += `<div class="stat-block"><h3>🇧🇪 Rode Duivels Barometer</h3>${belHTML}</div>`;
 
+    let poulesMap = {};
+    collections.forEach(c => {
+        if(!poulesMap[c.group]) poulesMap[c.group] = { totalStickers: 0, usersOwned: { 'Lou & Noé': 0, 'Wesley': 0, 'Oliver': 0 } };
+        poulesMap[c.group].totalStickers += c.count;
+        for (let i = 1; i <= c.count; i++) {
+            let code = c.prefix === 'FWC' && i === 1 ? '00' : c.prefix === 'FWC' ? `FWC ${i-1}` : `${c.prefix} ${i}`;
+            users.forEach(u => { if(allStickers[u][code]) poulesMap[c.group].usersOwned[u]++; });
+        }
+    });
+
+    let poulesHTML = '';
+    Object.keys(poulesMap).forEach(gName => {
+        let pData = poulesMap[gName];
+        let sortedPouleUsers = [...users].sort((a,b) => pData.usersOwned[b] - pData.usersOwned[a]);
+        let leader = sortedPouleUsers[0];
+        let leaderScore = pData.usersOwned[leader];
+        let leaderPerc = Math.round((leaderScore / pData.totalStickers) * 100);
+
+        poulesHTML += `
+            <div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed #f1f5f9;">
+                <div style="font-size: 0.95rem; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;">${gName} <span style="font-size:0.75rem; color:var(--text-secondary);">(${pData.totalStickers} tot.)</span></div>
+                <div class="poule-row">
+                    <span style="color: ${userColors[leader]}; font-size:0.85rem;">🥇 ${leader}</span>
+                    <div class="poule-mini-bar"><div style="height:100%; background:${userColors[leader]}; width:${(leaderScore/pData.totalStickers)*100}%;"></div></div>
+                    <span>${leaderScore} st. (${leaderPerc}%)</span>
+                </div>
+            </div>`;
+    });
+    statsHTML += `<div class="stat-block"><h3>📊 Poule Ranglijst</h3>${poulesHTML}</div>`;
+
     const top10 = [
         { code: 'ARG 17', name: 'Lionel Messi' }, { code: 'POR 15', name: 'Cristiano Ronaldo' },
         { code: 'FRA 20', name: 'Kylian Mbappé' }, { code: 'ENG 11', name: 'Jude Bellingham' },
@@ -319,9 +410,9 @@ function openStatsCenter() {
         let dotsHTML = '';
         users.forEach(u => {
             let hasIt = allStickers[u][p.code] > 0;
-            dotsHTML += `<div class="legend-dot" style="background: ${hasIt ? userColors[u] : '#cbd5e1'}; opacity: ${hasIt ? '1' : '0.2'};"></div>`;
+            dotsHTML += `<div class="legend-dot" style="background: ${hasIt ? userColors[u] : '#cbd5e1'}; opacity: ${hasIt ? '1' : '0.2'}; margin-right:4px;"></div>`;
         });
-        top10HTML += `<div class="top10-item"><span>${p.name}</span><div style="display:flex; gap:6px; align-items:center;">${dotsHTML}</div></div>`;
+        top10HTML += `<div class="top10-item"><span>${p.name}</span><div style="display:flex; align-items:center;">${dotsHTML}</div></div>`;
     });
     statsHTML += `<div class="stat-block"><h3>⭐ Top 10 Most Wanted</h3>${top10HTML}</div>`;
 
@@ -385,7 +476,7 @@ function openStatsCenter() {
             ${getWinnerHTML(dupScores, "dubbele")}
         </div>
         <div class="stat-block">
-            <h3>😎 De Exclusieve Club</h3>
+            <h3>👑 De Exclusieve Club</h3>
             <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 5px;">Unieke stickers die de andere twee niet hebben:</div>
             ${getWinnerHTML(exclScores, "uniek")}
         </div>`;
