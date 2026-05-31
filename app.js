@@ -1,4 +1,4 @@
-// app.js - Ultimate Edition v18 (Mijn Dubbele filter + Luxe Ruilcentrum met vlaggen)
+// app.js - Ultimate Edition v19.1 (Met Sniper-Crop Scanner)
 
 const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co'; 
 const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; 
@@ -11,7 +11,7 @@ const dbNames = { 'Lou & Noé': 'Jorden', 'Wesley': 'Wesley', 'Oliver': 'Oliver'
 let currentUser = ''; 
 let otherUsers = []; 
 let allStickers = { 'Lou & Noé': {}, 'Wesley': {}, 'Oliver': {} };
-let showOnlyDoubles = false; // Filter aangepast van 'Missing' naar 'Doubles'
+let showOnlyDoubles = false; 
 
 function getRank(score) {
     if (score >= 980) return "Wereldkampioen! 🏆";
@@ -52,7 +52,6 @@ function logout() {
     document.getElementById('dashboard-section').style.display = 'none';
 }
 
-// Aangepaste filter: Wisselen tussen Alles en 'Mijn Dubbele'
 function toggleFilter() { 
     showOnlyDoubles = !showOnlyDoubles; 
     document.getElementById('btn-filter').classList.toggle('active', showOnlyDoubles); 
@@ -95,15 +94,10 @@ function renderDashboard() {
         for (let i = 1; i <= country.count; i++) {
             let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
             users.forEach(u => { if (allStickers[u][code]) countTracker[u]++; });
-            
-            // Check of ingelogde gebruiker hier een dubbele heeft liggen
-            if ((allStickers[currentUser][code] || 0) > 1) {
-                hasAnyDoubleInCountry = true;
-            }
+            if ((allStickers[currentUser][code] || 0) > 1) { hasAnyDoubleInCountry = true; }
         }
         users.forEach(u => { scores[u] += countTracker[u]; });
 
-        // NIEUW: Als 'Mijn Dubbele' aan staat, verberg landen zonder dubbele
         if (showOnlyDoubles && !hasAnyDoubleInCountry) return;
         if (!country.name.toLowerCase().includes(searchTerm) && !country.prefix.toLowerCase().includes(searchTerm)) return;
 
@@ -315,7 +309,6 @@ function openTradeCenter() {
                 let numDisplay = country.prefix === 'FWC' && i === 1 ? "00" : `${i}`;
                 let pageStr = country.page ? ` (P.${country.page})` : '';
 
-                // NIEUW: Stop de objecten met vlag, naam en nummer in de arrays in plaats van pure tekst
                 if (myAmt > 1 && theirAmt === 0) give.push({code: code, flag: country.flagUrl, num: numDisplay, name: pName, page: pageStr});
                 if (theirAmt > 1 && myAmt === 0) get.push({code: code, flag: country.flagUrl, num: numDisplay, name: pName, page: pageStr});
             }
@@ -486,7 +479,8 @@ function openStatsCenter() {
 }
 function closeStatsCenter() { document.getElementById('stats-modal').style.display = 'none'; }
 
-// --- LIVE OCR SCANNER LOGICA (Versie 19) --- //
+
+// --- LIVE OCR SCANNER LOGICA (Versie 19.1 - Met Sniper Cropping) --- //
 let isScanning = false;
 let scannerInterval;
 let scannerWorker;
@@ -509,17 +503,14 @@ async function toggleScanner() {
         isScanning = true;
 
         try {
-            // Vraag camera permissie (gebruik de achterste camera)
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', focusMode: 'continuous' } });
             video.srcObject = stream;
             status.innerText = "Scanner initialiseren... ⏳";
 
-            // Laad Tesseract OCR in op de achtergrond
             if (!scannerWorker) {
                 scannerWorker = await Tesseract.createWorker();
                 await scannerWorker.loadLanguage('eng');
                 await scannerWorker.initialize('eng');
-                // Forceer OCR om enkel hoofdletters en cijfers te zoeken (verhoogt precisie en snelheid)
                 await scannerWorker.setParameters({
                     tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ',
                 });
@@ -529,40 +520,51 @@ async function toggleScanner() {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            // Scan elke 1.5 seconden een frame van de video
             scannerInterval = setInterval(async () => {
                 if (!isScanning) return;
                 
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                // --- NIEUW: De Sniper Crop ---
+                // We sturen niet de hele foto, maar enkel het centrum door!
+                const vw = video.videoWidth;
+                const vh = video.videoHeight;
                 
-                // OCR Herkenning
+                // Crop box: 50% van breedte, 30% van hoogte (exact waar je gele vakje staat)
+                const cropW = vw * 0.5;
+                const cropH = vh * 0.3;
+                const cropX = (vw - cropW) / 2;
+                const cropY = (vh - cropH) / 2;
+
+                canvas.width = cropW;
+                canvas.height = cropH;
+                
+                // Teken enkel de gecropte zone
+                ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+                // -----------------------------
+                
+                // OCR Herkenning enkel op dit kleine stukje
                 const { data: { text } } = await scannerWorker.recognize(canvas);
                 
-                // Zoek met Regex naar patronen zoals "BEL 4", "MEX 12", "FWC 00"
-                const match = text.match(/([A-Z]{3})\s*(\d{1,2})/);
+                // Ruim de tekst op voor de zekerheid (bijv. vlekjes die hij als komma ziet)
+                let cleanText = text.toUpperCase().replace(/[^A-Z0-9\s]/g, '');
+
+                const match = cleanText.match(/([A-Z]{3})\s*(\d{1,2})/);
                 if (match) {
                     let prefix = match[1];
                     let num = parseInt(match[2], 10);
                     let code = prefix === 'FWC' && num === 0 ? '00' : `${prefix} ${num}`;
                     
-                    // Dubbel-scan preventie en validatie
                     if (code !== lastScannedCode) {
                         let country = collections.find(c => c.prefix === prefix);
                         if (country) {
                             let maxNum = prefix === 'FWC' ? 19 : 20; 
                             if (code === '00' || (num >= 1 && num <= maxNum)) {
                                 
-                                // Succes!
                                 status.innerText = `Gevonden: ${code} ✅`;
                                 lastScannedCode = code;
                                 
-                                // Vul de balk in en druk automatisch op de knop!
                                 document.getElementById('quick-add-input').value = code;
                                 processQuickAdd(); 
                                 
-                                // Cooldown van 3.5 seconden voor je een volgende sticker kunt scannen
                                 setTimeout(() => { 
                                     if(isScanning) status.innerText = "Live: Volgende sticker 📷"; 
                                     lastScannedCode = ""; 
@@ -571,12 +573,12 @@ async function toggleScanner() {
                         }
                     }
                 }
-            }, 1500);
+            }, 1000);
 
         } catch (err) {
             console.error(err);
             showToast("❌ Camera toegang geweigerd of fout", "error");
-            toggleScanner(); // Zet weer uit
+            toggleScanner(); 
         }
     }
 }
