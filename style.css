@@ -1,4 +1,4 @@
-/* style.css - Ultimate Panini Tracker Edition v16 */
+/* style.css - Ultimate Panini Tracker Edition v18 */
 
 :root {
     --bg-main: #f4f7fc;
@@ -35,8 +35,8 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 .dashboard-actions { display: flex; gap: 8px; justify-content: flex-end; margin-bottom: 20px; }
 .btn-action {
     background: #f1f5f9; color: var(--text-primary); border: none;
-    padding: 10px; border-radius: 14px; font-weight: 800;
-    cursor: pointer; transition: all 0.2s ease; font-size: 1rem;
+    padding: 10px 14px; border-radius: 14px; font-weight: 800;
+    cursor: pointer; transition: all 0.2s ease; font-size: 0.95rem;
     display: flex; align-items: center; justify-content: center;
 }
 .btn-action:hover { background: #e2e8f0; transform: translateY(-2px); }
@@ -122,13 +122,32 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 
 #trade-modal .modal-content, #stats-modal .modal-content { background: var(--bg-main); color: var(--text-primary); }
 #trade-modal .modal-header, #stats-modal .modal-header { background: white; color: var(--text-primary); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-.trade-section { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; padding-bottom: 20px; }
+.trade-section { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding-bottom: 20px; }
 .trade-block { background: white; border-radius: 16px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); margin-bottom: 10px; }
-.trade-block h3 { text-align: left; margin-bottom: 10px; font-size: 1.2rem; }
-.trade-codes { display: flex; flex-wrap: wrap; gap: 8px; }
-.trade-chip { background: #f1f5f9; padding: 6px 12px; border-radius: 12px; font-weight: 800; font-size: 0.9rem; border: 1px solid #e2e8f0; }
-.trade-chip.give { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
-.trade-chip.get { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+.trade-block h3 { text-align: left; margin-bottom: 12px; font-size: 1.2rem; }
+.trade-codes { display: flex; flex-direction: column; gap: 8px; }
+
+/* NIEUW EN FLITSEND: Uitgebreide vlag + naam styling in het Ruilcentrum */
+.trade-chip-wrapper { 
+    display: flex; justify-content: space-between; align-items: center; 
+    background: #f8fafc; border-radius: 14px; padding: 8px 12px; 
+    border: 1px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0,0,0,0.01);
+}
+.trade-item-left { display: flex; align-items: center; gap: 10px; }
+.trade-mini-flag { width: 24px; height: 16px; border-radius: 3px; background-size: cover; background-position: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.trade-num-badge { font-weight: 900; font-size: 0.95rem; min-width: 28px; }
+.trade-player-name { font-weight: 700; font-size: 0.9rem; color: var(--text-primary); text-align: left; }
+
+.trade-status-box { padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; }
+.trade-status-box.get { background: #fee2e2; color: #991b1b; }
+.trade-status-box.give { background: #dcfce7; color: #166534; }
+
+.btn-instant-trade { 
+    background: #4f46e5; color: white; border: none; font-size: 0.8rem; 
+    font-weight: 900; padding: 6px 12px; border-radius: 10px; cursor: pointer; 
+    transition: all 0.1s; box-shadow: 0 3px 8px rgba(79, 70, 229, 0.2);
+}
+.btn-instant-trade:active { transform: scale(0.92); }
 
 .modal-flag-wrapper { position: relative; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; }
 .flag-ring-1 { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 3px solid rgba(255,255,255,0.8); }
@@ -162,11 +181,7 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 .top10-item:last-child { border-bottom: none; }
 .winner-text { font-size: 1.1rem; font-weight: 900; }
 
-/* Fix voor de bolletjes in de Trophy Room */
-.legend-dot { 
-    width: 12px; 
-    height: 12px; 
-    border-radius: 50%; 
-    display: inline-block; 
-}
+.legend-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
 
+.poule-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem; font-weight: 700; }
+.poule-mini-bar { background: #cbd5e1; height: 6px; border-radius: 3px; flex-grow: 1; margin: 0 10px; overflow: hidden; }
