@@ -9,12 +9,12 @@
     <link rel="icon" href="icon.png" type="image/png">
     <link rel="apple-touch-icon" href="icon.png">
     
-    <!-- Supabase & Confetti Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=18">
+    <link rel="stylesheet" href="style.css?v=19">
 </head>
 <body>
 
@@ -32,7 +32,6 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <h2 id="welcome-text" style="text-align: left; margin: 0; font-size: 1.5rem; line-height: 1.2;">Album</h2>
             <div class="dashboard-actions">
-                <!-- Aangepaste knop: Nu Mijn Dubbele filter -->
                 <button class="btn-action" id="btn-filter" onclick="toggleFilter()" title="Toon Mijn Dubbele">🔄 Mijn Dubbele</button>
                 <button class="btn-action" onclick="openTradeCenter()" title="Ruilcentrum">🔄 Ruil</button>
                 <button class="btn-action" onclick="openStatsCenter()" title="Statistieken">🏆 Stats</button>
@@ -49,8 +48,16 @@
             <input type="text" id="search-bar" class="custom-input" placeholder="🔍 Zoek land (bijv. BEL of België)..." onkeyup="filterCountries()">
         </div>
         
+        <div id="scanner-container" class="scanner-container">
+            <video id="scanner-video" autoplay playsinline class="scanner-video"></video>
+            <div id="scanner-status" class="scanner-status">Scanner voorbereiden...</div>
+            <div class="scanner-guide">Plaats de code (bijv. BEL 4) in dit vak</div>
+            <button class="btn-action btn-scanner-stop" onclick="toggleScanner()">✖ Sluiten</button>
+        </div>
+
         <div class="quick-add-container">
-            <input type="text" id="quick-add-input" class="custom-input" placeholder="⚡ Snel toevoegen (bijv. BEL 4)" onkeypress="handleQuickAdd(event)">
+            <button class="btn-action" style="min-width: 50px; background: #e2e8f0; font-size: 1.2rem;" onclick="toggleScanner()" title="Live Scanner">📷</button>
+            <input type="text" id="quick-add-input" class="custom-input" placeholder="⚡ Typ of scan (bijv. BEL 4)" onkeypress="handleQuickAdd(event)">
             <button class="btn-quick-add" onclick="processQuickAdd()">+</button>
         </div>
 
@@ -99,8 +106,8 @@
 
     <div id="toast" class="toast">Bericht hier</div>
 
-    <script src="countries.js?v=18"></script>
-    <script src="app.js?v=18"></script>
+    <script src="countries.js?v=19"></script>
+    <script src="app.js?v=19"></script>
     
     <script>
         if ('serviceWorker' in navigator) {
