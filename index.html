@@ -9,15 +9,17 @@
     <link rel="icon" href="icon.png" type="image/png">
     <link rel="apple-touch-icon" href="icon.png">
     
+    <!-- Scripts voor Database, Confetti en de Live Scanner -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=21">
+    <link rel="stylesheet" href="style.css?v=22">
 </head>
 <body>
 
+    <!-- Profiel Selectie -->
     <div id="profile-section" class="container">
         <h1 style="color: #4f46e5; font-size: 2.2rem; margin-bottom: 5px;">WK 2026 Tracker</h1>
         <p style="text-align: center; color: var(--text-secondary); font-weight: 700; margin-bottom: 25px;">Kies een profiel</p>
@@ -28,11 +30,13 @@
         </div>
     </div>
 
+    <!-- Hoofd Dashboard -->
     <div id="dashboard-section" class="container" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <h2 id="welcome-text" style="text-align: left; margin: 0; font-size: 1.5rem; line-height: 1.2;">Album</h2>
+        
+        <!-- NIEUW: Compacter Header Gedeelte -->
+        <div class="header-container">
+            <h2 id="welcome-text">Album</h2>
             <div class="dashboard-actions">
-                <!-- NIEUW: Inventaris Lijsten knop -->
                 <button class="btn-action" onclick="openListCenter()" title="Digitale Lijsten">📋 Lijsten</button>
                 <button class="btn-action" onclick="openTradeCenter()" title="Ruilcentrum">🔄 Ruil</button>
                 <button class="btn-action" onclick="printList()" title="Print Lijst">🖨️ Print</button>
@@ -66,9 +70,10 @@
         <div class="countries-list" id="countries-container"></div>
     </div>
 
-    <!-- Modals -->
+    <!-- Modals (Verborgen Schermen) -->
+    
+    <!-- 1. Land Detail Modal -->
     <div id="modal" class="modal-overlay">
-        <!-- Bestaande land-modal... -->
         <div class="modal-content">
             <div class="modal-header">
                 <div style="display: flex; align-items: center; gap: 12px;">
@@ -88,7 +93,7 @@
         </div>
     </div>
 
-    <!-- NIEUW: Digitale Lijsten Modal -->
+    <!-- 2. Digitale Lijsten Modal (Snelbeheer) -->
     <div id="list-modal" class="modal-overlay">
         <div class="modal-content" style="background: var(--bg-main);">
             <div class="modal-header" style="background: white; border-bottom-left-radius: 0; border-bottom-right-radius: 0; padding-bottom: 5px; margin-bottom: 0;">
@@ -106,6 +111,7 @@
         </div>
     </div>
 
+    <!-- 3. Ruilcentrum Modal -->
     <div id="trade-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -116,6 +122,7 @@
         </div>
     </div>
 
+    <!-- 4. Trophy Room Modal -->
     <div id="stats-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -126,12 +133,15 @@
         </div>
     </div>
 
+    <!-- Systeem Elementen -->
     <div id="toast" class="toast">Bericht hier</div>
     <div id="print-area"></div>
 
-    <script src="countries.js?v=21"></script>
-    <script src="app.js?v=21"></script>
+    <!-- Externe JS bestanden inladen -->
+    <script src="countries.js?v=22"></script>
+    <script src="app.js?v=22"></script>
     
+    <!-- Service Worker voor Offline modus en Installatie -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
