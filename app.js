@@ -1,4 +1,4 @@
-// app.js - Ultimate Edition v21 (Interactieve Snelbeheer Lijsten)
+// app.js - Ultimate Edition v22.1 (Alfabetische Print)
 
 const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co'; 
 const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; 
@@ -263,7 +263,7 @@ function updateStickerUI(code, amount) {
 }
 
 
-// --- NIEUW: INTERACTIEVE DIGITALE LIJSTEN (Snelbeheer) --- //
+// --- INTERACTIEVE DIGITALE LIJSTEN (Snelbeheer) --- //
 let currentListTab = 'doubles';
 
 function openListCenter() {
@@ -337,12 +337,10 @@ async function updateStickerFromList(code, change) {
     allStickers[currentUser][code] = newAmt;
     if (newAmt === 0) delete allStickers[currentUser][code];
     
-    // UI direct updaten zonder dat de hele lijst verspringt
     let countEl = document.getElementById(`list-cnt-${code.replace(' ', '-')}`);
     if (countEl) countEl.innerText = `${newAmt}x`;
     if (navigator.vibrate) navigator.vibrate(40);
 
-    // Confetti als je eentje toevoegt die je nog niet had!
     if (currentAmt === 0 && change > 0 && typeof confetti === 'function') {
         let prefix = code === '00' ? 'FWC' : code.split(' ')[0];
         let country = collections.find(c => c.prefix === prefix);
@@ -482,10 +480,14 @@ function openStatsCenter() {
 }
 function closeStatsCenter() { document.getElementById('stats-modal').style.display = 'none'; }
 
-// --- PRINT LOGICA --- //
+// --- ALFABETISCHE PRINT LOGICA --- //
 function printList() {
     let html = `<div class="print-header"><h2>WK 2026 Ruillijst - ${currentUser}</h2><p>Gegenereerd op ${new Date().toLocaleDateString('nl-BE')} - Totaal: ${document.querySelector('.rank-score').innerText.split(' ')[0]} stickers</p></div><div class="print-grid">`;
-    collections.forEach(country => {
+    
+    // Maak een kopie van collections en sorteer deze alfabetisch op de landsnaam
+    let sortedCollections = [...collections].sort((a, b) => a.name.localeCompare(b.name));
+
+    sortedCollections.forEach(country => {
         let missing = []; let doubles = [];
         for (let i = 1; i <= country.count; i++) {
             let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
@@ -493,8 +495,9 @@ function printList() {
             if (amt === 0) { missing.push(numDisplay); } else if (amt > 1) { doubles.push(amt > 2 ? `${numDisplay} (${amt}x)` : numDisplay); }
         }
         if (missing.length > 0 || doubles.length > 0) {
-            html += `<div class="print-country-block"><div class="print-country-title"><img src="${country.flagUrl}" class="print-flag" alt="${country.prefix}"> <strong>${country.prefix}</strong></div><div class="print-lists"><div class="print-missing"><strong>Zoekt:</strong> ${missing.length > 0 ? missing.join(', ') : 'Compleet! 🎉'}</div>${doubles.length > 0 ? `<div class="print-doubles"><strong>Dubbel:</strong> ${doubles.join(', ')}</div>` : ''}</div></div>`;
+            html += `<div class="print-country-block"><div class="print-country-title"><img src="${country.flagUrl}" class="print-flag" alt="${country.prefix}"> <strong>${country.name}</strong> <span style="font-size: 0.85rem; color: #64748b;">(${country.prefix})</span></div><div class="print-lists"><div class="print-missing"><strong>Zoekt:</strong> ${missing.length > 0 ? missing.join(', ') : 'Compleet! 🎉'}</div>${doubles.length > 0 ? `<div class="print-doubles"><strong>Dubbel:</strong> ${doubles.join(', ')}</div>` : ''}</div></div>`;
         }
     });
+    
     html += `</div>`; document.getElementById('print-area').innerHTML = html; window.print();
 }
