@@ -1,4 +1,4 @@
-// app.js - Ultimate Edition v22.1 (Alfabetische Print)
+// app.js - Ultimate Edition v23 (Alfabetische Print met doorstreep-logica)
 
 const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co'; 
 const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; 
@@ -351,7 +351,7 @@ async function updateStickerFromList(code, change) {
 }
 
 
-// --- LIVE OCR SCANNER LOGICA (v19.1) --- //
+// --- LIVE OCR SCANNER LOGICA --- //
 let isScanning = false; let scannerInterval; let scannerWorker; let lastScannedCode = "";
 async function toggleScanner() {
     const container = document.getElementById('scanner-container');
@@ -480,19 +480,27 @@ function openStatsCenter() {
 }
 function closeStatsCenter() { document.getElementById('stats-modal').style.display = 'none'; }
 
-// --- ALFABETISCHE PRINT LOGICA --- //
+// --- ALFABETISCHE PRINT LOGICA MET DOORSTREEP-SYSTEEM --- //
 function printList() {
     let html = `<div class="print-header"><h2>WK 2026 Ruillijst - ${currentUser}</h2><p>Gegenereerd op ${new Date().toLocaleDateString('nl-BE')} - Totaal: ${document.querySelector('.rank-score').innerText.split(' ')[0]} stickers</p></div><div class="print-grid">`;
     
-    // Maak een kopie van collections en sorteer deze alfabetisch op de landsnaam
     let sortedCollections = [...collections].sort((a, b) => a.name.localeCompare(b.name));
 
     sortedCollections.forEach(country => {
         let missing = []; let doubles = [];
         for (let i = 1; i <= country.count; i++) {
             let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
-            let numDisplay = country.prefix === 'FWC' && i === 1 ? '00' : `${i}`; let amt = allStickers[currentUser][code] || 0;
-            if (amt === 0) { missing.push(numDisplay); } else if (amt > 1) { doubles.push(amt > 2 ? `${numDisplay} (${amt}x)` : numDisplay); }
+            let numDisplay = country.prefix === 'FWC' && i === 1 ? '00' : `${i}`; 
+            let amt = allStickers[currentUser][code] || 0;
+            
+            if (amt === 0) { 
+                missing.push(numDisplay); 
+            } else if (amt > 1) { 
+                // Het nummer wordt exact zo vaak geprint als je hem daadwerkelijk kan weggeven (amt - 1)
+                for(let d = 0; d < (amt - 1); d++) {
+                    doubles.push(numDisplay);
+                }
+            }
         }
         if (missing.length > 0 || doubles.length > 0) {
             html += `<div class="print-country-block"><div class="print-country-title"><img src="${country.flagUrl}" class="print-flag" alt="${country.prefix}"> <strong>${country.name}</strong> <span style="font-size: 0.85rem; color: #64748b;">(${country.prefix})</span></div><div class="print-lists"><div class="print-missing"><strong>Zoekt:</strong> ${missing.length > 0 ? missing.join(', ') : 'Compleet! 🎉'}</div>${doubles.length > 0 ? `<div class="print-doubles"><strong>Dubbel:</strong> ${doubles.join(', ')}</div>` : ''}</div></div>`;
