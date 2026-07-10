@@ -1,4 +1,4 @@
-// app.js - Ultimate Edition v19.1 (Met Sniper-Crop Scanner)
+// app.js - Ultimate Edition v21 (Interactieve Snelbeheer Lijsten)
 
 const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co'; 
 const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; 
@@ -11,7 +11,6 @@ const dbNames = { 'Lou & Noé': 'Jorden', 'Wesley': 'Wesley', 'Oliver': 'Oliver'
 let currentUser = ''; 
 let otherUsers = []; 
 let allStickers = { 'Lou & Noé': {}, 'Wesley': {}, 'Oliver': {} };
-let showOnlyDoubles = false; 
 
 function getRank(score) {
     if (score >= 980) return "Wereldkampioen! 🏆";
@@ -52,12 +51,6 @@ function logout() {
     document.getElementById('dashboard-section').style.display = 'none';
 }
 
-function toggleFilter() { 
-    showOnlyDoubles = !showOnlyDoubles; 
-    document.getElementById('btn-filter').classList.toggle('active', showOnlyDoubles); 
-    renderDashboard(); 
-}
-
 function filterCountries() { renderDashboard(); }
 
 async function loadUserData() {
@@ -89,16 +82,13 @@ function renderDashboard() {
     let currentGroup = ''; let cardIndex = 0;
     collections.forEach(country => {
         let countTracker = { 'Lou & Noé': 0, 'Wesley': 0, 'Oliver': 0 };
-        let hasAnyDoubleInCountry = false;
 
         for (let i = 1; i <= country.count; i++) {
             let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
             users.forEach(u => { if (allStickers[u][code]) countTracker[u]++; });
-            if ((allStickers[currentUser][code] || 0) > 1) { hasAnyDoubleInCountry = true; }
         }
         users.forEach(u => { scores[u] += countTracker[u]; });
 
-        if (showOnlyDoubles && !hasAnyDoubleInCountry) return;
         if (!country.name.toLowerCase().includes(searchTerm) && !country.prefix.toLowerCase().includes(searchTerm)) return;
 
         if (country.group !== currentGroup) {
@@ -272,28 +262,155 @@ function updateStickerUI(code, amount) {
     else { badge.style.display = 'none'; }
 }
 
-async function executeInstantTrade(code, targetUser) {
-    let myNewAmt = Math.max((allStickers[currentUser][code] || 0) - 1, 0);
-    let theirNewAmt = (allStickers[targetUser][code] || 0) + 1;
 
-    allStickers[currentUser][code] = myNewAmt;
-    if(myNewAmt === 0) delete allStickers[currentUser][code];
-    allStickers[targetUser][code] = theirNewAmt;
+// --- NIEUW: INTERACTIEVE DIGITALE LIJSTEN (Snelbeheer) --- //
+let currentListTab = 'doubles';
 
-    if(navigator.vibrate) navigator.vibrate([50, 30, 50]);
+function openListCenter() {
+    document.getElementById('list-modal').style.display = 'block';
+    setListTab(currentListTab);
+}
+function closeListCenter() {
+    document.getElementById('list-modal').style.display = 'none';
+    renderDashboard(); 
+}
 
-    await Promise.all([
-        supabaseClient.from('user_stickers').upsert({ user_name: dbNames[currentUser], sticker_code: code, amount: myNewAmt }),
-        supabaseClient.from('user_stickers').upsert({ user_name: dbNames[targetUser], sticker_code: code, amount: theirNewAmt })
-    ]);
+function setListTab(tab) {
+    currentListTab = tab;
+    document.querySelectorAll('.list-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    renderListContent();
+}
 
-    if(myNewAmt === 0) {
-        await supabaseClient.from('user_stickers').delete().match({ user_name: dbNames[currentUser], sticker_code: code });
+function renderListContent() {
+    let html = '';
+    let count = 0;
+    
+    collections.forEach(country => {
+        let countryItems = [];
+        for (let i = 1; i <= country.count; i++) {
+            let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
+            let amt = allStickers[currentUser][code] || 0;
+            let pName = country.players ? country.players[i-1] : `Speler ${i}`;
+            
+            let show = false;
+            if (currentListTab === 'doubles' && amt > 1) show = true;
+            if (currentListTab === 'owned' && amt > 0) show = true;
+            if (currentListTab === 'missing' && amt === 0) show = true;
+            
+            if (show) {
+                count++;
+                countryItems.push(`
+                    <div class="list-item">
+                        <div class="list-item-info">
+                            <div class="trade-mini-flag" style="background-image: url('${country.flagUrl}');"></div>
+                            <span class="trade-num-badge" style="min-width: 50px;">${code}</span>
+                            <span class="trade-player-name" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${pName}</span>
+                        </div>
+                        <div class="list-controls">
+                            <button class="btn-list-ctrl" onclick="updateStickerFromList('${code}', -1)">-</button>
+                            <span class="list-count" id="list-cnt-${code.replace(' ', '-')}">${amt}x</span>
+                            <button class="btn-list-ctrl" onclick="updateStickerFromList('${code}', 1)">+</button>
+                        </div>
+                    </div>
+                `);
+            }
+        }
+        
+        if (countryItems.length > 0) {
+            html += `<div style="margin: 15px 15px 8px 15px; font-weight: 900; color: var(--text-secondary); text-transform: uppercase; font-size: 0.9rem;">${country.name}</div>`;
+            html += `<div style="padding: 0 15px;">` + countryItems.join('') + `</div>`;
+        }
+    });
+    
+    if (count === 0) {
+        html = `<div style="text-align:center; padding: 40px 20px; color: #94a3b8; font-weight: 800;">Geen stickers in deze lijst...</div>`;
     }
+    
+    document.getElementById('list-content').innerHTML = html;
+}
 
-    showToast(`🔄 Sticker overgedragen naar ${targetUser}!`, "success");
-    openTradeCenter(); 
-    renderDashboard();
+async function updateStickerFromList(code, change) {
+    let currentAmt = allStickers[currentUser][code] || 0;
+    let newAmt = Math.max(0, currentAmt + change);
+    
+    allStickers[currentUser][code] = newAmt;
+    if (newAmt === 0) delete allStickers[currentUser][code];
+    
+    // UI direct updaten zonder dat de hele lijst verspringt
+    let countEl = document.getElementById(`list-cnt-${code.replace(' ', '-')}`);
+    if (countEl) countEl.innerText = `${newAmt}x`;
+    if (navigator.vibrate) navigator.vibrate(40);
+
+    // Confetti als je eentje toevoegt die je nog niet had!
+    if (currentAmt === 0 && change > 0 && typeof confetti === 'function') {
+        let prefix = code === '00' ? 'FWC' : code.split(' ')[0];
+        let country = collections.find(c => c.prefix === prefix);
+        if(country) confetti({ particleCount: 100, spread: 60, origin: { y: 0.8 }, colors: country.colors });
+    }
+    
+    await syncToSupabase(code, newAmt);
+}
+
+
+// --- LIVE OCR SCANNER LOGICA (v19.1) --- //
+let isScanning = false; let scannerInterval; let scannerWorker; let lastScannedCode = "";
+async function toggleScanner() {
+    const container = document.getElementById('scanner-container');
+    if (isScanning) {
+        isScanning = false; clearInterval(scannerInterval);
+        const video = document.getElementById('scanner-video');
+        if (video.srcObject) { video.srcObject.getTracks().forEach(track => track.stop()); }
+        container.style.display = 'none';
+    } else {
+        const video = document.getElementById('scanner-video'); const status = document.getElementById('scanner-status');
+        container.style.display = 'block'; isScanning = true;
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', focusMode: 'continuous' } });
+            video.srcObject = stream; status.innerText = "Scanner initialiseren... ⏳";
+            if (!scannerWorker) {
+                scannerWorker = await Tesseract.createWorker(); await scannerWorker.loadLanguage('eng'); await scannerWorker.initialize('eng');
+                await scannerWorker.setParameters({ tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ' });
+            }
+            status.innerText = "Live: Houd sticker in vak 📷";
+            const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
+            scannerInterval = setInterval(async () => {
+                if (!isScanning) return;
+                const vw = video.videoWidth; const vh = video.videoHeight;
+                const cropW = vw * 0.5; const cropH = vh * 0.3; const cropX = (vw - cropW) / 2; const cropY = (vh - cropH) / 2;
+                canvas.width = cropW; canvas.height = cropH;
+                ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+                const { data: { text } } = await scannerWorker.recognize(canvas);
+                let cleanText = text.toUpperCase().replace(/[^A-Z0-9\s]/g, '');
+                const match = cleanText.match(/([A-Z]{3})\s*(\d{1,2})/);
+                if (match) {
+                    let prefix = match[1]; let num = parseInt(match[2], 10);
+                    let code = prefix === 'FWC' && num === 0 ? '00' : `${prefix} ${num}`;
+                    if (code !== lastScannedCode) {
+                        let country = collections.find(c => c.prefix === prefix);
+                        if (country) {
+                            let maxNum = prefix === 'FWC' ? 19 : 20; 
+                            if (code === '00' || (num >= 1 && num <= maxNum)) {
+                                status.innerText = `Gevonden: ${code} ✅`; lastScannedCode = code;
+                                document.getElementById('quick-add-input').value = code; processQuickAdd(); 
+                                setTimeout(() => { if(isScanning) status.innerText = "Live: Volgende sticker 📷"; lastScannedCode = ""; }, 3500);
+                            }
+                        }
+                    }
+                }
+            }, 1000);
+        } catch (err) { console.error(err); showToast("❌ Camera toegang geweigerd of fout", "error"); toggleScanner(); }
+    }
+}
+
+// --- RUIL & STATS LOGICA --- //
+async function executeInstantTrade(code, targetUser) {
+    let myNewAmt = Math.max((allStickers[currentUser][code] || 0) - 1, 0); let theirNewAmt = (allStickers[targetUser][code] || 0) + 1;
+    allStickers[currentUser][code] = myNewAmt; if(myNewAmt === 0) delete allStickers[currentUser][code]; allStickers[targetUser][code] = theirNewAmt;
+    if(navigator.vibrate) navigator.vibrate([50, 30, 50]);
+    await Promise.all([ supabaseClient.from('user_stickers').upsert({ user_name: dbNames[currentUser], sticker_code: code, amount: myNewAmt }), supabaseClient.from('user_stickers').upsert({ user_name: dbNames[targetUser], sticker_code: code, amount: theirNewAmt }) ]);
+    if(myNewAmt === 0) { await supabaseClient.from('user_stickers').delete().match({ user_name: dbNames[currentUser], sticker_code: code }); }
+    showToast(`🔄 Sticker overgedragen naar ${targetUser}!`, "success"); openTradeCenter(); renderDashboard();
 }
 
 function openTradeCenter() {
@@ -304,11 +421,9 @@ function openTradeCenter() {
             for (let i = 1; i <= country.count; i++) {
                 let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
                 let myAmt = allStickers[currentUser][code] || 0; let theirAmt = allStickers[ou][code] || 0;
-                
                 let pName = country.players ? country.players[i-1] : `Speler ${i}`;
                 let numDisplay = country.prefix === 'FWC' && i === 1 ? "00" : `${i}`;
                 let pageStr = country.page ? ` (P.${country.page})` : '';
-
                 if (myAmt > 1 && theirAmt === 0) give.push({code: code, flag: country.flagUrl, num: numDisplay, name: pName, page: pageStr});
                 if (theirAmt > 1 && myAmt === 0) get.push({code: code, flag: country.flagUrl, num: numDisplay, name: pName, page: pageStr});
             }
@@ -319,48 +434,30 @@ function openTradeCenter() {
                 <div style="margin-bottom: 16px;"><strong style="font-size: 0.95rem;">Jij zoekt, ${ou} heeft dubbel (${get.length}):</strong>
                     <div class="trade-codes" style="margin-top: 8px;">${get.length === 0 ? '<span style="color:#94a3b8; font-size:0.8rem;">Niets wat jij mist...</span>' : get.map(item => `
                         <div class="trade-chip-wrapper">
-                            <div class="trade-item-left">
-                                <div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div>
-                                <span class="trade-num-badge">${item.num}</span>
-                                <span class="trade-player-name">${item.name} <span style="font-size:0.75rem; color:var(--text-secondary);">${item.page}</span></span>
-                            </div>
+                            <div class="trade-item-left"><div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div><span class="trade-num-badge">${item.num}</span><span class="trade-player-name">${item.name} <span style="font-size:0.75rem; color:var(--text-secondary);">${item.page}</span></span></div>
                             <span class="trade-status-box get">Jij Mist</span>
-                        </div>
-                    `).join('')}</div>
+                        </div>`).join('')}</div>
                 </div>
                 <div><strong style="font-size: 0.95rem;">${ou} zoekt, jij hebt dubbel (${give.length}):</strong>
                     <div class="trade-codes" style="margin-top: 8px;">${give.length === 0 ? '<span style="color:#94a3b8; font-size:0.8rem;">Geen dubbele voor ${ou}...</span>' : give.map(item => `
                         <div class="trade-chip-wrapper">
-                            <div class="trade-item-left">
-                                <div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div>
-                                <span class="trade-num-badge">${item.num}</span>
-                                <span class="trade-player-name">${item.name} <span style="font-size:0.75rem; color:var(--text-secondary);">${item.page}</span></span>
-                            </div>
+                            <div class="trade-item-left"><div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div><span class="trade-num-badge">${item.num}</span><span class="trade-player-name">${item.name} <span style="font-size:0.75rem; color:var(--text-secondary);">${item.page}</span></span></div>
                             <button class="btn-instant-trade" onclick="executeInstantTrade('${item.code}', '${ou}')">⚡ Ruil</button>
-                        </div>
-                    `).join('')}</div>
+                        </div>`).join('')}</div>
                 </div>
             </div>`;
     });
-    document.getElementById('trade-content').innerHTML = tradeHTML;
-    document.getElementById('trade-modal').style.display = 'block';
+    document.getElementById('trade-content').innerHTML = tradeHTML; document.getElementById('trade-modal').style.display = 'block';
 }
-
 function closeTradeCenter() { document.getElementById('trade-modal').style.display = 'none'; }
 
 function openStatsCenter() {
-    let statsHTML = '';
-    let belHTML = '';
+    let statsHTML = ''; let belHTML = '';
     users.forEach(u => {
-        let belCount = 0;
-        for(let i=1; i<=20; i++){ if(allStickers[u][`BEL ${i}`]) belCount++; }
-        let perc = (belCount / 20) * 100;
-        belHTML += `
-            <div style="font-size: 0.85rem; font-weight: 800; color: ${userColors[u]};">${u} (${belCount}/20)</div>
-            <div class="stat-bar-bg"><div class="stat-bar-fill" style="background: ${userColors[u]}; width: ${perc}%;"></div></div>`;
+        let belCount = 0; for(let i=1; i<=20; i++){ if(allStickers[u][`BEL ${i}`]) belCount++; } let perc = (belCount / 20) * 100;
+        belHTML += `<div style="font-size: 0.85rem; font-weight: 800; color: ${userColors[u]};">${u} (${belCount}/20)</div><div class="stat-bar-bg"><div class="stat-bar-fill" style="background: ${userColors[u]}; width: ${perc}%;"></div></div>`;
     });
     statsHTML += `<div class="stat-block"><h3>🇧🇪 Rode Duivels Barometer</h3>${belHTML}</div>`;
-
     let poulesMap = {};
     collections.forEach(c => {
         if(!poulesMap[c.group]) poulesMap[c.group] = { totalStickers: 0, usersOwned: { 'Lou & Noé': 0, 'Wesley': 0, 'Oliver': 0 } };
@@ -370,215 +467,34 @@ function openStatsCenter() {
             users.forEach(u => { if(allStickers[u][code]) poulesMap[c.group].usersOwned[u]++; });
         }
     });
-
     let poulesHTML = '';
     Object.keys(poulesMap).forEach(gName => {
-        let pData = poulesMap[gName];
-        let sortedPouleUsers = [...users].sort((a,b) => pData.usersOwned[b] - pData.usersOwned[a]);
-        let leader = sortedPouleUsers[0];
-        let leaderScore = pData.usersOwned[leader];
-        let leaderPerc = Math.round((leaderScore / pData.totalStickers) * 100);
-
+        let pData = poulesMap[gName]; let sortedPouleUsers = [...users].sort((a,b) => pData.usersOwned[b] - pData.usersOwned[a]);
+        let leader = sortedPouleUsers[0]; let leaderScore = pData.usersOwned[leader]; let leaderPerc = Math.round((leaderScore / pData.totalStickers) * 100);
         poulesHTML += `
             <div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed #f1f5f9;">
                 <div style="font-size: 0.95rem; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;">${gName} <span style="font-size:0.75rem; color:var(--text-secondary);">(${pData.totalStickers} tot.)</span></div>
-                <div class="poule-row">
-                    <span style="color: ${userColors[leader]}; font-size:0.85rem;">🥇 ${leader}</span>
-                    <div class="poule-mini-bar"><div style="height:100%; background:${userColors[leader]}; width:${(leaderScore/pData.totalStickers)*100}%;"></div></div>
-                    <span>${leaderScore} st. (${leaderPerc}%)</span>
-                </div>
+                <div class="poule-row"><span style="color: ${userColors[leader]}; font-size:0.85rem;">🥇 ${leader}</span><div class="poule-mini-bar"><div style="height:100%; background:${userColors[leader]}; width:${(leaderScore/pData.totalStickers)*100}%;"></div></div><span>${leaderScore} st. (${leaderPerc}%)</span></div>
             </div>`;
     });
     statsHTML += `<div class="stat-block"><h3>📊 Poule Ranglijst</h3>${poulesHTML}</div>`;
-
-    const top10 = [
-        { code: 'ARG 17', name: 'Lionel Messi' }, { code: 'POR 15', name: 'Cristiano Ronaldo' },
-        { code: 'FRA 20', name: 'Kylian Mbappé' }, { code: 'ENG 11', name: 'Jude Bellingham' },
-        { code: 'BRA 14', name: 'Vinícius Jr.' }, { code: 'BEL 15', name: 'Kevin De Bruyne' },
-        { code: 'ESP 15', name: 'Lamine Yamal' }, { code: 'NOR 15', name: 'Erling Haaland' },
-        { code: 'GER 15', name: 'Jamal Musiala' }, { code: 'BEL 14', name: 'Hans Vanaken' }
-    ];
-    let top10HTML = '';
-    top10.forEach(p => {
-        let dotsHTML = '';
-        users.forEach(u => {
-            let hasIt = allStickers[u][p.code] > 0;
-            dotsHTML += `<div class="legend-dot" style="background: ${hasIt ? userColors[u] : '#cbd5e1'}; opacity: ${hasIt ? '1' : '0.2'}; margin-right:4px;"></div>`;
-        });
-        top10HTML += `<div class="top10-item"><span>${p.name}</span><div style="display:flex; align-items:center;">${dotsHTML}</div></div>`;
-    });
-    statsHTML += `<div class="stat-block"><h3>⭐ Top 10 Most Wanted</h3>${top10HTML}</div>`;
-
-    let foilScores = { 'Lou & Noé':0, 'Wesley':0, 'Oliver':0 };
-    let dupScores = { 'Lou & Noé':0, 'Wesley':0, 'Oliver':0 };
-    let exclScores = { 'Lou & Noé':0, 'Wesley':0, 'Oliver':0 };
-    let bestDomUser = ''; let bestDomCountry = ''; let bestDomScore = 0;
-    let mostCollCountry = ''; let mostCollScore = 0;
-
-    collections.forEach(country => {
-        let combinedUnique = 0; let uScores = { 'Lou & Noé':0, 'Wesley':0, 'Oliver':0 };
-        for(let i=1; i<=country.count; i++) {
-            let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
-            let isFoil = (i === 1 || country.prefix === 'FWC');
-            
-            let countL = allStickers['Lou & Noé'][code] || 0;
-            let countW = allStickers['Wesley'][code] || 0;
-            let countO = allStickers['Oliver'][code] || 0;
-
-            if(countL > 0) { uScores['Lou & Noé']++; }
-            if(countW > 0) { uScores['Wesley']++; }
-            if(countO > 0) { uScores['Oliver']++; }
-            if(countL > 0 || countW > 0 || countO > 0) { combinedUnique++; }
-
-            if(isFoil) { if(countL > 0) foilScores['Lou & Noé']++; if(countW > 0) foilScores['Wesley']++; if(countO > 0) foilScores['Oliver']++; }
-            if(countL > 1) dupScores['Lou & Noé'] += (countL-1); if(countW > 1) dupScores['Wesley'] += (countW-1); if(countO > 1) dupScores['Oliver'] += (countO-1);
-
-            if(countL > 0 && countW === 0 && countO === 0) exclScores['Lou & Noé']++;
-            if(countW > 0 && countL === 0 && countO === 0) exclScores['Wesley']++;
-            if(countO > 0 && countL === 0 && countW === 0) exclScores['Oliver']++;
-        }
-        if(country.prefix !== 'FWC') {
-            if(combinedUnique > mostCollScore) { mostCollScore = combinedUnique; mostCollCountry = country.name; }
-            users.forEach(u => { if(uScores[u] > bestDomScore) { bestDomScore = uScores[u]; bestDomUser = u; bestDomCountry = country.name; } });
-        }
-    });
-
-    const getWinnerHTML = (scoresObj, label) => {
-        let winner = Object.keys(scoresObj).reduce((a, b) => scoresObj[a] > scoresObj[b] ? a : b);
-        let score = scoresObj[winner];
-        if (score === 0) return `<div style="font-size: 0.9rem; color: #94a3b8;">Nog niemand...</div>`;
-        return `<div class="winner-text" style="color: ${userColors[winner]};">${winner} <span style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 700;">(${score} ${label})</span></div>`;
-    };
-
-    statsHTML += `
-        <div class="stat-block">
-            <h3>👑 Absolute Dominantie</h3>
-            <div style="font-size: 0.9rem; margin-bottom: 4px;">Hoogste score in één land:</div>
-            <div class="winner-text" style="color: ${userColors[bestDomUser]};">${bestDomUser} <span style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 700;">(${bestDomScore}/20 in ${bestDomCountry})</span></div>
-            <div style="font-size: 0.9rem; margin-top: 10px; margin-bottom: 4px;">Meest verzamelde land samen:</div>
-            <div class="winner-text" style="color: var(--text-primary);">${mostCollCountry} <span style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 700;">(${mostCollScore}/20)</span></div>
-        </div>
-        <div class="stat-block">
-            <h3>✨ De Glimmende Baas</h3>
-            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 5px;">Meeste teamlogo's en FWC stickers:</div>
-            ${getWinnerHTML(foilScores, "glimmend")}
-        </div>
-        <div class="stat-block">
-            <h3>💰 De Suikeroom</h3>
-            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 5px;">Meeste dubbele stickers in bezit:</div>
-            ${getWinnerHTML(dupScores, "dubbele")}
-        </div>
-        <div class="stat-block">
-            <h3>👑 De Exclusieve Club</h3>
-            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 5px;">Unieke stickers die de andere twee niet hebben:</div>
-            ${getWinnerHTML(exclScores, "uniek")}
-        </div>`;
-
-    document.getElementById('stats-content').innerHTML = statsHTML;
-    document.getElementById('stats-modal').style.display = 'block';
+    document.getElementById('stats-content').innerHTML = statsHTML; document.getElementById('stats-modal').style.display = 'block';
 }
 function closeStatsCenter() { document.getElementById('stats-modal').style.display = 'none'; }
 
-
-// --- LIVE OCR SCANNER LOGICA (Versie 19.1 - Met Sniper Cropping) --- //
-let isScanning = false;
-let scannerInterval;
-let scannerWorker;
-let lastScannedCode = "";
-
-async function toggleScanner() {
-    const container = document.getElementById('scanner-container');
-    if (isScanning) {
-        // Stop Scanner
-        isScanning = false;
-        clearInterval(scannerInterval);
-        const video = document.getElementById('scanner-video');
-        if (video.srcObject) { video.srcObject.getTracks().forEach(track => track.stop()); }
-        container.style.display = 'none';
-    } else {
-        // Start Scanner
-        const video = document.getElementById('scanner-video');
-        const status = document.getElementById('scanner-status');
-        container.style.display = 'block';
-        isScanning = true;
-
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', focusMode: 'continuous' } });
-            video.srcObject = stream;
-            status.innerText = "Scanner initialiseren... ⏳";
-
-            if (!scannerWorker) {
-                scannerWorker = await Tesseract.createWorker();
-                await scannerWorker.loadLanguage('eng');
-                await scannerWorker.initialize('eng');
-                await scannerWorker.setParameters({
-                    tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ',
-                });
-            }
-
-            status.innerText = "Live: Houd sticker in vak 📷";
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-
-            scannerInterval = setInterval(async () => {
-                if (!isScanning) return;
-                
-                // --- NIEUW: De Sniper Crop ---
-                // We sturen niet de hele foto, maar enkel het centrum door!
-                const vw = video.videoWidth;
-                const vh = video.videoHeight;
-                
-                // Crop box: 50% van breedte, 30% van hoogte (exact waar je gele vakje staat)
-                const cropW = vw * 0.5;
-                const cropH = vh * 0.3;
-                const cropX = (vw - cropW) / 2;
-                const cropY = (vh - cropH) / 2;
-
-                canvas.width = cropW;
-                canvas.height = cropH;
-                
-                // Teken enkel de gecropte zone
-                ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
-                // -----------------------------
-                
-                // OCR Herkenning enkel op dit kleine stukje
-                const { data: { text } } = await scannerWorker.recognize(canvas);
-                
-                // Ruim de tekst op voor de zekerheid (bijv. vlekjes die hij als komma ziet)
-                let cleanText = text.toUpperCase().replace(/[^A-Z0-9\s]/g, '');
-
-                const match = cleanText.match(/([A-Z]{3})\s*(\d{1,2})/);
-                if (match) {
-                    let prefix = match[1];
-                    let num = parseInt(match[2], 10);
-                    let code = prefix === 'FWC' && num === 0 ? '00' : `${prefix} ${num}`;
-                    
-                    if (code !== lastScannedCode) {
-                        let country = collections.find(c => c.prefix === prefix);
-                        if (country) {
-                            let maxNum = prefix === 'FWC' ? 19 : 20; 
-                            if (code === '00' || (num >= 1 && num <= maxNum)) {
-                                
-                                status.innerText = `Gevonden: ${code} ✅`;
-                                lastScannedCode = code;
-                                
-                                document.getElementById('quick-add-input').value = code;
-                                processQuickAdd(); 
-                                
-                                setTimeout(() => { 
-                                    if(isScanning) status.innerText = "Live: Volgende sticker 📷"; 
-                                    lastScannedCode = ""; 
-                                }, 3500);
-                            }
-                        }
-                    }
-                }
-            }, 1000);
-
-        } catch (err) {
-            console.error(err);
-            showToast("❌ Camera toegang geweigerd of fout", "error");
-            toggleScanner(); 
+// --- PRINT LOGICA --- //
+function printList() {
+    let html = `<div class="print-header"><h2>WK 2026 Ruillijst - ${currentUser}</h2><p>Gegenereerd op ${new Date().toLocaleDateString('nl-BE')} - Totaal: ${document.querySelector('.rank-score').innerText.split(' ')[0]} stickers</p></div><div class="print-grid">`;
+    collections.forEach(country => {
+        let missing = []; let doubles = [];
+        for (let i = 1; i <= country.count; i++) {
+            let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
+            let numDisplay = country.prefix === 'FWC' && i === 1 ? '00' : `${i}`; let amt = allStickers[currentUser][code] || 0;
+            if (amt === 0) { missing.push(numDisplay); } else if (amt > 1) { doubles.push(amt > 2 ? `${numDisplay} (${amt}x)` : numDisplay); }
         }
-    }
+        if (missing.length > 0 || doubles.length > 0) {
+            html += `<div class="print-country-block"><div class="print-country-title"><img src="${country.flagUrl}" class="print-flag" alt="${country.prefix}"> <strong>${country.prefix}</strong></div><div class="print-lists"><div class="print-missing"><strong>Zoekt:</strong> ${missing.length > 0 ? missing.join(', ') : 'Compleet! 🎉'}</div>${doubles.length > 0 ? `<div class="print-doubles"><strong>Dubbel:</strong> ${doubles.join(', ')}</div>` : ''}</div></div>`;
+        }
+    });
+    html += `</div>`; document.getElementById('print-area').innerHTML = html; window.print();
 }
