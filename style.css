@@ -1,4 +1,4 @@
-/* style.css - Ultimate Panini Tracker Edition v21 (Volledige Herstelversie) */
+/* style.css - Ultimate Panini Tracker Edition v21.1 (Mobiele Header Fix) */
 
 :root {
     --bg-main: #f4f7fc;
@@ -16,7 +16,7 @@ body {
     font-family: 'Nunito', 'Segoe UI', sans-serif;
     background-color: var(--bg-main);
     color: var(--text-primary);
-    margin: 0; padding: 10px;
+    margin: 0; padding: 5px; /* Minder padding op de body voor kleine schermen */
     display: flex; justify-content: center;
     -webkit-font-smoothing: antialiased;
 }
@@ -24,24 +24,57 @@ body {
 .container {
     width: 100%; max-width: 520px;
     background: var(--bg-card);
-    padding: 24px 14px; 
-    border-radius: 28px;
+    padding: 15px 10px; /* Compacter: minder padding in de container */
+    border-radius: 20px; /* Iets minder ronde hoeken om ruimte te sparen */
     box-shadow: 0 15px 50px rgba(0, 0, 0, 0.04);
     box-sizing: border-box;
 }
 
 h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 
-.dashboard-actions { display: flex; gap: 8px; justify-content: flex-end; margin-bottom: 20px; }
+/* FIX VOOR DE HEADER (Titel en Knoppen) */
+.header-container {
+    display: flex;
+    flex-direction: column; /* Zet titel en knoppen onder elkaar op kleine schermen */
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+#welcome-text {
+    text-align: center; /* Centreer de naam */
+    margin: 0; 
+    font-size: 1.3rem; /* Iets kleinere tekst */
+    line-height: 1.2;
+}
+
+#welcome-text span {
+    font-size: 1.5rem !important; /* Forceer een iets kleinere maat voor de naam zelf */
+    display: inline-block; /* Zorg dat het mooi op de regel blijft */
+}
+
+.dashboard-actions { 
+    display: flex; 
+    gap: 6px; /* Kleinere tussenruimte */
+    justify-content: center; /* Centreer de knoppen */
+    flex-wrap: wrap; /* Laat de knoppen naar de volgende regel gaan als het niet past! Dit is de belangrijkste fix. */
+    width: 100%;
+}
+
 .btn-action {
     background: #f1f5f9; color: var(--text-primary); border: none;
-    padding: 10px 14px; border-radius: 14px; font-weight: 800;
-    cursor: pointer; transition: all 0.2s ease; font-size: 0.95rem;
+    padding: 8px 10px; /* Kleinere padding op de knoppen */
+    border-radius: 12px; font-weight: 800;
+    cursor: pointer; transition: all 0.2s ease; 
+    font-size: 0.85rem; /* Kleiner lettertype voor de knoppen */
     display: flex; align-items: center; justify-content: center;
+    flex: 1 1 auto; /* Laat knoppen meegroeien of krimpen */
+    min-width: fit-content; /* Zorg dat de tekst op de knop past */
 }
+
 .btn-action:hover { background: #e2e8f0; transform: translateY(-2px); }
 .btn-action.active { background: var(--color-1); color: white; }
 
+/* ... (De rest van je CSS blijft exact hetzelfde als in v21) ... */
 #profile-section { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; }
 .profile-grid { display: flex; flex-wrap: wrap; gap: 12px; width: 100%; margin-top: 15px; justify-content: center; }
 .profile-card {
@@ -53,7 +86,7 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 }
 .profile-card:hover { border-color: var(--color-1); color: var(--color-1); transform: translateY(-4px); box-shadow: 0 12px 24px rgba(79, 70, 229, 0.1); }
 
-.total-card { background: #f8fafc; padding: 20px; border-radius: 22px; margin-bottom: 25px; text-align: center; }
+.total-card { background: #f8fafc; padding: 15px; border-radius: 20px; margin-bottom: 20px; text-align: center; } /* Iets compacter */
 .ranks-container { display: flex; flex-direction: column; gap: 8px; }
 .rank-row {
     display: flex; justify-content: space-between; align-items: center;
@@ -69,7 +102,7 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 .quick-add-container { display: flex; gap: 8px; margin-bottom: 15px; width: 100%; }
 
 .custom-input {
-    width: 100%; padding: 14px 18px; border-radius: 16px; border: 2px solid #e2e8f0;
+    width: 100%; padding: 12px 14px; border-radius: 14px; border: 2px solid #e2e8f0; /* Iets kleinere padding in de input */
     background: #f8fafc; font-family: 'Nunito', sans-serif; font-size: 1rem;
     font-weight: 700; color: var(--text-primary); box-sizing: border-box; transition: all 0.2s ease;
 }
@@ -78,8 +111,8 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 .custom-input:focus { outline: none; border-color: var(--color-1); background: #ffffff; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1); }
 
 .btn-quick-add {
-    background: var(--color-owned); color: white; border: none; border-radius: 16px;
-    font-weight: 900; font-size: 1.5rem; width: 60px; min-width: 60px; 
+    background: var(--color-owned); color: white; border: none; border-radius: 14px;
+    font-weight: 900; font-size: 1.5rem; width: 50px; min-width: 50px; /* Iets smallere knop */
     cursor: pointer; transition: all 0.1s ease; display: flex; align-items: center; justify-content: center;
     box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
 }
@@ -87,153 +120,153 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
 
 .toast {
     display: none; visibility: hidden; min-width: 300px; max-width: 90vw; color: #fff;
-    text-align: center; border-radius: 20px; padding: 22px 25px; position: fixed; z-index: 10000;
+    text-align: center; border-radius: 20px; padding: 15px 20px; position: fixed; z-index: 10000; /* Compacter bericht */
     left: 50%; bottom: -100px; transform: translateX(-50%); font-weight: 800;
     box-shadow: 0 10px 40px rgba(0,0,0,0.5); opacity: 0;
     transition: opacity 0.4s, bottom 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
     border: 3px solid rgba(255, 255, 255, 0.4); backdrop-filter: blur(10px);
 }
-.toast.show { display: block; visibility: visible; opacity: 1; bottom: 40px; }
+.toast.show { display: block; visibility: visible; opacity: 1; bottom: 20px; } /* Iets lager op het scherm */
 
-.countries-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.countries-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; } /* Minder ruimte tussen landen */
 .group-header {
     grid-column: 1 / -1; margin: 15px 0 5px 0; padding-bottom: 5px;
     border-bottom: 2px dashed #cbd5e1; display: flex; justify-content: space-between; align-items: flex-end; transition: all 0.4s ease;
 }
-.group-header h3 { margin: 0; color: var(--text-secondary); font-size: 1.15rem; text-transform: uppercase; letter-spacing: 1.5px; }
+.group-header h3 { margin: 0; color: var(--text-secondary); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1.5px; }
 .group-score { font-size: 0.85rem; font-weight: 800; color: var(--text-secondary); }
 
 .group-header.gold { border-bottom: 2px solid #ffd700; background: linear-gradient(90deg, #ffd70020, transparent); border-radius: 8px 8px 0 0; padding: 8px 10px; }
 .group-header.gold h3 { color: #d4af37; font-weight: 900; }
 .group-header.gold .group-score { color: #d4af37; }
 
-.country-card { display: flex; flex-direction: column; align-items: center; padding: 12px 4px; border-radius: 16px; cursor: pointer; background: #f8fafc; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); animation: popIn 0.35s ease-out backwards; }
+.country-card { display: flex; flex-direction: column; align-items: center; padding: 10px 4px; border-radius: 12px; cursor: pointer; background: #f8fafc; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); animation: popIn 0.35s ease-out backwards; } /* Compacter kaartje */
 .country-card:hover { transform: scale(1.06) translateY(-3px); box-shadow: 0 12px 25px rgba(0,0,0,0.06); background: #ffffff; }
 @keyframes popIn { 0% { transform: scale(0.85); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
-.flag-circle { width: 40px; height: 40px; border-radius: 50%; background-size: cover; background-position: center; box-shadow: 0 4px 10px rgba(0,0,0,0.06); margin-bottom: 6px; }
-.country-prefix { font-weight: 900; font-size: 0.95rem; letter-spacing: 0.5px; color: var(--text-primary); }
-.grid-score-row { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; justify-content: center; }
-.grid-badge { padding: 2px 5px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; color: white; min-width: 12px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.08); }
+.flag-circle { width: 36px; height: 36px; border-radius: 50%; background-size: cover; background-position: center; box-shadow: 0 4px 10px rgba(0,0,0,0.06); margin-bottom: 4px; } /* Iets kleinere vlag */
+.country-prefix { font-weight: 900; font-size: 0.9rem; letter-spacing: 0.5px; color: var(--text-primary); }
+.grid-score-row { display: flex; gap: 3px; margin-top: 4px; flex-wrap: wrap; justify-content: center; }
+.grid-badge { padding: 2px 4px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; color: white; min-width: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.08); }
 
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; overflow: hidden; background: rgba(0,0,0,0.8); }
-.modal-content { width: 100%; max-width: 550px; margin: 0 auto; height: 100dvh; padding: 15px; box-sizing: border-box; display: flex; flex-direction: column; color: white; }
-.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: rgba(0, 0, 0, 0.12); backdrop-filter: blur(15px); padding: 12px 16px; border-radius: 18px; }
+.modal-content { width: 100%; max-width: 550px; margin: 0 auto; height: 100dvh; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; color: white; } /* Minder padding op kleine schermen */
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: rgba(0, 0, 0, 0.12); backdrop-filter: blur(15px); padding: 10px 14px; border-radius: 16px; }
 
 #trade-modal .modal-content, #stats-modal .modal-content, #list-modal .modal-content { background: var(--bg-main); color: var(--text-primary); }
 #trade-modal .modal-header, #stats-modal .modal-header, #list-modal .modal-header { background: white; color: var(--text-primary); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-.trade-section { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding-bottom: 20px; }
-.trade-block { background: white; border-radius: 16px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); margin-bottom: 10px; }
-.trade-block h3 { text-align: left; margin-bottom: 12px; font-size: 1.2rem; }
-.trade-codes { display: flex; flex-direction: column; gap: 8px; }
+.trade-section { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 15px; }
+.trade-block { background: white; border-radius: 14px; padding: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); margin-bottom: 8px; }
+.trade-block h3 { text-align: left; margin-bottom: 10px; font-size: 1.1rem; }
+.trade-codes { display: flex; flex-direction: column; gap: 6px; }
 
 /* Ruilchips & Verdelingslay-out */
 .trade-chip-wrapper { 
     display: flex; justify-content: space-between; align-items: center; 
-    background: #f8fafc; border-radius: 14px; padding: 8px 12px; 
+    background: #f8fafc; border-radius: 12px; padding: 6px 10px; 
     border: 1px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0,0,0,0.01);
 }
-.trade-item-left { display: flex; align-items: center; gap: 10px; }
-.trade-mini-flag { width: 24px; height: 16px; border-radius: 3px; background-size: cover; background-position: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-.trade-num-badge { font-weight: 900; font-size: 0.95rem; min-width: 28px; }
-.trade-player-name { font-weight: 700; font-size: 0.9rem; color: var(--text-primary); text-align: left; }
+.trade-item-left { display: flex; align-items: center; gap: 8px; }
+.trade-mini-flag { width: 22px; height: 14px; border-radius: 3px; background-size: cover; background-position: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.trade-num-badge { font-weight: 900; font-size: 0.9rem; min-width: 26px; }
+.trade-player-name { font-weight: 700; font-size: 0.85rem; color: var(--text-primary); text-align: left; }
 
-.trade-status-box { padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; }
+.trade-status-box { padding: 3px 6px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; }
 .trade-status-box.get { background: #fee2e2; color: #991b1b; }
 .trade-status-box.give { background: #dcfce7; color: #166534; }
 
 .btn-instant-trade { 
-    background: #4f46e5; color: white; border: none; font-size: 0.8rem; 
-    font-weight: 900; padding: 6px 12px; border-radius: 10px; cursor: pointer; 
+    background: #4f46e5; color: white; border: none; font-size: 0.75rem; 
+    font-weight: 900; padding: 5px 10px; border-radius: 8px; cursor: pointer; 
     transition: all 0.1s; box-shadow: 0 3px 8px rgba(79, 70, 229, 0.2);
 }
 .btn-instant-trade:active { transform: scale(0.92); }
 
-.modal-flag-wrapper { position: relative; width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; }
+.modal-flag-wrapper { position: relative; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
 .flag-ring-1 { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 3px solid rgba(255,255,255,0.8); }
 .flag-ring-2 { position: absolute; width: 84%; height: 84%; border-radius: 50%; border: 2.5px solid rgba(255,255,255,0.3); }
 .flag-inner-circle { position: relative; width: 65%; height: 65%; border-radius: 50%; background-size: cover; background-position: center; border: 1.5px solid white; }
-.modal-title-text { margin: 0; text-align: left; font-size: 1.4rem; line-height: 1.2; }
-.modal-subtitle { font-size: 0.75rem; opacity: 0.85; }
+.modal-title-text { margin: 0; text-align: left; font-size: 1.3rem; line-height: 1.2; }
+.modal-subtitle { font-size: 0.7rem; opacity: 0.85; }
 
-.sticker-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(5, minmax(0, 1fr)); gap: 8px; flex-grow: 1; min-height: 0; }
-.sticker-box { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(10px); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 10px; cursor: pointer; font-weight: 800; color: white; transition: transform 0.1s; user-select: none; position: relative; }
+.sticker-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(5, minmax(0, 1fr)); gap: 6px; flex-grow: 1; min-height: 0; }
+.sticker-box { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(10px); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 8px; cursor: pointer; font-weight: 800; color: white; transition: transform 0.1s; user-select: none; position: relative; }
 .sticker-box:active { transform: scale(0.95); }
 .sticker-box.owned { background: #ffffff; color: var(--text-primary); border: none; box-shadow: inset 0 0 0 3px var(--color-owned), 0 4px 8px rgba(0,0,0,0.15); }
 .sticker-box.double { background: linear-gradient(135deg, #ffd700, #ffa500, #ff8c00, #ffd700); background-size: 300% 300%; color: #4a2500; border: none; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.5); animation: shinyGlow 3s infinite linear; }
 @keyframes shinyGlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
-.box-prefix { font-size: 0.65rem; font-weight: 800; opacity: 0.85; pointer-events: none; }
-.box-num { font-size: 1.15rem; font-weight: 800; margin-top: -2px; pointer-events: none; }
-.badge { position: absolute; top: -6px; right: -6px; background: #ef4444; color: white; font-size: 0.75rem; width: 22px; height: 22px; display: flex; justify-content: center; align-items: center; border-radius: 50%; font-weight: 900; box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 10; border: 2px solid white; cursor: pointer; }
+.box-prefix { font-size: 0.6rem; font-weight: 800; opacity: 0.85; pointer-events: none; }
+.box-num { font-size: 1.1rem; font-weight: 800; margin-top: -2px; pointer-events: none; }
+.badge { position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; font-size: 0.7rem; width: 20px; height: 20px; display: flex; justify-content: center; align-items: center; border-radius: 50%; font-weight: 900; box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 10; border: 2px solid white; cursor: pointer; }
 .sticker-box.double .badge { background: #4a2500; border-color: #ffd700; color: #ffd700; }
 
-.dots-container { position: absolute; top: -6px; left: -6px; display: flex; z-index: 5; }
-.other-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3); font-size: 0.5rem; font-weight: 900; display: flex; align-items: center; justify-content: center; color: white; margin-right: -6px; position: relative; }
+.dots-container { position: absolute; top: -5px; left: -5px; display: flex; z-index: 5; }
+.other-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3); font-size: 0.45rem; font-weight: 900; display: flex; align-items: center; justify-content: center; color: white; margin-right: -5px; position: relative; }
 .other-dot:last-child { margin-right: 0; }
 
 /* Trophy Room Styles */
-.stat-block { background: white; border-radius: 16px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); margin-bottom: 12px; }
-.stat-block h3 { text-align: left; margin-bottom: 10px; font-size: 1.1rem; color: var(--text-primary); border-bottom: 2px dashed #f1f5f9; padding-bottom: 8px; display: flex; align-items: center; gap: 8px; }
-.stat-bar-bg { background: #e2e8f0; height: 12px; border-radius: 6px; width: 100%; overflow: hidden; margin-top: 4px; margin-bottom: 10px; }
-.stat-bar-fill { height: 100%; border-radius: 6px; transition: width 1s ease-in-out; }
-.top10-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f8fafc; font-size: 0.95rem; font-weight: 700; }
+.stat-block { background: white; border-radius: 14px; padding: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); margin-bottom: 10px; }
+.stat-block h3 { text-align: left; margin-bottom: 8px; font-size: 1.05rem; color: var(--text-primary); border-bottom: 2px dashed #f1f5f9; padding-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.stat-bar-bg { background: #e2e8f0; height: 10px; border-radius: 5px; width: 100%; overflow: hidden; margin-top: 4px; margin-bottom: 8px; }
+.stat-bar-fill { height: 100%; border-radius: 5px; transition: width 1s ease-in-out; }
+.top10-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f8fafc; font-size: 0.9rem; font-weight: 700; }
 .top10-item:last-child { border-bottom: none; }
-.winner-text { font-size: 1.1rem; font-weight: 900; }
+.winner-text { font-size: 1.05rem; font-weight: 900; }
 
 /* CRUCIALE FIX: Bolletjesindicator in de Trophy Room */
-.legend-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 
-.poule-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem; font-weight: 700; }
-.poule-mini-bar { background: #cbd5e1; height: 6px; border-radius: 3px; flex-grow: 1; margin: 0 10px; overflow: hidden; }
+.poule-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 0.8rem; font-weight: 700; }
+.poule-mini-bar { background: #cbd5e1; height: 5px; border-radius: 2.5px; flex-grow: 1; margin: 0 8px; overflow: hidden; }
 
 /* LIVE SCANNER OVERLAY SYSTEM */
 .scanner-container {
-    display: none; position: relative; width: 100%; height: 250px; 
-    border-radius: 16px; overflow: hidden; margin-bottom: 12px; 
+    display: none; position: relative; width: 100%; height: 200px; /* Iets minder hoog */
+    border-radius: 14px; overflow: hidden; margin-bottom: 10px; 
     background: #000; box-shadow: 0 8px 25px rgba(0,0,0,0.15);
 }
 .scanner-video { width: 100%; height: 100%; object-fit: cover; }
 .scanner-status {
-    position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); 
-    padding: 6px 12px; border-radius: 10px; color: #10b981; font-weight: 900; 
-    font-size: 0.85rem; z-index: 10;
+    position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); 
+    padding: 5px 10px; border-radius: 8px; color: #10b981; font-weight: 900; 
+    font-size: 0.8rem; z-index: 10;
 }
 .scanner-guide {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-    width: 200px; height: 60px; border: 3px dashed #ffd700; border-radius: 12px; 
+    width: 180px; height: 50px; border: 3px dashed #ffd700; border-radius: 10px; 
     box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5); z-index: 5;
     display: flex; justify-content: center; align-items: flex-end; 
-    padding-bottom: 5px; color: white; font-size: 0.75rem; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    padding-bottom: 4px; color: white; font-size: 0.7rem; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
 }
 .btn-scanner-stop {
-    position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); 
-    background: #ef4444; color: white; border: none; font-size: 0.9rem; z-index: 10; padding: 8px 16px; border-radius: 10px;
+    position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); 
+    background: #ef4444; color: white; border: none; font-size: 0.85rem; z-index: 10; padding: 6px 14px; border-radius: 8px;
 }
 
 /* INTERACTIEVE INVENTARIS LIJSTEN (Snelbeheer) */
-.list-tabs { display: flex; gap: 8px; padding: 0 15px; }
+.list-tabs { display: flex; gap: 6px; padding: 0 10px; }
 .list-tab { 
-    flex: 1; padding: 10px 5px; text-align: center; background: white; 
-    border: 1px solid #e2e8f0; border-radius: 12px; font-weight: 800; 
-    font-size: 0.85rem; cursor: pointer; color: var(--text-secondary); transition: all 0.2s; 
+    flex: 1; padding: 8px 4px; text-align: center; background: white; 
+    border: 1px solid #e2e8f0; border-radius: 10px; font-weight: 800; 
+    font-size: 0.8rem; cursor: pointer; color: var(--text-secondary); transition: all 0.2s; 
 }
 .list-tab.active { background: var(--color-1); color: white; border-color: var(--color-1); }
 
 .list-item { 
     display: flex; justify-content: space-between; align-items: center; 
-    background: white; padding: 10px 12px; border-radius: 14px; margin-bottom: 8px; 
+    background: white; padding: 8px 10px; border-radius: 12px; margin-bottom: 6px; 
     box-shadow: 0 2px 5px rgba(0,0,0,0.02); 
 }
-.list-item-info { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-.list-controls { display: flex; align-items: center; gap: 8px; background: #f8fafc; padding: 4px; border-radius: 10px; border: 1px solid #e2e8f0; }
+.list-item-info { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.list-controls { display: flex; align-items: center; gap: 6px; background: #f8fafc; padding: 4px; border-radius: 10px; border: 1px solid #e2e8f0; }
 .btn-list-ctrl { 
-    width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; 
-    background: white; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 900; 
-    font-size: 1.2rem; color: var(--text-primary); cursor: pointer; transition: all 0.1s; 
+    width: 28px; height: 28px; display: flex; justify-content: center; align-items: center; 
+    background: white; border: 1px solid #cbd5e1; border-radius: 6px; font-weight: 900; 
+    font-size: 1.1rem; color: var(--text-primary); cursor: pointer; transition: all 0.1s; 
 }
 .btn-list-ctrl:active { background: #e2e8f0; transform: scale(0.9); }
-.list-count { font-weight: 900; font-size: 1rem; min-width: 28px; text-align: center; color: var(--text-primary); }
+.list-count { font-weight: 900; font-size: 0.95rem; min-width: 24px; text-align: center; color: var(--text-primary); }
 
 /* INKTBESPARENDE PRINTSYSTEM STYLING */
 #print-area { display: none; }
