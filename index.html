@@ -14,7 +14,7 @@
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=19">
+    <link rel="stylesheet" href="style.css?v=21">
 </head>
 <body>
 
@@ -32,9 +32,11 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <h2 id="welcome-text" style="text-align: left; margin: 0; font-size: 1.5rem; line-height: 1.2;">Album</h2>
             <div class="dashboard-actions">
-                <button class="btn-action" id="btn-filter" onclick="toggleFilter()" title="Toon Mijn Dubbele">🔄 Mijn Dubbele</button>
+                <!-- NIEUW: Inventaris Lijsten knop -->
+                <button class="btn-action" onclick="openListCenter()" title="Digitale Lijsten">📋 Lijsten</button>
                 <button class="btn-action" onclick="openTradeCenter()" title="Ruilcentrum">🔄 Ruil</button>
-                <button class="btn-action" onclick="openStatsCenter()" title="Statistieken">🏆 Stats</button>
+                <button class="btn-action" onclick="printList()" title="Print Lijst">🖨️ Print</button>
+                <button class="btn-action" onclick="openStatsCenter()" title="Statistieken">🏆</button>
                 <button class="btn-action" onclick="logout()" title="Uitloggen">🚪</button>
             </div>
         </div>
@@ -64,7 +66,9 @@
         <div class="countries-list" id="countries-container"></div>
     </div>
 
+    <!-- Modals -->
     <div id="modal" class="modal-overlay">
+        <!-- Bestaande land-modal... -->
         <div class="modal-content">
             <div class="modal-header">
                 <div style="display: flex; align-items: center; gap: 12px;">
@@ -81,6 +85,24 @@
                 <button class="btn-action" style="background: rgba(255,255,255,0.2); color: white;" onclick="closeModal()">✖</button>
             </div>
             <div class="sticker-grid" id="sticker-grid"></div>
+        </div>
+    </div>
+
+    <!-- NIEUW: Digitale Lijsten Modal -->
+    <div id="list-modal" class="modal-overlay">
+        <div class="modal-content" style="background: var(--bg-main);">
+            <div class="modal-header" style="background: white; border-bottom-left-radius: 0; border-bottom-right-radius: 0; padding-bottom: 5px; margin-bottom: 0;">
+                <h2 style="margin:0; font-size: 1.5rem;">📋 Inventaris</h2>
+                <button class="btn-action" onclick="closeListCenter()">✖</button>
+            </div>
+            <div style="background: white; padding-bottom: 12px; border-bottom-left-radius: 18px; border-bottom-right-radius: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+                <div class="list-tabs">
+                    <div class="list-tab active" id="tab-doubles" onclick="setListTab('doubles')">Dubbels</div>
+                    <div class="list-tab" id="tab-owned" onclick="setListTab('owned')">In Album</div>
+                    <div class="list-tab" id="tab-missing" onclick="setListTab('missing')">Manco's</div>
+                </div>
+            </div>
+            <div class="trade-section" id="list-content" style="padding-top: 15px;"></div>
         </div>
     </div>
 
@@ -105,9 +127,10 @@
     </div>
 
     <div id="toast" class="toast">Bericht hier</div>
+    <div id="print-area"></div>
 
-    <script src="countries.js?v=19"></script>
-    <script src="app.js?v=19"></script>
+    <script src="countries.js?v=21"></script>
+    <script src="app.js?v=21"></script>
     
     <script>
         if ('serviceWorker' in navigator) {
