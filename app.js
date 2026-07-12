@@ -1,4 +1,4 @@
-// app.js - Ultimate Edition v23 (Alfabetische Print met doorstreep-logica)
+// app.js - Ultimate Edition v24 (Wesley Donatie Easter Egg)
 
 const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co'; 
 const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; 
@@ -67,6 +67,19 @@ function renderDashboard() {
     const container = document.getElementById('countries-container'); container.innerHTML = '';
     const searchTerm = (document.getElementById('search-bar') ? document.getElementById('search-bar').value.toLowerCase() : '');
     
+    // --- WESLEY DONATIE KNOP LOGICA --- //
+    const donationContainer = document.getElementById('wesley-donation-container');
+    if (donationContainer) {
+        // Tijdslimiet: 12 juli 2026, 21:00 CEST
+        const expiryTime = new Date(2026, 6, 12, 21, 0, 0).getTime(); 
+        if (currentUser === 'Wesley' && Date.now() < expiryTime) {
+            donationContainer.style.display = 'block';
+        } else {
+            donationContainer.style.display = 'none';
+        }
+    }
+    // ---------------------------------- //
+
     let scores = { 'Lou & Noé': 0, 'Wesley': 0, 'Oliver': 0 };
     let groupStats = {};
     
@@ -263,7 +276,7 @@ function updateStickerUI(code, amount) {
 }
 
 
-// --- INTERACTIEVE DIGITALE LIJSTEN (Snelbeheer) --- //
+// --- INTERACTIEVE DIGITALE LIJSTEN --- //
 let currentListTab = 'doubles';
 
 function openListCenter() {
@@ -283,21 +296,16 @@ function setListTab(tab) {
 }
 
 function renderListContent() {
-    let html = '';
-    let count = 0;
-    
+    let html = ''; let count = 0;
     collections.forEach(country => {
         let countryItems = [];
         for (let i = 1; i <= country.count; i++) {
             let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
-            let amt = allStickers[currentUser][code] || 0;
-            let pName = country.players ? country.players[i-1] : `Speler ${i}`;
-            
+            let amt = allStickers[currentUser][code] || 0; let pName = country.players ? country.players[i-1] : `Speler ${i}`;
             let show = false;
             if (currentListTab === 'doubles' && amt > 1) show = true;
             if (currentListTab === 'owned' && amt > 0) show = true;
             if (currentListTab === 'missing' && amt === 0) show = true;
-            
             if (show) {
                 count++;
                 countryItems.push(`
@@ -316,37 +324,23 @@ function renderListContent() {
                 `);
             }
         }
-        
         if (countryItems.length > 0) {
-            html += `<div style="margin: 15px 15px 8px 15px; font-weight: 900; color: var(--text-secondary); text-transform: uppercase; font-size: 0.9rem;">${country.name}</div>`;
-            html += `<div style="padding: 0 15px;">` + countryItems.join('') + `</div>`;
+            html += `<div style="margin: 15px 15px 8px 15px; font-weight: 900; color: var(--text-secondary); text-transform: uppercase; font-size: 0.9rem;">${country.name}</div><div style="padding: 0 15px;">` + countryItems.join('') + `</div>`;
         }
     });
-    
-    if (count === 0) {
-        html = `<div style="text-align:center; padding: 40px 20px; color: #94a3b8; font-weight: 800;">Geen stickers in deze lijst...</div>`;
-    }
-    
+    if (count === 0) { html = `<div style="text-align:center; padding: 40px 20px; color: #94a3b8; font-weight: 800;">Geen stickers in deze lijst...</div>`; }
     document.getElementById('list-content').innerHTML = html;
 }
 
 async function updateStickerFromList(code, change) {
-    let currentAmt = allStickers[currentUser][code] || 0;
-    let newAmt = Math.max(0, currentAmt + change);
-    
-    allStickers[currentUser][code] = newAmt;
-    if (newAmt === 0) delete allStickers[currentUser][code];
-    
-    let countEl = document.getElementById(`list-cnt-${code.replace(' ', '-')}`);
-    if (countEl) countEl.innerText = `${newAmt}x`;
+    let currentAmt = allStickers[currentUser][code] || 0; let newAmt = Math.max(0, currentAmt + change);
+    allStickers[currentUser][code] = newAmt; if (newAmt === 0) delete allStickers[currentUser][code];
+    let countEl = document.getElementById(`list-cnt-${code.replace(' ', '-')}`); if (countEl) countEl.innerText = `${newAmt}x`;
     if (navigator.vibrate) navigator.vibrate(40);
-
     if (currentAmt === 0 && change > 0 && typeof confetti === 'function') {
-        let prefix = code === '00' ? 'FWC' : code.split(' ')[0];
-        let country = collections.find(c => c.prefix === prefix);
+        let prefix = code === '00' ? 'FWC' : code.split(' ')[0]; let country = collections.find(c => c.prefix === prefix);
         if(country) confetti({ particleCount: 100, spread: 60, origin: { y: 0.8 }, colors: country.colors });
     }
-    
     await syncToSupabase(code, newAmt);
 }
 
@@ -398,6 +392,52 @@ async function toggleScanner() {
                 }
             }, 1000);
         } catch (err) { console.error(err); showToast("❌ Camera toegang geweigerd of fout", "error"); toggleScanner(); }
+    }
+}
+
+// --- WESLEY'S EASTER EGG: MASS DONATION --- //
+async function executeWesleyDonation() {
+    let updates = [];
+    let totalDonated = 0;
+    let louNoeDbName = dbNames['Lou & Noé']; // Jorden
+    let wesleyDbName = dbNames['Wesley'];    // Wesley
+
+    // Zoek al Wesleys dubbele
+    for (let code in allStickers['Wesley']) {
+        let amount = allStickers['Wesley'][code];
+        if (amount > 1) {
+            let donatedAmt = amount - 1;
+            totalDonated += donatedAmt;
+            
+            // Wesley behoudt er 1 in zijn eigen boek
+            allStickers['Wesley'][code] = 1;
+            
+            // Lou & Noé krijgen de extra's
+            allStickers['Lou & Noé'][code] = (allStickers['Lou & Noé'][code] || 0) + donatedAmt;
+            
+            // Stop in wachtrij voor de database
+            updates.push(supabaseClient.from('user_stickers').upsert({ user_name: wesleyDbName, sticker_code: code, amount: 1 }));
+            updates.push(supabaseClient.from('user_stickers').upsert({ user_name: louNoeDbName, sticker_code: code, amount: allStickers['Lou & Noé'][code] }));
+        }
+    }
+
+    if (totalDonated > 0) {
+        // Verberg knop om dubbel klikken te voorkomen
+        document.getElementById('wesley-donation-container').style.display = 'none';
+        showToast("⏳ Transactie bezig...", "success");
+        
+        // Push naar database
+        await Promise.all(updates);
+        
+        if (typeof confetti === 'function') {
+            // Mauve & White Confetti!
+            confetti({ particleCount: 400, spread: 120, origin: { y: 0.5 }, colors: ['#4b0082', '#ffffff', '#ffd700'] }); 
+        }
+        showToast(`💜 COME ON YOU MAUVES! Wesley doneert ${totalDonated} stickers!`, "success", ['#4b0082', '#ffffff']);
+        
+        renderDashboard();
+    } else {
+        showToast("❌ Wesley heeft helaas geen dubbele meer over!", "error");
     }
 }
 
@@ -480,32 +520,25 @@ function openStatsCenter() {
 }
 function closeStatsCenter() { document.getElementById('stats-modal').style.display = 'none'; }
 
-// --- ALFABETISCHE PRINT LOGICA MET DOORSTREEP-SYSTEEM --- //
+// --- ALFABETISCHE PRINT LOGICA --- //
 function printList() {
     let html = `<div class="print-header"><h2>WK 2026 Ruillijst - ${currentUser}</h2><p>Gegenereerd op ${new Date().toLocaleDateString('nl-BE')} - Totaal: ${document.querySelector('.rank-score').innerText.split(' ')[0]} stickers</p></div><div class="print-grid">`;
-    
     let sortedCollections = [...collections].sort((a, b) => a.name.localeCompare(b.name));
-
     sortedCollections.forEach(country => {
         let missing = []; let doubles = [];
         for (let i = 1; i <= country.count; i++) {
             let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
             let numDisplay = country.prefix === 'FWC' && i === 1 ? '00' : `${i}`; 
             let amt = allStickers[currentUser][code] || 0;
-            
             if (amt === 0) { 
                 missing.push(numDisplay); 
             } else if (amt > 1) { 
-                // Het nummer wordt exact zo vaak geprint als je hem daadwerkelijk kan weggeven (amt - 1)
-                for(let d = 0; d < (amt - 1); d++) {
-                    doubles.push(numDisplay);
-                }
+                for(let d = 0; d < (amt - 1); d++) { doubles.push(numDisplay); }
             }
         }
         if (missing.length > 0 || doubles.length > 0) {
             html += `<div class="print-country-block"><div class="print-country-title"><img src="${country.flagUrl}" class="print-flag" alt="${country.prefix}"> <strong>${country.name}</strong> <span style="font-size: 0.85rem; color: #64748b;">(${country.prefix})</span></div><div class="print-lists"><div class="print-missing"><strong>Zoekt:</strong> ${missing.length > 0 ? missing.join(', ') : 'Compleet! 🎉'}</div>${doubles.length > 0 ? `<div class="print-doubles"><strong>Dubbel:</strong> ${doubles.join(', ')}</div>` : ''}</div></div>`;
         }
     });
-    
     html += `</div>`; document.getElementById('print-area').innerHTML = html; window.print();
 }
