@@ -291,3 +291,28 @@ h1, h2, h3 { font-weight: 800; margin-top: 0; text-align: center; }
     
     @page { margin: 1cm; }
 }
+
+/* --- WESLEY DONATIE KNOP (Anderlecht Easter Egg) --- */
+.btn-wesley-donate {
+    width: 100%;
+    background: linear-gradient(45deg, #4b0082, #6a0dad, #4b0082); /* Mauve Paars */
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 900;
+    padding: 15px;
+    border: 3px solid #ffd700; /* Gouden randje */
+    border-radius: 16px;
+    cursor: pointer;
+    margin-bottom: 15px;
+    animation: pulseMauve 1.5s infinite;
+    text-transform: uppercase;
+    box-shadow: 0 10px 20px rgba(75, 0, 130, 0.4);
+    line-height: 1.4;
+}
+
+@keyframes pulseMauve {
+    0% { transform: scale(1); box-shadow: 0 0 10px #6a0dad; }
+    50% { transform: scale(1.02); box-shadow: 0 0 25px #6a0dad, 0 0 15px #ffd700; }
+    100% { transform: scale(1); box-shadow: 0 0 10px #6a0dad; }
+}
+
