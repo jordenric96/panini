@@ -1,4 +1,4 @@
-// app.js - Ultimate Edition v25 (De Stapel Editie)
+// app.js - Ultimate Edition v26 (Verdeelcentrum Update)
 
 const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co'; 
 const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; 
@@ -42,13 +42,17 @@ async function selectUser(name) {
     document.getElementById('profile-section').style.display = 'none';
     document.getElementById('dashboard-section').style.display = 'block';
     
-    // Verberg het klassement op het dashboard als 'De Stapel' is ingelogd
+    // UI aanpassingen voor "De Stapel"
     if(currentUser === 'De Stapel') {
         document.getElementById('ranks-card-container').style.display = 'none';
-        document.getElementById('welcome-text').innerHTML = `Inventaris van <br><span style="color: ${userColors[currentUser]}; font-weight: 900; font-size: 1.8rem;">📦 ${currentUser}</span>`;
+        document.getElementById('welcome-text').innerHTML = `Magazijn van <br><span style="color: ${userColors[currentUser]}; font-weight: 900; font-size: 1.8rem;">📦 ${currentUser}</span>`;
+        document.getElementById('btn-distribute').style.display = 'flex';
+        document.getElementById('btn-trade').style.display = 'none';
     } else {
         document.getElementById('ranks-card-container').style.display = 'block';
         document.getElementById('welcome-text').innerHTML = `Album van <br><span style="color: ${userColors[currentUser]}; font-weight: 900; font-size: 1.8rem;">${currentUser}</span>`;
+        document.getElementById('btn-distribute').style.display = 'none';
+        document.getElementById('btn-trade').style.display = 'flex';
     }
     
     await loadUserData();
@@ -76,7 +80,6 @@ function renderDashboard() {
     const container = document.getElementById('countries-container'); container.innerHTML = '';
     const searchTerm = (document.getElementById('search-bar') ? document.getElementById('search-bar').value.toLowerCase() : '');
     
-    // Wesley's Donatie Knop Logica (Kan na juli 2026 genegeerd worden)
     const donationContainer = document.getElementById('wesley-donation-container');
     if (donationContainer) {
         const expiryTime = new Date(2026, 6, 12, 21, 0, 0).getTime(); 
@@ -123,7 +126,6 @@ function renderDashboard() {
 
         let badgesHTML = '';
         users.forEach(u => { 
-            // We tonen "De Stapel" badges niet op de overzichtskaartjes van anderen, behalve als je De Stapel zelf bent.
             if (u === 'De Stapel' && currentUser !== 'De Stapel') return; 
             badgesHTML += `<div class="grid-badge" style="background: ${userColors[u]};">${countTracker[u]}</div>`; 
         });
@@ -137,7 +139,6 @@ function renderDashboard() {
             </div>`;
     });
 
-    // Rangen renderen (EXCLUSIEF De Stapel)
     let ranksHTML = '';
     let sortedUsers = [...users].filter(u => u !== 'De Stapel').sort((a, b) => scores[b] - scores[a]);
     sortedUsers.forEach(u => {
@@ -270,9 +271,12 @@ async function removeSticker(event, code) {
     updateStickerUI(code, allStickers[currentUser][code] || 0);
     if(navigator.vibrate) navigator.vibrate([30, 50, 30]); await syncToSupabase(code, allStickers[currentUser][code] || 0);
 }
-async function syncToSupabase(code, amount) {
+
+// Aangepaste Sync functie (Kan nu ook voor andere profielen wegschrijven via Verdeelcentrum)
+async function syncToSupabase(code, amount, specificUser = null) {
     try {
-        let dbName = dbNames[currentUser];
+        let target = specificUser ? specificUser : currentUser;
+        let dbName = dbNames[target];
         if (amount === 0) await supabaseClient.from('user_stickers').delete().match({ user_name: dbName, sticker_code: code });
         else await supabaseClient.from('user_stickers').upsert({ user_name: dbName, sticker_code: code, amount: amount });
     } catch (err) { console.error("Cloud Error:", err.message); }
@@ -281,23 +285,129 @@ async function syncToSupabase(code, amount) {
 function updateStickerUI(code, amount) {
     const box = document.getElementById(`box-${code}`);
     const badge = document.getElementById(`badge-${code}`);
+    if(!box || !badge) return;
     box.className = 'sticker-box';
     if (amount === 1) { box.classList.add('owned'); badge.innerText = `1x`; badge.style.display = 'flex'; }
     else if (amount > 1) { box.classList.add('double'); badge.innerText = `${amount}x`; badge.style.display = 'flex'; }
     else { badge.style.display = 'none'; }
 }
 
+// --- NIEUW: 📦 HET VERDEELCENTRUM LOGICA --- //
+function openDistributeCenter() {
+    let html = '';
+    let groups = { both: [], lou: [], oli: [], nobody: [] };
+
+    // Loop door de hele stapel heen
+    for (let code in allStickers['De Stapel']) {
+        let amt = allStickers['De Stapel'][code];
+        if (amt > 0) {
+            let needsLou = (allStickers['Lou & Noé'][code] || 0) === 0;
+            let needsOli = (allStickers['Oliver'][code] || 0) === 0;
+
+            let prefix = code === '00' ? 'FWC' : code.split(' ')[0];
+            let num = code === '00' ? 0 : parseInt(code.split(' ')[1]);
+            let country = collections.find(c => c.prefix === prefix);
+            let pName = "Speler"; let flag = "";
+            if (country) {
+                flag = country.flagUrl;
+                let idx = prefix === 'FWC' ? (code==='00'?0:num) : num - 1;
+                pName = country.players ? country.players[idx] : `Speler ${num}`;
+            }
+
+            let item = { code, name: pName, flag, amt };
+
+            if (needsLou && needsOli) groups.both.push(item);
+            else if (needsLou) groups.lou.push(item);
+            else if (needsOli) groups.oli.push(item);
+            else groups.nobody.push(item);
+        }
+    }
+
+    const renderGroup = (title, items, color, type) => {
+        if (items.length === 0) return '';
+        let res = `<div class="trade-block" style="border-left: 4px solid ${color};">
+            <h3 style="color: ${color};">${title} (${items.length})</h3>
+            <div class="trade-codes">`;
+        
+        items.forEach(item => {
+            let btnHTML = '';
+            if (type === 'both') {
+                btnHTML = `
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn-instant-trade" style="background:var(--color-1);" onclick="claimFromPile('${item.code}', 'Lou & Noé')">L&N</button>
+                        <button class="btn-instant-trade" style="background:var(--color-3);" onclick="claimFromPile('${item.code}', 'Oliver')">Oli</button>
+                    </div>
+                `;
+            } else if (type === 'lou') {
+                btnHTML = `<button class="btn-instant-trade" style="background:var(--color-1);" onclick="claimFromPile('${item.code}', 'Lou & Noé')">Geef L&N</button>`;
+            } else if (type === 'oli') {
+                btnHTML = `<button class="btn-instant-trade" style="background:var(--color-3);" onclick="claimFromPile('${item.code}', 'Oliver')">Geef Oli</button>`;
+            } else {
+                btnHTML = `<span class="trade-status-box give">Echte Dubbele</span>`;
+            }
+
+            res += `
+                <div class="trade-chip-wrapper">
+                    <div class="trade-item-left">
+                        <div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div>
+                        <span class="trade-num-badge">${item.code}</span>
+                        <span class="trade-player-name">${item.name} <span style="font-size:0.7rem; color:#94a3b8;">(${item.amt}x)</span></span>
+                    </div>
+                    ${btnHTML}
+                </div>
+            `;
+        });
+        res += `</div></div>`;
+        return res;
+    };
+
+    html += renderGroup('Beiden nodig!', groups.both, '#ef4444', 'both');
+    html += renderGroup('Enkel Lou & Noé nodig', groups.lou, userColors['Lou & Noé'], 'lou');
+    html += renderGroup('Enkel Oliver nodig', groups.oli, userColors['Oliver'], 'oli');
+    html += renderGroup('Niemand nodig (Echte Dubbele)', groups.nobody, '#94a3b8', 'nobody');
+
+    if (html === '') html = `<div style="text-align:center; padding: 40px 20px; color: #94a3b8; font-weight: 800;">De stapel is leeg! Begin met scannen.</div>`;
+
+    document.getElementById('distribute-content').innerHTML = html;
+    document.getElementById('distribute-modal').style.display = 'block';
+}
+
+function closeDistributeCenter() { document.getElementById('distribute-modal').style.display = 'none'; }
+
+// Als je in het Verdeelcentrum op een L&N / Oli knop klikt
+async function claimFromPile(code, targetUser) {
+    let pileAmt = allStickers['De Stapel'][code];
+    if (!pileAmt || pileAmt < 1) return;
+
+    // 1. Haal hem uit De Stapel
+    allStickers['De Stapel'][code] -= 1;
+    if (allStickers['De Stapel'][code] === 0) delete allStickers['De Stapel'][code];
+
+    // 2. Stop hem bij het juiste kind in zijn album
+    allStickers[targetUser][code] = (allStickers[targetUser][code] || 0) + 1;
+
+    if(navigator.vibrate) navigator.vibrate(40);
+    
+    // 3. Stuur deze transactie naar Supabase Database
+    await Promise.all([
+        syncToSupabase(code, allStickers['De Stapel'][code] || 0, 'De Stapel'),
+        syncToSupabase(code, allStickers[targetUser][code], targetUser)
+    ]);
+
+    // 4. Confetti knal (met de juiste kleur!)
+    let prefix = code === '00' ? 'FWC' : code.split(' ')[0]; let country = collections.find(c => c.prefix === prefix);
+    if(typeof confetti === 'function' && country) { confetti({ particleCount: 100, spread: 60, origin: { y: 0.8 }, colors: country.colors }); }
+
+    showToast(`✅ ${code} geplakt in het album van ${targetUser}!`, "success");
+    openDistributeCenter(); // Vernieuw de Verdeel-lijst direct
+    renderDashboard();
+}
+
 // --- INTERACTIEVE DIGITALE LIJSTEN --- //
 let currentListTab = 'doubles';
 
-function openListCenter() {
-    document.getElementById('list-modal').style.display = 'block';
-    setListTab(currentListTab);
-}
-function closeListCenter() {
-    document.getElementById('list-modal').style.display = 'none';
-    renderDashboard(); 
-}
+function openListCenter() { document.getElementById('list-modal').style.display = 'block'; setListTab(currentListTab); }
+function closeListCenter() { document.getElementById('list-modal').style.display = 'none'; renderDashboard(); }
 
 function setListTab(tab) {
     currentListTab = tab;
@@ -406,86 +516,57 @@ async function toggleScanner() {
     }
 }
 
-// --- WESLEY'S EASTER EGG: MASS DONATION --- //
+// --- WESLEY'S EASTER EGG --- //
 async function executeWesleyDonation() {
-    let updates = [];
-    let totalDonated = 0;
-    let louNoeDbName = dbNames['Lou & Noé'];
-    let wesleyDbName = dbNames['Wesley'];
-
+    let updates = []; let totalDonated = 0; let louNoeDbName = dbNames['Lou & Noé']; let wesleyDbName = dbNames['Wesley'];
     for (let code in allStickers['Wesley']) {
         let amount = allStickers['Wesley'][code];
         if (amount > 1) {
-            let donatedAmt = amount - 1;
-            totalDonated += donatedAmt;
-            allStickers['Wesley'][code] = 1;
-            allStickers['Lou & Noé'][code] = (allStickers['Lou & Noé'][code] || 0) + donatedAmt;
-            
+            let donatedAmt = amount - 1; totalDonated += donatedAmt;
+            allStickers['Wesley'][code] = 1; allStickers['Lou & Noé'][code] = (allStickers['Lou & Noé'][code] || 0) + donatedAmt;
             updates.push(supabaseClient.from('user_stickers').upsert({ user_name: wesleyDbName, sticker_code: code, amount: 1 }));
             updates.push(supabaseClient.from('user_stickers').upsert({ user_name: louNoeDbName, sticker_code: code, amount: allStickers['Lou & Noé'][code] }));
         }
     }
-
     if (totalDonated > 0) {
-        document.getElementById('wesley-donation-container').style.display = 'none';
-        showToast("⏳ Transactie bezig...", "success");
+        document.getElementById('wesley-donation-container').style.display = 'none'; showToast("⏳ Transactie bezig...", "success");
         await Promise.all(updates);
         if (typeof confetti === 'function') { confetti({ particleCount: 400, spread: 120, origin: { y: 0.5 }, colors: ['#4b0082', '#ffffff', '#ffd700'] }); }
-        showToast(`💜 COME ON YOU MAUVES! Wesley doneert ${totalDonated} stickers!`, "success", ['#4b0082', '#ffffff']);
-        renderDashboard();
-    } else {
-        showToast("❌ Wesley heeft helaas geen dubbele meer over!", "error");
-    }
+        showToast(`💜 COME ON YOU MAUVES! Wesley doneert ${totalDonated} stickers!`, "success", ['#4b0082', '#ffffff']); renderDashboard();
+    } else { showToast("❌ Wesley heeft helaas geen dubbele meer over!", "error"); }
 }
 
-// --- RUIL & STATS LOGICA --- //
+// --- RUIL LOGICA --- //
 async function executeInstantTrade(code, targetUser) {
-    let myNewAmt = Math.max((allStickers[currentUser][code] || 0) - 1, 0); 
-    let theirNewAmt = (allStickers[targetUser][code] || 0) + 1;
-    allStickers[currentUser][code] = myNewAmt; if(myNewAmt === 0) delete allStickers[currentUser][code]; 
-    allStickers[targetUser][code] = theirNewAmt;
+    let myNewAmt = Math.max((allStickers[currentUser][code] || 0) - 1, 0); let theirNewAmt = (allStickers[targetUser][code] || 0) + 1;
+    allStickers[currentUser][code] = myNewAmt; if(myNewAmt === 0) delete allStickers[currentUser][code]; allStickers[targetUser][code] = theirNewAmt;
     if(navigator.vibrate) navigator.vibrate([50, 30, 50]);
-    await Promise.all([ supabaseClient.from('user_stickers').upsert({ user_name: dbNames[currentUser], sticker_code: code, amount: myNewAmt }), supabaseClient.from('user_stickers').upsert({ user_name: dbNames[targetUser], sticker_code: code, amount: theirNewAmt }) ]);
-    if(myNewAmt === 0) { await supabaseClient.from('user_stickers').delete().match({ user_name: dbNames[currentUser], sticker_code: code }); }
+    await Promise.all([ syncToSupabase(code, myNewAmt), syncToSupabase(code, theirNewAmt, targetUser) ]);
     showToast(`🔄 Sticker overgedragen naar ${targetUser}!`, "success"); openTradeCenter(); renderDashboard();
 }
 
 function openTradeCenter() {
     let tradeHTML = '';
     otherUsers.forEach(ou => {
+        if(ou === 'De Stapel') return; // De Stapel doet niet mee met gewone ruil, die heeft zijn eigen Verdeelcentrum!
         let give = []; let get = [];
         collections.forEach(country => {
             for (let i = 1; i <= country.count; i++) {
                 let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
                 let myAmt = allStickers[currentUser][code] || 0; let theirAmt = allStickers[ou][code] || 0;
-                let pName = country.players ? country.players[i-1] : `Speler ${i}`;
-                let numDisplay = country.prefix === 'FWC' && i === 1 ? "00" : `${i}`;
-                let pageStr = country.page ? ` (P.${country.page})` : '';
-                
-                // SPECIALE REGEL: De Stapel doneert alles wat hij heeft! 
-                let canGive = (ou === 'De Stapel') ? (myAmt > 1) : (myAmt > 1 && theirAmt === 0);
-                let canGet = (ou === 'De Stapel') ? (theirAmt > 0 && myAmt === 0) : (theirAmt > 1 && myAmt === 0);
-
-                if (canGive) give.push({code: code, flag: country.flagUrl, num: numDisplay, name: pName, page: pageStr});
-                if (canGet) get.push({code: code, flag: country.flagUrl, num: numDisplay, name: pName, page: pageStr});
+                let pName = country.players ? country.players[i-1] : `Speler ${i}`; let numDisplay = country.prefix === 'FWC' && i === 1 ? "00" : `${i}`; let pageStr = country.page ? ` (P.${country.page})` : '';
+                if (myAmt > 1 && theirAmt === 0) give.push({code: code, flag: country.flagUrl, num: numDisplay, name: pName, page: pageStr});
+                if (theirAmt > 1 && myAmt === 0) get.push({code: code, flag: country.flagUrl, num: numDisplay, name: pName, page: pageStr});
             }
         });
         tradeHTML += `
             <div class="trade-block" style="border-left: 4px solid ${userColors[ou]};">
                 <h3 style="color: ${userColors[ou]};">Ruilen met ${ou}</h3>
-                <div style="margin-bottom: 16px;"><strong style="font-size: 0.95rem;">Jij zoekt, ${ou} heeft beschikbaar (${get.length}):</strong>
-                    <div class="trade-codes" style="margin-top: 8px;">${get.length === 0 ? '<span style="color:#94a3b8; font-size:0.8rem;">Niets wat jij mist...</span>' : get.map(item => `
-                        <div class="trade-chip-wrapper">
-                            <div class="trade-item-left"><div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div><span class="trade-num-badge">${item.num}</span><span class="trade-player-name">${item.name} <span style="font-size:0.75rem; color:var(--text-secondary);">${item.page}</span></span></div>
-                            <span class="trade-status-box get">Jij Mist</span>
-                        </div>`).join('')}</div>
+                <div style="margin-bottom: 16px;"><strong style="font-size: 0.95rem;">Jij zoekt, ${ou} heeft dubbel (${get.length}):</strong>
+                    <div class="trade-codes" style="margin-top: 8px;">${get.length === 0 ? '<span style="color:#94a3b8; font-size:0.8rem;">Niets wat jij mist...</span>' : get.map(item => `<div class="trade-chip-wrapper"><div class="trade-item-left"><div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div><span class="trade-num-badge">${item.num}</span><span class="trade-player-name">${item.name} <span style="font-size:0.75rem; color:var(--text-secondary);">${item.page}</span></span></div><span class="trade-status-box get">Jij Mist</span></div>`).join('')}</div>
                 </div>
                 <div><strong style="font-size: 0.95rem;">${ou} zoekt, jij hebt dubbel (${give.length}):</strong>
-                    <div class="trade-codes" style="margin-top: 8px;">${give.length === 0 ? '<span style="color:#94a3b8; font-size:0.8rem;">Geen dubbele voor ${ou}...</span>' : give.map(item => `
-                        <div class="trade-chip-wrapper">
-                            <div class="trade-item-left"><div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div><span class="trade-num-badge">${item.num}</span><span class="trade-player-name">${item.name} <span style="font-size:0.75rem; color:var(--text-secondary);">${item.page}</span></span></div>
-                            <button class="btn-instant-trade" onclick="executeInstantTrade('${item.code}', '${ou}')">⚡ Ruil</button>
-                        </div>`).join('')}</div>
+                    <div class="trade-codes" style="margin-top: 8px;">${give.length === 0 ? '<span style="color:#94a3b8; font-size:0.8rem;">Geen dubbele voor ${ou}...</span>' : give.map(item => `<div class="trade-chip-wrapper"><div class="trade-item-left"><div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div><span class="trade-num-badge">${item.num}</span><span class="trade-player-name">${item.name} <span style="font-size:0.75rem; color:var(--text-secondary);">${item.page}</span></span></div><button class="btn-instant-trade" onclick="executeInstantTrade('${item.code}', '${ou}')">⚡ Ruil</button></div>`).join('')}</div>
                 </div>
             </div>`;
     });
@@ -494,16 +575,13 @@ function openTradeCenter() {
 function closeTradeCenter() { document.getElementById('trade-modal').style.display = 'none'; }
 
 function openStatsCenter() {
-    // Alleen de échte spelers tonen in de statistieken! (De Stapel doet niet mee voor de Trophy's)
     const realUsers = ['Lou & Noé', 'Wesley', 'Oliver'];
     let statsHTML = ''; let belHTML = '';
-
     realUsers.forEach(u => {
         let belCount = 0; for(let i=1; i<=20; i++){ if(allStickers[u][`BEL ${i}`]) belCount++; } let perc = (belCount / 20) * 100;
         belHTML += `<div style="font-size: 0.85rem; font-weight: 800; color: ${userColors[u]};">${u} (${belCount}/20)</div><div class="stat-bar-bg"><div class="stat-bar-fill" style="background: ${userColors[u]}; width: ${perc}%;"></div></div>`;
     });
     statsHTML += `<div class="stat-block"><h3>🇧🇪 Rode Duivels Barometer</h3>${belHTML}</div>`;
-    
     let poulesMap = {};
     collections.forEach(c => {
         if(!poulesMap[c.group]) poulesMap[c.group] = { totalStickers: 0, usersOwned: { 'Lou & Noé': 0, 'Wesley': 0, 'Oliver': 0 } };
@@ -536,13 +614,8 @@ function printList() {
         let missing = []; let doubles = [];
         for (let i = 1; i <= country.count; i++) {
             let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
-            let numDisplay = country.prefix === 'FWC' && i === 1 ? '00' : `${i}`; 
-            let amt = allStickers[currentUser][code] || 0;
-            if (amt === 0) { 
-                missing.push(numDisplay); 
-            } else if (amt > 1) { 
-                for(let d = 0; d < (amt - 1); d++) { doubles.push(numDisplay); }
-            }
+            let numDisplay = country.prefix === 'FWC' && i === 1 ? '00' : `${i}`; let amt = allStickers[currentUser][code] || 0;
+            if (amt === 0) { missing.push(numDisplay); } else if (amt > 1) { for(let d = 0; d < (amt - 1); d++) { doubles.push(numDisplay); } }
         }
         if (missing.length > 0 || doubles.length > 0) {
             html += `<div class="print-country-block"><div class="print-country-title"><img src="${country.flagUrl}" class="print-flag" alt="${country.prefix}"> <strong>${country.name}</strong> <span style="font-size: 0.85rem; color: #64748b;">(${country.prefix})</span></div><div class="print-lists"><div class="print-missing"><strong>Zoekt:</strong> ${missing.length > 0 ? missing.join(', ') : 'Compleet! 🎉'}</div>${doubles.length > 0 ? `<div class="print-doubles"><strong>Dubbel:</strong> ${doubles.join(', ')}</div>` : ''}</div></div>`;
