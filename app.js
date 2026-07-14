@@ -1,4 +1,4 @@
-// app.js - Ultimate Edition v26 (Verdeelcentrum Update)
+// app.js - Ultimate Edition v27 (Multi-Add Update)
 
 const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co'; 
 const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; 
@@ -42,7 +42,6 @@ async function selectUser(name) {
     document.getElementById('profile-section').style.display = 'none';
     document.getElementById('dashboard-section').style.display = 'block';
     
-    // UI aanpassingen voor "De Stapel"
     if(currentUser === 'De Stapel') {
         document.getElementById('ranks-card-container').style.display = 'none';
         document.getElementById('welcome-text').innerHTML = `Magazijn van <br><span style="color: ${userColors[currentUser]}; font-weight: 900; font-size: 1.8rem;">📦 ${currentUser}</span>`;
@@ -170,51 +169,102 @@ function showToast(message, type, colors = null) {
 
 function handleQuickAdd(event) { if (event.key === 'Enter') processQuickAdd(); }
 
+
+// --- NIEUWE SLIMME MULTI-ADD LOGICA --- //
 function processQuickAdd() {
     const inputField = document.getElementById('quick-add-input');
     let input = inputField.value.trim().toUpperCase();
     if (!input) return;
 
-    let code = null; let num = 0; let prefix = '';
-    if (input === 'FWC 00' || input === 'FWC00') { code = '00'; prefix = 'FWC'; num = 0; } 
-    else {
-        const match = input.match(/^([A-Z]{3})\s*(\d{1,2})$/);
-        if (match) { prefix = match[1]; num = parseInt(match[2], 10); code = `${prefix} ${num}`; }
+    // Splits de invoer in een prefix (3 letters) en de rest (de cijfers)
+    const match = input.match(/^([A-Z]{3})\s*(.*)$/);
+    
+    if (!match) {
+        // Fallback voor een ruwe FWC 00
+        if (input === '00' || input === 'FWC 00' || input === 'FWC00') {
+            input = "FWC 00";
+        } else {
+            return showToast("❌ Ongeldige code. Typ bijv: BEL 1, 13, 20", "error");
+        }
     }
 
-    if (!code) return showToast("❌ Ongeldige code. Gebruik bijv. BEL 4", "error");
+    let prefix = match ? match[1] : 'FWC';
+    let numbersStr = match ? match[2] : '00';
+
     let country = collections.find(c => c.prefix === prefix);
     if (!country) return showToast(`❌ Landcode '${prefix}' bestaat niet.`, "error");
 
     let maxNum = prefix === 'FWC' ? 19 : 20; 
-    if (code !== '00' && (num < 1 || num > maxNum)) return showToast(`❌ ${prefix} stopt bij nummer ${maxNum}.`, "error");
+    
+    // Zet komma's om in spaties en splits alles mooi op
+    let numbersArray = [];
+    numbersStr.replace(/,/g, ' ').split(/\s+/).forEach(n => {
+        if (n.trim() !== '') numbersArray.push(n.trim());
+    });
 
-    let newAmount = (allStickers[currentUser][code] || 0) + 1;
-    allStickers[currentUser][code] = newAmount;
+    if (numbersArray.length === 0) return showToast("❌ Geen nummers ingevuld. Typ bijv: BEL 1, 13, 20", "error");
 
-    syncToSupabase(code, newAmount).then(() => {
-        let playerName = "";
-        if (prefix === 'FWC') { let i = code === '00' ? 1 : num + 1; playerName = country.players ? country.players[i-1] : `Speler ${i}`; } 
-        else { playerName = country.players ? country.players[num-1] : (num === 1 ? "Team Logo" : (num === 13 ? "Teamfoto" : `Speler ${num}`)); }
-        
-        let pageText = country.page ? `<div style="margin-top: 5px; font-size: 0.9rem; opacity: 0.9;">Pagina ${country.page}</div>` : '';
-        let statusText = newAmount === 1 ? '🌟 NIEUWE STICKER!' : `🔄 DUBBEL (${newAmount}x)`;
+    let validCodes = [];
+    let errors = [];
 
-        if (typeof confetti === 'function') {
-            if (newAmount === 1) confetti({ particleCount: 150, spread: 80, origin: { y: 0.8 }, colors: country.colors });
-            else confetti({ particleCount: 50, spread: 40, origin: { y: 0.8 }, colors: country.colors });
+    // Check elk los nummer uit de lijst
+    numbersArray.forEach(numStr => {
+        let num = parseInt(numStr, 10);
+        let code = null;
+
+        if (prefix === 'FWC' && (numStr === '00' || num === 0)) {
+            code = '00';
+        } else if (!isNaN(num) && num >= 1 && num <= maxNum) {
+            code = `${prefix} ${num}`;
+        } else {
+            errors.push(numStr);
         }
 
+        if (code) validCodes.push(code);
+    });
+
+    if (errors.length > 0) {
+        showToast(`❌ Genegeerd (bestaan niet): ${errors.join(', ')}`, "error");
+    }
+
+    if (validCodes.length === 0) return;
+
+    // Voeg alle geldige stickers lokaal toe en hou bij hoeveel we er exact toevoegen per code
+    let updatesMap = {};
+    validCodes.forEach(code => {
+        allStickers[currentUser][code] = (allStickers[currentUser][code] || 0) + 1;
+        updatesMap[code] = allStickers[currentUser][code];
+    });
+
+    // Stuur alle updates naar de cloud Database
+    let promises = Object.keys(updatesMap).map(code => {
+        return syncToSupabase(code, updatesMap[code]);
+    });
+
+    Promise.all(promises).then(() => {
+        // Grotere confetti knal naarmate je er meer in één keer toevoegt!
+        if (typeof confetti === 'function') {
+            let particles = Math.min(300, 100 + (validCodes.length * 20));
+            confetti({ particleCount: particles, spread: 100, origin: { y: 0.8 }, colors: country.colors });
+        }
+
+        let msgTitle = validCodes.length === 1 ? `🌟 ${validCodes[0]} TOEGEVOEGD!` : `💥 ${validCodes.length} STICKERS TOEGEVOEGD!`;
+        let msgBody = validCodes.length === 1 
+            ? `Nummer ${validCodes[0].split(' ')[1] || '00'} van ${country.name}` 
+            : validCodes.join(', ');
+
         let msg = `
-            <div style="font-size: 1.4rem; font-weight: 900; margin-bottom: 5px;">${code} - ${playerName}</div>
-            <div style="font-size: 1.2rem; font-weight: 800; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 8px; display: inline-block;">${statusText}</div>
-            ${pageText}
+            <div style="font-size: 1.3rem; font-weight: 900; margin-bottom: 5px;">${msgTitle}</div>
+            <div style="font-size: 1.1rem; font-weight: 800; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 8px; display: inline-block;">${msgBody}</div>
         `;
         showToast(msg, "success", country.colors);
-        inputField.value = ''; renderDashboard(); 
-        if(navigator.vibrate) navigator.vibrate([40, 40]); 
+        
+        inputField.value = ''; 
+        renderDashboard(); 
+        if(navigator.vibrate) navigator.vibrate([40, 40, 40]); 
     });
 }
+// ---------------------------------------- //
 
 function openModal(prefix) {
     const countryData = collections.find(c => c.prefix === prefix);
@@ -272,7 +322,6 @@ async function removeSticker(event, code) {
     if(navigator.vibrate) navigator.vibrate([30, 50, 30]); await syncToSupabase(code, allStickers[currentUser][code] || 0);
 }
 
-// Aangepaste Sync functie (Kan nu ook voor andere profielen wegschrijven via Verdeelcentrum)
 async function syncToSupabase(code, amount, specificUser = null) {
     try {
         let target = specificUser ? specificUser : currentUser;
@@ -292,12 +341,10 @@ function updateStickerUI(code, amount) {
     else { badge.style.display = 'none'; }
 }
 
-// --- NIEUW: 📦 HET VERDEELCENTRUM LOGICA --- //
 function openDistributeCenter() {
     let html = '';
     let groups = { both: [], lou: [], oli: [], nobody: [] };
 
-    // Loop door de hele stapel heen
     for (let code in allStickers['De Stapel']) {
         let amt = allStickers['De Stapel'][code];
         if (amt > 0) {
@@ -325,19 +372,11 @@ function openDistributeCenter() {
 
     const renderGroup = (title, items, color, type) => {
         if (items.length === 0) return '';
-        let res = `<div class="trade-block" style="border-left: 4px solid ${color};">
-            <h3 style="color: ${color};">${title} (${items.length})</h3>
-            <div class="trade-codes">`;
-        
+        let res = `<div class="trade-block" style="border-left: 4px solid ${color};"><h3 style="color: ${color};">${title} (${items.length})</h3><div class="trade-codes">`;
         items.forEach(item => {
             let btnHTML = '';
             if (type === 'both') {
-                btnHTML = `
-                    <div style="display:flex; gap:5px;">
-                        <button class="btn-instant-trade" style="background:var(--color-1);" onclick="claimFromPile('${item.code}', 'Lou & Noé')">L&N</button>
-                        <button class="btn-instant-trade" style="background:var(--color-3);" onclick="claimFromPile('${item.code}', 'Oliver')">Oli</button>
-                    </div>
-                `;
+                btnHTML = `<div style="display:flex; gap:5px;"><button class="btn-instant-trade" style="background:var(--color-1);" onclick="claimFromPile('${item.code}', 'Lou & Noé')">L&N</button><button class="btn-instant-trade" style="background:var(--color-3);" onclick="claimFromPile('${item.code}', 'Oliver')">Oli</button></div>`;
             } else if (type === 'lou') {
                 btnHTML = `<button class="btn-instant-trade" style="background:var(--color-1);" onclick="claimFromPile('${item.code}', 'Lou & Noé')">Geef L&N</button>`;
             } else if (type === 'oli') {
@@ -346,16 +385,7 @@ function openDistributeCenter() {
                 btnHTML = `<span class="trade-status-box give">Echte Dubbele</span>`;
             }
 
-            res += `
-                <div class="trade-chip-wrapper">
-                    <div class="trade-item-left">
-                        <div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div>
-                        <span class="trade-num-badge">${item.code}</span>
-                        <span class="trade-player-name">${item.name} <span style="font-size:0.7rem; color:#94a3b8;">(${item.amt}x)</span></span>
-                    </div>
-                    ${btnHTML}
-                </div>
-            `;
+            res += `<div class="trade-chip-wrapper"><div class="trade-item-left"><div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div><span class="trade-num-badge">${item.code}</span><span class="trade-player-name">${item.name} <span style="font-size:0.7rem; color:#94a3b8;">(${item.amt}x)</span></span></div>${btnHTML}</div>`;
         });
         res += `</div></div>`;
         return res;
@@ -368,54 +398,30 @@ function openDistributeCenter() {
 
     if (html === '') html = `<div style="text-align:center; padding: 40px 20px; color: #94a3b8; font-weight: 800;">De stapel is leeg! Begin met scannen.</div>`;
 
-    document.getElementById('distribute-content').innerHTML = html;
-    document.getElementById('distribute-modal').style.display = 'block';
+    document.getElementById('distribute-content').innerHTML = html; document.getElementById('distribute-modal').style.display = 'block';
 }
 
 function closeDistributeCenter() { document.getElementById('distribute-modal').style.display = 'none'; }
 
-// Als je in het Verdeelcentrum op een L&N / Oli knop klikt
 async function claimFromPile(code, targetUser) {
     let pileAmt = allStickers['De Stapel'][code];
     if (!pileAmt || pileAmt < 1) return;
-
-    // 1. Haal hem uit De Stapel
-    allStickers['De Stapel'][code] -= 1;
-    if (allStickers['De Stapel'][code] === 0) delete allStickers['De Stapel'][code];
-
-    // 2. Stop hem bij het juiste kind in zijn album
+    allStickers['De Stapel'][code] -= 1; if (allStickers['De Stapel'][code] === 0) delete allStickers['De Stapel'][code];
     allStickers[targetUser][code] = (allStickers[targetUser][code] || 0) + 1;
-
     if(navigator.vibrate) navigator.vibrate(40);
-    
-    // 3. Stuur deze transactie naar Supabase Database
-    await Promise.all([
-        syncToSupabase(code, allStickers['De Stapel'][code] || 0, 'De Stapel'),
-        syncToSupabase(code, allStickers[targetUser][code], targetUser)
-    ]);
-
-    // 4. Confetti knal (met de juiste kleur!)
+    await Promise.all([ syncToSupabase(code, allStickers['De Stapel'][code] || 0, 'De Stapel'), syncToSupabase(code, allStickers[targetUser][code], targetUser) ]);
     let prefix = code === '00' ? 'FWC' : code.split(' ')[0]; let country = collections.find(c => c.prefix === prefix);
     if(typeof confetti === 'function' && country) { confetti({ particleCount: 100, spread: 60, origin: { y: 0.8 }, colors: country.colors }); }
-
-    showToast(`✅ ${code} geplakt in het album van ${targetUser}!`, "success");
-    openDistributeCenter(); // Vernieuw de Verdeel-lijst direct
-    renderDashboard();
+    showToast(`✅ ${code} geplakt in het album van ${targetUser}!`, "success"); openDistributeCenter(); renderDashboard();
 }
 
-// --- INTERACTIEVE DIGITALE LIJSTEN --- //
 let currentListTab = 'doubles';
-
 function openListCenter() { document.getElementById('list-modal').style.display = 'block'; setListTab(currentListTab); }
 function closeListCenter() { document.getElementById('list-modal').style.display = 'none'; renderDashboard(); }
-
 function setListTab(tab) {
-    currentListTab = tab;
-    document.querySelectorAll('.list-tab').forEach(t => t.classList.remove('active'));
-    document.getElementById(`tab-${tab}`).classList.add('active');
-    renderListContent();
+    currentListTab = tab; document.querySelectorAll('.list-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(`tab-${tab}`).classList.add('active'); renderListContent();
 }
-
 function renderListContent() {
     let html = ''; let count = 0;
     collections.forEach(country => {
@@ -429,51 +435,29 @@ function renderListContent() {
             if (currentListTab === 'missing' && amt === 0) show = true;
             if (show) {
                 count++;
-                countryItems.push(`
-                    <div class="list-item">
-                        <div class="list-item-info">
-                            <div class="trade-mini-flag" style="background-image: url('${country.flagUrl}');"></div>
-                            <span class="trade-num-badge" style="min-width: 50px;">${code}</span>
-                            <span class="trade-player-name" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${pName}</span>
-                        </div>
-                        <div class="list-controls">
-                            <button class="btn-list-ctrl" onclick="updateStickerFromList('${code}', -1)">-</button>
-                            <span class="list-count" id="list-cnt-${code.replace(' ', '-')}">${amt}x</span>
-                            <button class="btn-list-ctrl" onclick="updateStickerFromList('${code}', 1)">+</button>
-                        </div>
-                    </div>
-                `);
+                countryItems.push(`<div class="list-item"><div class="list-item-info"><div class="trade-mini-flag" style="background-image: url('${country.flagUrl}');"></div><span class="trade-num-badge" style="min-width: 50px;">${code}</span><span class="trade-player-name" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${pName}</span></div><div class="list-controls"><button class="btn-list-ctrl" onclick="updateStickerFromList('${code}', -1)">-</button><span class="list-count" id="list-cnt-${code.replace(' ', '-')}">${amt}x</span><button class="btn-list-ctrl" onclick="updateStickerFromList('${code}', 1)">+</button></div></div>`);
             }
         }
-        if (countryItems.length > 0) {
-            html += `<div style="margin: 15px 15px 8px 15px; font-weight: 900; color: var(--text-secondary); text-transform: uppercase; font-size: 0.9rem;">${country.name}</div><div style="padding: 0 15px;">` + countryItems.join('') + `</div>`;
-        }
+        if (countryItems.length > 0) { html += `<div style="margin: 15px 15px 8px 15px; font-weight: 900; color: var(--text-secondary); text-transform: uppercase; font-size: 0.9rem;">${country.name}</div><div style="padding: 0 15px;">` + countryItems.join('') + `</div>`; }
     });
     if (count === 0) { html = `<div style="text-align:center; padding: 40px 20px; color: #94a3b8; font-weight: 800;">Geen stickers in deze lijst...</div>`; }
     document.getElementById('list-content').innerHTML = html;
 }
-
 async function updateStickerFromList(code, change) {
     let currentAmt = allStickers[currentUser][code] || 0; let newAmt = Math.max(0, currentAmt + change);
     allStickers[currentUser][code] = newAmt; if (newAmt === 0) delete allStickers[currentUser][code];
     let countEl = document.getElementById(`list-cnt-${code.replace(' ', '-')}`); if (countEl) countEl.innerText = `${newAmt}x`;
     if (navigator.vibrate) navigator.vibrate(40);
-    if (currentAmt === 0 && change > 0 && typeof confetti === 'function') {
-        let prefix = code === '00' ? 'FWC' : code.split(' ')[0]; let country = collections.find(c => c.prefix === prefix);
-        if(country) confetti({ particleCount: 100, spread: 60, origin: { y: 0.8 }, colors: country.colors });
-    }
+    if (currentAmt === 0 && change > 0 && typeof confetti === 'function') { let prefix = code === '00' ? 'FWC' : code.split(' ')[0]; let country = collections.find(c => c.prefix === prefix); if(country) confetti({ particleCount: 100, spread: 60, origin: { y: 0.8 }, colors: country.colors }); }
     await syncToSupabase(code, newAmt);
 }
 
-
-// --- LIVE OCR SCANNER LOGICA --- //
 let isScanning = false; let scannerInterval; let scannerWorker; let lastScannedCode = "";
 async function toggleScanner() {
     const container = document.getElementById('scanner-container');
     if (isScanning) {
         isScanning = false; clearInterval(scannerInterval);
-        const video = document.getElementById('scanner-video');
-        if (video.srcObject) { video.srcObject.getTracks().forEach(track => track.stop()); }
+        const video = document.getElementById('scanner-video'); if (video.srcObject) { video.srcObject.getTracks().forEach(track => track.stop()); }
         container.style.display = 'none';
     } else {
         const video = document.getElementById('scanner-video'); const status = document.getElementById('scanner-status');
@@ -481,31 +465,24 @@ async function toggleScanner() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', focusMode: 'continuous' } });
             video.srcObject = stream; status.innerText = "Scanner initialiseren... ⏳";
-            if (!scannerWorker) {
-                scannerWorker = await Tesseract.createWorker(); await scannerWorker.loadLanguage('eng'); await scannerWorker.initialize('eng');
-                await scannerWorker.setParameters({ tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ' });
-            }
+            if (!scannerWorker) { scannerWorker = await Tesseract.createWorker(); await scannerWorker.loadLanguage('eng'); await scannerWorker.initialize('eng'); await scannerWorker.setParameters({ tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ' }); }
             status.innerText = "Live: Houd sticker in vak 📷";
             const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
             scannerInterval = setInterval(async () => {
                 if (!isScanning) return;
                 const vw = video.videoWidth; const vh = video.videoHeight;
                 const cropW = vw * 0.5; const cropH = vh * 0.3; const cropX = (vw - cropW) / 2; const cropY = (vh - cropH) / 2;
-                canvas.width = cropW; canvas.height = cropH;
-                ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+                canvas.width = cropW; canvas.height = cropH; ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
                 const { data: { text } } = await scannerWorker.recognize(canvas);
-                let cleanText = text.toUpperCase().replace(/[^A-Z0-9\s]/g, '');
-                const match = cleanText.match(/([A-Z]{3})\s*(\d{1,2})/);
+                let cleanText = text.toUpperCase().replace(/[^A-Z0-9\s]/g, ''); const match = cleanText.match(/([A-Z]{3})\s*(\d{1,2})/);
                 if (match) {
-                    let prefix = match[1]; let num = parseInt(match[2], 10);
-                    let code = prefix === 'FWC' && num === 0 ? '00' : `${prefix} ${num}`;
+                    let prefix = match[1]; let num = parseInt(match[2], 10); let code = prefix === 'FWC' && num === 0 ? '00' : `${prefix} ${num}`;
                     if (code !== lastScannedCode) {
                         let country = collections.find(c => c.prefix === prefix);
                         if (country) {
                             let maxNum = prefix === 'FWC' ? 19 : 20; 
                             if (code === '00' || (num >= 1 && num <= maxNum)) {
-                                status.innerText = `Gevonden: ${code} ✅`; lastScannedCode = code;
-                                document.getElementById('quick-add-input').value = code; processQuickAdd(); 
+                                status.innerText = `Gevonden: ${code} ✅`; lastScannedCode = code; document.getElementById('quick-add-input').value = code; processQuickAdd(); 
                                 setTimeout(() => { if(isScanning) status.innerText = "Live: Volgende sticker 📷"; lastScannedCode = ""; }, 3500);
                             }
                         }
@@ -516,7 +493,6 @@ async function toggleScanner() {
     }
 }
 
-// --- WESLEY'S EASTER EGG --- //
 async function executeWesleyDonation() {
     let updates = []; let totalDonated = 0; let louNoeDbName = dbNames['Lou & Noé']; let wesleyDbName = dbNames['Wesley'];
     for (let code in allStickers['Wesley']) {
@@ -529,14 +505,12 @@ async function executeWesleyDonation() {
         }
     }
     if (totalDonated > 0) {
-        document.getElementById('wesley-donation-container').style.display = 'none'; showToast("⏳ Transactie bezig...", "success");
-        await Promise.all(updates);
+        document.getElementById('wesley-donation-container').style.display = 'none'; showToast("⏳ Transactie bezig...", "success"); await Promise.all(updates);
         if (typeof confetti === 'function') { confetti({ particleCount: 400, spread: 120, origin: { y: 0.5 }, colors: ['#4b0082', '#ffffff', '#ffd700'] }); }
         showToast(`💜 COME ON YOU MAUVES! Wesley doneert ${totalDonated} stickers!`, "success", ['#4b0082', '#ffffff']); renderDashboard();
     } else { showToast("❌ Wesley heeft helaas geen dubbele meer over!", "error"); }
 }
 
-// --- RUIL LOGICA --- //
 async function executeInstantTrade(code, targetUser) {
     let myNewAmt = Math.max((allStickers[currentUser][code] || 0) - 1, 0); let theirNewAmt = (allStickers[targetUser][code] || 0) + 1;
     allStickers[currentUser][code] = myNewAmt; if(myNewAmt === 0) delete allStickers[currentUser][code]; allStickers[targetUser][code] = theirNewAmt;
@@ -548,7 +522,7 @@ async function executeInstantTrade(code, targetUser) {
 function openTradeCenter() {
     let tradeHTML = '';
     otherUsers.forEach(ou => {
-        if(ou === 'De Stapel') return; // De Stapel doet niet mee met gewone ruil, die heeft zijn eigen Verdeelcentrum!
+        if(ou === 'De Stapel') return; 
         let give = []; let get = [];
         collections.forEach(country => {
             for (let i = 1; i <= country.count; i++) {
@@ -560,15 +534,7 @@ function openTradeCenter() {
             }
         });
         tradeHTML += `
-            <div class="trade-block" style="border-left: 4px solid ${userColors[ou]};">
-                <h3 style="color: ${userColors[ou]};">Ruilen met ${ou}</h3>
-                <div style="margin-bottom: 16px;"><strong style="font-size: 0.95rem;">Jij zoekt, ${ou} heeft dubbel (${get.length}):</strong>
-                    <div class="trade-codes" style="margin-top: 8px;">${get.length === 0 ? '<span style="color:#94a3b8; font-size:0.8rem;">Niets wat jij mist...</span>' : get.map(item => `<div class="trade-chip-wrapper"><div class="trade-item-left"><div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div><span class="trade-num-badge">${item.num}</span><span class="trade-player-name">${item.name} <span style="font-size:0.75rem; color:var(--text-secondary);">${item.page}</span></span></div><span class="trade-status-box get">Jij Mist</span></div>`).join('')}</div>
-                </div>
-                <div><strong style="font-size: 0.95rem;">${ou} zoekt, jij hebt dubbel (${give.length}):</strong>
-                    <div class="trade-codes" style="margin-top: 8px;">${give.length === 0 ? '<span style="color:#94a3b8; font-size:0.8rem;">Geen dubbele voor ${ou}...</span>' : give.map(item => `<div class="trade-chip-wrapper"><div class="trade-item-left"><div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div><span class="trade-num-badge">${item.num}</span><span class="trade-player-name">${item.name} <span style="font-size:0.75rem; color:var(--text-secondary);">${item.page}</span></span></div><button class="btn-instant-trade" onclick="executeInstantTrade('${item.code}', '${ou}')">⚡ Ruil</button></div>`).join('')}</div>
-                </div>
-            </div>`;
+            <div class="trade-block" style="border-left: 4px solid ${userColors[ou]};"><h3 style="color: ${userColors[ou]};">Ruilen met ${ou}</h3><div style="margin-bottom: 16px;"><strong style="font-size: 0.95rem;">Jij zoekt, ${ou} heeft dubbel (${get.length}):</strong><div class="trade-codes" style="margin-top: 8px;">${get.length === 0 ? '<span style="color:#94a3b8; font-size:0.8rem;">Niets wat jij mist...</span>' : get.map(item => `<div class="trade-chip-wrapper"><div class="trade-item-left"><div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div><span class="trade-num-badge">${item.num}</span><span class="trade-player-name">${item.name} <span style="font-size:0.75rem; color:var(--text-secondary);">${item.page}</span></span></div><span class="trade-status-box get">Jij Mist</span></div>`).join('')}</div></div><div><strong style="font-size: 0.95rem;">${ou} zoekt, jij hebt dubbel (${give.length}):</strong><div class="trade-codes" style="margin-top: 8px;">${give.length === 0 ? '<span style="color:#94a3b8; font-size:0.8rem;">Geen dubbele voor ${ou}...</span>' : give.map(item => `<div class="trade-chip-wrapper"><div class="trade-item-left"><div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div><span class="trade-num-badge">${item.num}</span><span class="trade-player-name">${item.name} <span style="font-size:0.75rem; color:var(--text-secondary);">${item.page}</span></span></div><button class="btn-instant-trade" onclick="executeInstantTrade('${item.code}', '${ou}')">⚡ Ruil</button></div>`).join('')}</div></div></div>`;
     });
     document.getElementById('trade-content').innerHTML = tradeHTML; document.getElementById('trade-modal').style.display = 'block';
 }
@@ -595,18 +561,13 @@ function openStatsCenter() {
     Object.keys(poulesMap).forEach(gName => {
         let pData = poulesMap[gName]; let sortedPouleUsers = [...realUsers].sort((a,b) => pData.usersOwned[b] - pData.usersOwned[a]);
         let leader = sortedPouleUsers[0]; let leaderScore = pData.usersOwned[leader]; let leaderPerc = Math.round((leaderScore / pData.totalStickers) * 100);
-        poulesHTML += `
-            <div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed #f1f5f9;">
-                <div style="font-size: 0.95rem; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;">${gName} <span style="font-size:0.75rem; color:var(--text-secondary);">(${pData.totalStickers} tot.)</span></div>
-                <div class="poule-row"><span style="color: ${userColors[leader]}; font-size:0.85rem;">🥇 ${leader}</span><div class="poule-mini-bar"><div style="height:100%; background:${userColors[leader]}; width:${(leaderScore/pData.totalStickers)*100}%;"></div></div><span>${leaderScore} st. (${leaderPerc}%)</span></div>
-            </div>`;
+        poulesHTML += `<div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed #f1f5f9;"><div style="font-size: 0.95rem; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;">${gName} <span style="font-size:0.75rem; color:var(--text-secondary);">(${pData.totalStickers} tot.)</span></div><div class="poule-row"><span style="color: ${userColors[leader]}; font-size:0.85rem;">🥇 ${leader}</span><div class="poule-mini-bar"><div style="height:100%; background:${userColors[leader]}; width:${(leaderScore/pData.totalStickers)*100}%;"></div></div><span>${leaderScore} st. (${leaderPerc}%)</span></div></div>`;
     });
     statsHTML += `<div class="stat-block"><h3>📊 Poule Ranglijst</h3>${poulesHTML}</div>`;
     document.getElementById('stats-content').innerHTML = statsHTML; document.getElementById('stats-modal').style.display = 'block';
 }
 function closeStatsCenter() { document.getElementById('stats-modal').style.display = 'none'; }
 
-// --- ALFABETISCHE PRINT LOGICA --- //
 function printList() {
     let html = `<div class="print-header"><h2>WK 2026 Ruillijst - ${currentUser}</h2><p>Gegenereerd op ${new Date().toLocaleDateString('nl-BE')}</p></div><div class="print-grid">`;
     let sortedCollections = [...collections].sort((a, b) => a.name.localeCompare(b.name));
