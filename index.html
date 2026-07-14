@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panini WK 2026 Tracker</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#4f46e5">
+    <meta name="theme-color" content="#e5989b">
     <link rel="icon" href="icon.png" type="image/png">
     <link rel="apple-touch-icon" href="icon.png">
     
@@ -13,19 +13,19 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=26">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=28">
 </head>
 <body>
 
     <div id="profile-section" class="container">
-        <h1 style="color: #4f46e5; font-size: 2.2rem; margin-bottom: 5px;">WK 2026 Tracker</h1>
+        <h1 class="girly-title">WK 2026 Tracker</h1>
         <p style="text-align: center; color: var(--text-secondary); font-weight: 700; margin-bottom: 25px;">Kies een profiel</p>
         <div class="profile-grid">
             <div class="profile-card" onclick="selectUser('Lou & Noé')">Lou & Noé</div>
             <div class="profile-card" onclick="selectUser('Wesley')">Wesley</div>
             <div class="profile-card" onclick="selectUser('Oliver')">Oliver</div>
-            <div class="profile-card" style="background: #f0f9ff; border-color: #e0f2fe; color: #0ea5e9;" onclick="selectUser('De Stapel')">De Stapel 📦</div>
+            <div class="profile-card" style="background: #fdf4f4; border-color: #f7dcdb; color: #b5838d;" onclick="selectUser('De Stapel')">De Stapel 📦</div>
         </div>
     </div>
 
@@ -35,8 +35,7 @@
             <div class="dashboard-actions">
                 <button class="btn-action" onclick="openListCenter()" title="Digitale Lijsten">📋 Lijsten</button>
                 <button class="btn-action" id="btn-trade" onclick="openTradeCenter()" title="Ruilcentrum">🔄 Ruil</button>
-                <!-- NIEUW: De Verdeel knop voor De Stapel -->
-                <button class="btn-action" id="btn-distribute" onclick="openDistributeCenter()" title="Verdeelcentrum" style="display: none; background: #0ea5e9; color: white;">📦 Verdeel</button>
+                <button class="btn-action" id="btn-distribute" onclick="openDistributeCenter()" title="Verdeelcentrum" style="display: none; background: linear-gradient(135deg, #f2b8b5, #e5989b); color: white;">📦 Verdeel</button>
                 <button class="btn-action" onclick="printList()" title="Print Lijst">🖨️ Print</button>
                 <button class="btn-action" onclick="openStatsCenter()" title="Statistieken">🏆</button>
                 <button class="btn-action" onclick="logout()" title="Uitloggen">🚪</button>
@@ -48,7 +47,7 @@
         </div>
         
         <div class="total-card" id="ranks-card-container">
-            <h3 style="margin: 0 0 12px 0; font-size: 1.1rem; color: var(--text-primary); text-align: left; border-bottom: 2px dashed #e2e8f0; padding-bottom: 8px;">🏆 Klassement & Rangen</h3>
+            <h3 style="margin: 0 0 12px 0; font-size: 1.1rem; color: var(--text-primary); text-align: left; border-bottom: 2px dashed #f2e1e1; padding-bottom: 8px;">🏆 Klassement & Rangen</h3>
             <div id="ranks-container" class="ranks-container"></div>
         </div>
 
@@ -64,15 +63,15 @@
         </div>
 
         <div class="quick-add-container">
-            <button class="btn-action" style="min-width: 50px; background: #e2e8f0; font-size: 1.2rem;" onclick="toggleScanner()" title="Live Scanner">📷</button>
-            <input type="text" id="quick-add-input" class="custom-input" placeholder="⚡ Typ of scan (bijv. BEL 4)" onkeypress="handleQuickAdd(event)">
-            <button class="btn-quick-add" onclick="processQuickAdd()">+</button>
+            <button class="btn-action" id="btn-bulk-mode" onclick="toggleBulkMode()" title="Wissel Toevoegen/Verwijderen" style="min-width: 45px; background: #fdf4f4; border: 1px solid #f7dcdb; font-size: 1.1rem; color: var(--color-1);">➕</button>
+            <button class="btn-action" style="min-width: 45px; background: #fdf4f4; border: 1px solid #f7dcdb; font-size: 1.1rem;" onclick="toggleScanner()" title="Live Scanner">📷</button>
+            <input type="text" id="quick-add-input" class="custom-input" placeholder="⚡ Typ of scan (bijv. BEL 1, 13)" onkeypress="handleQuickAdd(event)">
+            <button class="btn-quick-add" onclick="processQuickAdd()">OK</button>
         </div>
 
         <div class="countries-list" id="countries-container"></div>
     </div>
 
-    <!-- Modals -->
     <div id="modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -87,17 +86,16 @@
                         <span class="modal-subtitle" id="modal-subtitle-text">Bolletjes = Anderen</span>
                     </div>
                 </div>
-                <button class="btn-action" style="background: rgba(255,255,255,0.2); color: white;" onclick="closeModal()">✖</button>
+                <button class="btn-action" style="background: rgba(255,255,255,0.4); color: var(--text-primary);" onclick="closeModal()">✖</button>
             </div>
             <div class="sticker-grid" id="sticker-grid"></div>
         </div>
     </div>
 
-    <!-- NIEUW: Verdeelcentrum Modal -->
     <div id="distribute-modal" class="modal-overlay">
         <div class="modal-content" style="background: var(--bg-main);">
             <div class="modal-header" style="background: white;">
-                <h2 style="margin:0; font-size: 1.5rem;">📦 Verdeelcentrum</h2>
+                <h2 style="margin:0; font-size: 1.5rem; color: var(--color-1);">📦 Verdeelcentrum</h2>
                 <button class="btn-action" onclick="closeDistributeCenter()">✖</button>
             </div>
             <div class="trade-section" id="distribute-content" style="padding-top: 15px;"></div>
@@ -107,7 +105,7 @@
     <div id="list-modal" class="modal-overlay">
         <div class="modal-content" style="background: var(--bg-main);">
             <div class="modal-header" style="background: white; border-bottom-left-radius: 0; border-bottom-right-radius: 0; padding-bottom: 5px; margin-bottom: 0;">
-                <h2 style="margin:0; font-size: 1.5rem;">📋 Inventaris</h2>
+                <h2 style="margin:0; font-size: 1.5rem; color: var(--color-1);">📋 Inventaris</h2>
                 <button class="btn-action" onclick="closeListCenter()">✖</button>
             </div>
             <div style="background: white; padding-bottom: 12px; border-bottom-left-radius: 18px; border-bottom-right-radius: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
@@ -124,7 +122,7 @@
     <div id="trade-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 style="margin:0; font-size: 1.5rem;">🔄 Ruilcentrum</h2>
+                <h2 style="margin:0; font-size: 1.5rem; color: var(--color-1);">🔄 Ruilcentrum</h2>
                 <button class="btn-action" onclick="closeTradeCenter()">✖</button>
             </div>
             <div class="trade-section" id="trade-content"></div>
@@ -134,7 +132,7 @@
     <div id="stats-modal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 style="margin:0; font-size: 1.5rem;">🏆 Trophy Room</h2>
+                <h2 style="margin:0; font-size: 1.5rem; color: var(--color-1);">🏆 Trophy Room</h2>
                 <button class="btn-action" onclick="closeStatsCenter()">✖</button>
             </div>
             <div class="trade-section" id="stats-content"></div>
@@ -144,8 +142,8 @@
     <div id="toast" class="toast">Bericht hier</div>
     <div id="print-area"></div>
 
-    <script src="countries.js?v=26"></script>
-    <script src="app.js?v=26"></script>
+    <script src="countries.js?v=28"></script>
+    <script src="app.js?v=28"></script>
     
     <script>
         if ('serviceWorker' in navigator) {
