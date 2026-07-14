@@ -1,16 +1,16 @@
-// app.js - Ultimate Edition v24 (Wesley Donatie Easter Egg)
+// app.js - Ultimate Edition v25 (De Stapel Editie)
 
 const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co'; 
 const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; 
 const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-const users = ['Lou & Noé', 'Wesley', 'Oliver'];
-const userColors = { 'Lou & Noé': 'var(--color-1)', 'Wesley': 'var(--color-2)', 'Oliver': 'var(--color-3)' };
-const dbNames = { 'Lou & Noé': 'Jorden', 'Wesley': 'Wesley', 'Oliver': 'Oliver' };
+const users = ['Lou & Noé', 'Wesley', 'Oliver', 'De Stapel'];
+const userColors = { 'Lou & Noé': 'var(--color-1)', 'Wesley': 'var(--color-2)', 'Oliver': 'var(--color-3)', 'De Stapel': 'var(--color-4)' };
+const dbNames = { 'Lou & Noé': 'Jorden', 'Wesley': 'Wesley', 'Oliver': 'Oliver', 'De Stapel': 'Stapel' };
 
 let currentUser = ''; 
 let otherUsers = []; 
-let allStickers = { 'Lou & Noé': {}, 'Wesley': {}, 'Oliver': {} };
+let allStickers = { 'Lou & Noé': {}, 'Wesley': {}, 'Oliver': {}, 'De Stapel': {} };
 
 function getRank(score) {
     if (score >= 980) return "Wereldkampioen! 🏆";
@@ -41,7 +41,16 @@ async function selectUser(name) {
     otherUsers = users.filter(u => u !== name);
     document.getElementById('profile-section').style.display = 'none';
     document.getElementById('dashboard-section').style.display = 'block';
-    document.getElementById('welcome-text').innerHTML = `Album van <br><span style="color: ${userColors[currentUser]}; font-weight: 900; font-size: 1.8rem;">${currentUser}</span>`;
+    
+    // Verberg het klassement op het dashboard als 'De Stapel' is ingelogd
+    if(currentUser === 'De Stapel') {
+        document.getElementById('ranks-card-container').style.display = 'none';
+        document.getElementById('welcome-text').innerHTML = `Inventaris van <br><span style="color: ${userColors[currentUser]}; font-weight: 900; font-size: 1.8rem;">📦 ${currentUser}</span>`;
+    } else {
+        document.getElementById('ranks-card-container').style.display = 'block';
+        document.getElementById('welcome-text').innerHTML = `Album van <br><span style="color: ${userColors[currentUser]}; font-weight: 900; font-size: 1.8rem;">${currentUser}</span>`;
+    }
+    
     await loadUserData();
 }
 
@@ -54,7 +63,7 @@ function logout() {
 function filterCountries() { renderDashboard(); }
 
 async function loadUserData() {
-    allStickers = { 'Lou & Noé': {}, 'Wesley': {}, 'Oliver': {} };
+    allStickers = { 'Lou & Noé': {}, 'Wesley': {}, 'Oliver': {}, 'De Stapel': {} };
     const promises = users.map(u => supabaseClient.from('user_stickers').select('*').eq('user_name', dbNames[u]));
     const results = await Promise.all(promises);
     users.forEach((u, index) => {
@@ -67,10 +76,9 @@ function renderDashboard() {
     const container = document.getElementById('countries-container'); container.innerHTML = '';
     const searchTerm = (document.getElementById('search-bar') ? document.getElementById('search-bar').value.toLowerCase() : '');
     
-    // --- WESLEY DONATIE KNOP LOGICA --- //
+    // Wesley's Donatie Knop Logica (Kan na juli 2026 genegeerd worden)
     const donationContainer = document.getElementById('wesley-donation-container');
     if (donationContainer) {
-        // Tijdslimiet: 12 juli 2026, 21:00 CEST
         const expiryTime = new Date(2026, 6, 12, 21, 0, 0).getTime(); 
         if (currentUser === 'Wesley' && Date.now() < expiryTime) {
             donationContainer.style.display = 'block';
@@ -78,9 +86,8 @@ function renderDashboard() {
             donationContainer.style.display = 'none';
         }
     }
-    // ---------------------------------- //
 
-    let scores = { 'Lou & Noé': 0, 'Wesley': 0, 'Oliver': 0 };
+    let scores = { 'Lou & Noé': 0, 'Wesley': 0, 'Oliver': 0, 'De Stapel': 0 };
     let groupStats = {};
     
     collections.forEach(c => {
@@ -94,7 +101,7 @@ function renderDashboard() {
 
     let currentGroup = ''; let cardIndex = 0;
     collections.forEach(country => {
-        let countTracker = { 'Lou & Noé': 0, 'Wesley': 0, 'Oliver': 0 };
+        let countTracker = { 'Lou & Noé': 0, 'Wesley': 0, 'Oliver': 0, 'De Stapel': 0 };
 
         for (let i = 1; i <= country.count; i++) {
             let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
@@ -115,7 +122,11 @@ function renderDashboard() {
         let pageInfo = country.page ? `<div style="font-size: 0.7rem; font-weight: 800; color: #94a3b8; margin-top: -2px; margin-bottom: 4px;">Pag. ${country.page}</div>` : '';
 
         let badgesHTML = '';
-        users.forEach(u => { badgesHTML += `<div class="grid-badge" style="background: ${userColors[u]};">${countTracker[u]}</div>`; });
+        users.forEach(u => { 
+            // We tonen "De Stapel" badges niet op de overzichtskaartjes van anderen, behalve als je De Stapel zelf bent.
+            if (u === 'De Stapel' && currentUser !== 'De Stapel') return; 
+            badgesHTML += `<div class="grid-badge" style="background: ${userColors[u]};">${countTracker[u]}</div>`; 
+        });
 
         container.innerHTML += `
             <div class="country-card" style="animation-delay: ${delay}s;" onclick="openModal('${country.prefix}')">
@@ -126,8 +137,9 @@ function renderDashboard() {
             </div>`;
     });
 
+    // Rangen renderen (EXCLUSIEF De Stapel)
     let ranksHTML = '';
-    let sortedUsers = [...users].sort((a, b) => scores[b] - scores[a]);
+    let sortedUsers = [...users].filter(u => u !== 'De Stapel').sort((a, b) => scores[b] - scores[a]);
     sortedUsers.forEach(u => {
         let rankName = getRank(scores[u]);
         let isMe = u === currentUser ? `font-weight: 900; background: ${userColors[u]}15; border: 1px solid ${userColors[u]}40; transform: scale(1.02);` : `font-weight: 800; border: 1px solid transparent;`;
@@ -275,7 +287,6 @@ function updateStickerUI(code, amount) {
     else { badge.style.display = 'none'; }
 }
 
-
 // --- INTERACTIEVE DIGITALE LIJSTEN --- //
 let currentListTab = 'doubles';
 
@@ -399,42 +410,28 @@ async function toggleScanner() {
 async function executeWesleyDonation() {
     let updates = [];
     let totalDonated = 0;
-    let louNoeDbName = dbNames['Lou & Noé']; // Jorden
-    let wesleyDbName = dbNames['Wesley'];    // Wesley
+    let louNoeDbName = dbNames['Lou & Noé'];
+    let wesleyDbName = dbNames['Wesley'];
 
-    // Zoek al Wesleys dubbele
     for (let code in allStickers['Wesley']) {
         let amount = allStickers['Wesley'][code];
         if (amount > 1) {
             let donatedAmt = amount - 1;
             totalDonated += donatedAmt;
-            
-            // Wesley behoudt er 1 in zijn eigen boek
             allStickers['Wesley'][code] = 1;
-            
-            // Lou & Noé krijgen de extra's
             allStickers['Lou & Noé'][code] = (allStickers['Lou & Noé'][code] || 0) + donatedAmt;
             
-            // Stop in wachtrij voor de database
             updates.push(supabaseClient.from('user_stickers').upsert({ user_name: wesleyDbName, sticker_code: code, amount: 1 }));
             updates.push(supabaseClient.from('user_stickers').upsert({ user_name: louNoeDbName, sticker_code: code, amount: allStickers['Lou & Noé'][code] }));
         }
     }
 
     if (totalDonated > 0) {
-        // Verberg knop om dubbel klikken te voorkomen
         document.getElementById('wesley-donation-container').style.display = 'none';
         showToast("⏳ Transactie bezig...", "success");
-        
-        // Push naar database
         await Promise.all(updates);
-        
-        if (typeof confetti === 'function') {
-            // Mauve & White Confetti!
-            confetti({ particleCount: 400, spread: 120, origin: { y: 0.5 }, colors: ['#4b0082', '#ffffff', '#ffd700'] }); 
-        }
+        if (typeof confetti === 'function') { confetti({ particleCount: 400, spread: 120, origin: { y: 0.5 }, colors: ['#4b0082', '#ffffff', '#ffd700'] }); }
         showToast(`💜 COME ON YOU MAUVES! Wesley doneert ${totalDonated} stickers!`, "success", ['#4b0082', '#ffffff']);
-        
         renderDashboard();
     } else {
         showToast("❌ Wesley heeft helaas geen dubbele meer over!", "error");
@@ -443,8 +440,10 @@ async function executeWesleyDonation() {
 
 // --- RUIL & STATS LOGICA --- //
 async function executeInstantTrade(code, targetUser) {
-    let myNewAmt = Math.max((allStickers[currentUser][code] || 0) - 1, 0); let theirNewAmt = (allStickers[targetUser][code] || 0) + 1;
-    allStickers[currentUser][code] = myNewAmt; if(myNewAmt === 0) delete allStickers[currentUser][code]; allStickers[targetUser][code] = theirNewAmt;
+    let myNewAmt = Math.max((allStickers[currentUser][code] || 0) - 1, 0); 
+    let theirNewAmt = (allStickers[targetUser][code] || 0) + 1;
+    allStickers[currentUser][code] = myNewAmt; if(myNewAmt === 0) delete allStickers[currentUser][code]; 
+    allStickers[targetUser][code] = theirNewAmt;
     if(navigator.vibrate) navigator.vibrate([50, 30, 50]);
     await Promise.all([ supabaseClient.from('user_stickers').upsert({ user_name: dbNames[currentUser], sticker_code: code, amount: myNewAmt }), supabaseClient.from('user_stickers').upsert({ user_name: dbNames[targetUser], sticker_code: code, amount: theirNewAmt }) ]);
     if(myNewAmt === 0) { await supabaseClient.from('user_stickers').delete().match({ user_name: dbNames[currentUser], sticker_code: code }); }
@@ -462,14 +461,19 @@ function openTradeCenter() {
                 let pName = country.players ? country.players[i-1] : `Speler ${i}`;
                 let numDisplay = country.prefix === 'FWC' && i === 1 ? "00" : `${i}`;
                 let pageStr = country.page ? ` (P.${country.page})` : '';
-                if (myAmt > 1 && theirAmt === 0) give.push({code: code, flag: country.flagUrl, num: numDisplay, name: pName, page: pageStr});
-                if (theirAmt > 1 && myAmt === 0) get.push({code: code, flag: country.flagUrl, num: numDisplay, name: pName, page: pageStr});
+                
+                // SPECIALE REGEL: De Stapel doneert alles wat hij heeft! 
+                let canGive = (ou === 'De Stapel') ? (myAmt > 1) : (myAmt > 1 && theirAmt === 0);
+                let canGet = (ou === 'De Stapel') ? (theirAmt > 0 && myAmt === 0) : (theirAmt > 1 && myAmt === 0);
+
+                if (canGive) give.push({code: code, flag: country.flagUrl, num: numDisplay, name: pName, page: pageStr});
+                if (canGet) get.push({code: code, flag: country.flagUrl, num: numDisplay, name: pName, page: pageStr});
             }
         });
         tradeHTML += `
             <div class="trade-block" style="border-left: 4px solid ${userColors[ou]};">
                 <h3 style="color: ${userColors[ou]};">Ruilen met ${ou}</h3>
-                <div style="margin-bottom: 16px;"><strong style="font-size: 0.95rem;">Jij zoekt, ${ou} heeft dubbel (${get.length}):</strong>
+                <div style="margin-bottom: 16px;"><strong style="font-size: 0.95rem;">Jij zoekt, ${ou} heeft beschikbaar (${get.length}):</strong>
                     <div class="trade-codes" style="margin-top: 8px;">${get.length === 0 ? '<span style="color:#94a3b8; font-size:0.8rem;">Niets wat jij mist...</span>' : get.map(item => `
                         <div class="trade-chip-wrapper">
                             <div class="trade-item-left"><div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div><span class="trade-num-badge">${item.num}</span><span class="trade-player-name">${item.name} <span style="font-size:0.75rem; color:var(--text-secondary);">${item.page}</span></span></div>
@@ -490,24 +494,28 @@ function openTradeCenter() {
 function closeTradeCenter() { document.getElementById('trade-modal').style.display = 'none'; }
 
 function openStatsCenter() {
+    // Alleen de échte spelers tonen in de statistieken! (De Stapel doet niet mee voor de Trophy's)
+    const realUsers = ['Lou & Noé', 'Wesley', 'Oliver'];
     let statsHTML = ''; let belHTML = '';
-    users.forEach(u => {
+
+    realUsers.forEach(u => {
         let belCount = 0; for(let i=1; i<=20; i++){ if(allStickers[u][`BEL ${i}`]) belCount++; } let perc = (belCount / 20) * 100;
         belHTML += `<div style="font-size: 0.85rem; font-weight: 800; color: ${userColors[u]};">${u} (${belCount}/20)</div><div class="stat-bar-bg"><div class="stat-bar-fill" style="background: ${userColors[u]}; width: ${perc}%;"></div></div>`;
     });
     statsHTML += `<div class="stat-block"><h3>🇧🇪 Rode Duivels Barometer</h3>${belHTML}</div>`;
+    
     let poulesMap = {};
     collections.forEach(c => {
         if(!poulesMap[c.group]) poulesMap[c.group] = { totalStickers: 0, usersOwned: { 'Lou & Noé': 0, 'Wesley': 0, 'Oliver': 0 } };
         poulesMap[c.group].totalStickers += c.count;
         for (let i = 1; i <= c.count; i++) {
             let code = c.prefix === 'FWC' && i === 1 ? '00' : c.prefix === 'FWC' ? `FWC ${i-1}` : `${c.prefix} ${i}`;
-            users.forEach(u => { if(allStickers[u][code]) poulesMap[c.group].usersOwned[u]++; });
+            realUsers.forEach(u => { if(allStickers[u][code]) poulesMap[c.group].usersOwned[u]++; });
         }
     });
     let poulesHTML = '';
     Object.keys(poulesMap).forEach(gName => {
-        let pData = poulesMap[gName]; let sortedPouleUsers = [...users].sort((a,b) => pData.usersOwned[b] - pData.usersOwned[a]);
+        let pData = poulesMap[gName]; let sortedPouleUsers = [...realUsers].sort((a,b) => pData.usersOwned[b] - pData.usersOwned[a]);
         let leader = sortedPouleUsers[0]; let leaderScore = pData.usersOwned[leader]; let leaderPerc = Math.round((leaderScore / pData.totalStickers) * 100);
         poulesHTML += `
             <div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed #f1f5f9;">
@@ -522,7 +530,7 @@ function closeStatsCenter() { document.getElementById('stats-modal').style.displ
 
 // --- ALFABETISCHE PRINT LOGICA --- //
 function printList() {
-    let html = `<div class="print-header"><h2>WK 2026 Ruillijst - ${currentUser}</h2><p>Gegenereerd op ${new Date().toLocaleDateString('nl-BE')} - Totaal: ${document.querySelector('.rank-score').innerText.split(' ')[0]} stickers</p></div><div class="print-grid">`;
+    let html = `<div class="print-header"><h2>WK 2026 Ruillijst - ${currentUser}</h2><p>Gegenereerd op ${new Date().toLocaleDateString('nl-BE')}</p></div><div class="print-grid">`;
     let sortedCollections = [...collections].sort((a, b) => a.name.localeCompare(b.name));
     sortedCollections.forEach(country => {
         let missing = []; let doubles = [];
