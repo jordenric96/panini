@@ -1,4 +1,4 @@
-// app.js - Ultimate Edition v27 (Multi-Add Update)
+// app.js - Girly Edition v28 (Smart Distribute & Add Feedback)
 
 const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co'; 
 const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; 
@@ -11,6 +11,7 @@ const dbNames = { 'Lou & Noé': 'Jorden', 'Wesley': 'Wesley', 'Oliver': 'Oliver'
 let currentUser = ''; 
 let otherUsers = []; 
 let allStickers = { 'Lou & Noé': {}, 'Wesley': {}, 'Oliver': {}, 'De Stapel': {} };
+let isBulkRemove = false;
 
 function getRank(score) {
     if (score >= 980) return "Wereldkampioen! 🏆";
@@ -44,7 +45,7 @@ async function selectUser(name) {
     
     if(currentUser === 'De Stapel') {
         document.getElementById('ranks-card-container').style.display = 'none';
-        document.getElementById('welcome-text').innerHTML = `Magazijn van <br><span style="color: ${userColors[currentUser]}; font-weight: 900; font-size: 1.8rem;">📦 ${currentUser}</span>`;
+        document.getElementById('welcome-text').innerHTML = `Magazijn van <br><span style="color: var(--color-4); font-weight: 900; font-size: 1.8rem;">📦 ${currentUser}</span>`;
         document.getElementById('btn-distribute').style.display = 'flex';
         document.getElementById('btn-trade').style.display = 'none';
     } else {
@@ -120,8 +121,8 @@ function renderDashboard() {
         }
 
         const delay = cardIndex * 0.015; cardIndex++;
-        const borderGlow = (countTracker[currentUser] === country.count) ? `border-color: #10b981; box-shadow: 0 0 12px #10b98180;` : `border-color: ${(country.colors ? country.colors[0] : '#4f46e5')}50;`;
-        let pageInfo = country.page ? `<div style="font-size: 0.7rem; font-weight: 800; color: #94a3b8; margin-top: -2px; margin-bottom: 4px;">Pag. ${country.page}</div>` : '';
+        const borderGlow = (countTracker[currentUser] === country.count) ? `border-color: var(--color-1); box-shadow: 0 0 12px rgba(229,152,155,0.4);` : `border-color: #f2e1e1;`;
+        let pageInfo = country.page ? `<div style="font-size: 0.7rem; font-weight: 800; color: #c4b5b8; margin-top: -2px; margin-bottom: 4px;">Pag. ${country.page}</div>` : '';
 
         let badgesHTML = '';
         users.forEach(u => { 
@@ -142,14 +143,14 @@ function renderDashboard() {
     let sortedUsers = [...users].filter(u => u !== 'De Stapel').sort((a, b) => scores[b] - scores[a]);
     sortedUsers.forEach(u => {
         let rankName = getRank(scores[u]);
-        let isMe = u === currentUser ? `font-weight: 900; background: ${userColors[u]}15; border: 1px solid ${userColors[u]}40; transform: scale(1.02);` : `font-weight: 800; border: 1px solid transparent;`;
+        let isMe = u === currentUser ? `font-weight: 900; background: #fff0f0; border: 1px solid #f7dcdb; transform: scale(1.02);` : `font-weight: 800; border: 1px solid transparent;`;
         ranksHTML += `
             <div class="rank-row" style="border-left: 5px solid ${userColors[u]}; ${isMe}">
                 <div class="rank-info">
                     <span class="rank-name" style="color: ${userColors[u]};">${u}</span>
                     <span class="rank-title">${rankName}</span>
                 </div>
-                <div class="rank-score" style="${u === currentUser ? 'font-weight: 900;' : 'font-weight: 700;'}">${scores[u]} <span style="font-size: 0.7rem; color: var(--text-secondary);">/ 980</span></div>
+                <div class="rank-score">${scores[u]} <span style="font-size: 0.7rem; color: var(--text-secondary);">/ 980</span></div>
             </div>`;
     });
     document.getElementById('ranks-container').innerHTML = ranksHTML;
@@ -160,8 +161,8 @@ function showToast(message, type, colors = null) {
     const toast = document.getElementById('toast');
     toast.innerHTML = message; toast.className = `toast show ${type}`;
     if (colors && colors.length >= 2) { toast.style.background = `linear-gradient(135deg, ${colors[0]}, ${colors[1]})`; } 
-    else if (type === 'error') { toast.style.background = '#ef4444'; } 
-    else { toast.style.background = 'var(--color-owned)'; }
+    else if (type === 'error') { toast.style.background = '#e11d48'; } 
+    else { toast.style.background = 'var(--color-1)'; }
 
     clearTimeout(toastTimeout);
     toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 10000);
@@ -169,23 +170,34 @@ function showToast(message, type, colors = null) {
 
 function handleQuickAdd(event) { if (event.key === 'Enter') processQuickAdd(); }
 
+function toggleBulkMode() {
+    isBulkRemove = !isBulkRemove;
+    const input = document.getElementById('quick-add-input');
+    const bulkBtn = document.getElementById('btn-bulk-mode');
+    
+    if (isBulkRemove) {
+        input.style.borderColor = "#e11d48";
+        input.placeholder = "⚡ VERWIJDER (bijv. BEL 1, 13)";
+        bulkBtn.style.color = "#e11d48";
+        bulkBtn.innerText = "➖";
+    } else {
+        input.style.borderColor = "#f2e1e1";
+        input.placeholder = "⚡ Typ of scan (bijv. BEL 1, 13)";
+        bulkBtn.style.color = "var(--color-1)";
+        bulkBtn.innerText = "➕";
+    }
+}
 
-// --- NIEUWE SLIMME MULTI-ADD LOGICA --- //
-function processQuickAdd() {
+// MULTI ADD + DUBBEL/NIEUW FEEDBACK
+async function processQuickAdd() {
     const inputField = document.getElementById('quick-add-input');
     let input = inputField.value.trim().toUpperCase();
     if (!input) return;
 
-    // Splits de invoer in een prefix (3 letters) en de rest (de cijfers)
     const match = input.match(/^([A-Z]{3})\s*(.*)$/);
-    
     if (!match) {
-        // Fallback voor een ruwe FWC 00
-        if (input === '00' || input === 'FWC 00' || input === 'FWC00') {
-            input = "FWC 00";
-        } else {
-            return showToast("❌ Ongeldige code. Typ bijv: BEL 1, 13, 20", "error");
-        }
+        if (input === '00' || input === 'FWC 00' || input === 'FWC00') input = "FWC 00";
+        else return showToast("❌ Ongeldige code. Typ bijv: BEL 1, 13", "error");
     }
 
     let prefix = match ? match[1] : 'FWC';
@@ -195,76 +207,65 @@ function processQuickAdd() {
     if (!country) return showToast(`❌ Landcode '${prefix}' bestaat niet.`, "error");
 
     let maxNum = prefix === 'FWC' ? 19 : 20; 
-    
-    // Zet komma's om in spaties en splits alles mooi op
-    let numbersArray = [];
-    numbersStr.replace(/,/g, ' ').split(/\s+/).forEach(n => {
-        if (n.trim() !== '') numbersArray.push(n.trim());
-    });
+    let numbersArray = numbersStr.replace(/,/g, ' ').split(/\s+/).filter(n => n !== '');
+    if (numbersArray.length === 0) return showToast("❌ Geen nummers ingevuld. Typ bijv: BEL 1", "error");
 
-    if (numbersArray.length === 0) return showToast("❌ Geen nummers ingevuld. Typ bijv: BEL 1, 13, 20", "error");
+    let validCodes = []; let errors = []; let updatesMap = {};
 
-    let validCodes = [];
-    let errors = [];
-
-    // Check elk los nummer uit de lijst
     numbersArray.forEach(numStr => {
         let num = parseInt(numStr, 10);
         let code = null;
+        if (prefix === 'FWC' && (numStr === '00' || num === 0)) code = '00';
+        else if (!isNaN(num) && num >= 1 && num <= maxNum) code = `${prefix} ${num}`;
+        else errors.push(numStr);
 
-        if (prefix === 'FWC' && (numStr === '00' || num === 0)) {
-            code = '00';
-        } else if (!isNaN(num) && num >= 1 && num <= maxNum) {
-            code = `${prefix} ${num}`;
-        } else {
-            errors.push(numStr);
+        if (code) {
+            validCodes.push(code);
+            let currentAmt = allStickers[currentUser][code] || 0;
+            let newAmt = isBulkRemove ? Math.max(0, currentAmt - 1) : currentAmt + 1;
+            allStickers[currentUser][code] = newAmt;
+            if (newAmt === 0) delete allStickers[currentUser][code];
+            updatesMap[code] = newAmt;
         }
-
-        if (code) validCodes.push(code);
     });
 
-    if (errors.length > 0) {
-        showToast(`❌ Genegeerd (bestaan niet): ${errors.join(', ')}`, "error");
-    }
-
+    if (errors.length > 0) showToast(`❌ Genegeerd (bestaan niet): ${errors.join(', ')}`, "error");
     if (validCodes.length === 0) return;
 
-    // Voeg alle geldige stickers lokaal toe en hou bij hoeveel we er exact toevoegen per code
-    let updatesMap = {};
-    validCodes.forEach(code => {
-        allStickers[currentUser][code] = (allStickers[currentUser][code] || 0) + 1;
-        updatesMap[code] = allStickers[currentUser][code];
-    });
+    let promises = Object.keys(updatesMap).map(code => syncToSupabase(code, updatesMap[code]));
+    await Promise.all(promises);
 
-    // Stuur alle updates naar de cloud Database
-    let promises = Object.keys(updatesMap).map(code => {
-        return syncToSupabase(code, updatesMap[code]);
-    });
+    if (typeof confetti === 'function' && !isBulkRemove) {
+        let particles = Math.min(300, 100 + (validCodes.length * 20));
+        confetti({ particleCount: particles, spread: 100, origin: { y: 0.8 }, colors: country.colors });
+    }
 
-    Promise.all(promises).then(() => {
-        // Grotere confetti knal naarmate je er meer in één keer toevoegt!
-        if (typeof confetti === 'function') {
-            let particles = Math.min(300, 100 + (validCodes.length * 20));
-            confetti({ particleCount: particles, spread: 100, origin: { y: 0.8 }, colors: country.colors });
-        }
-
-        let msgTitle = validCodes.length === 1 ? `🌟 ${validCodes[0]} TOEGEVOEGD!` : `💥 ${validCodes.length} STICKERS TOEGEVOEGD!`;
-        let msgBody = validCodes.length === 1 
-            ? `Nummer ${validCodes[0].split(' ')[1] || '00'} van ${country.name}` 
-            : validCodes.join(', ');
-
+    // NIEUW vs DUBBEL Feedback voor Snel Invoeren
+    if (!isBulkRemove && validCodes.length === 1) {
+        let code = validCodes[0];
+        let newAmt = allStickers[currentUser][code];
+        let statusText = newAmt === 1 ? '🌟 NIEUWE STICKER!' : `🔄 DUBBEL (${newAmt}x)`;
+        let pName = country.players ? country.players[(code==='00'?0:parseInt(code.split(' ')[1])) - (prefix==='FWC'?0:1)] : code;
+        
         let msg = `
-            <div style="font-size: 1.3rem; font-weight: 900; margin-bottom: 5px;">${msgTitle}</div>
-            <div style="font-size: 1.1rem; font-weight: 800; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 8px; display: inline-block;">${msgBody}</div>
+            <div style="font-size: 1.4rem; font-weight: 900; margin-bottom: 5px;">${code}</div>
+            <div style="font-size: 0.8rem; margin-bottom: 8px;">${pName}</div>
+            <div style="font-size: 1.1rem; font-weight: 900; background: rgba(0,0,0,0.2); padding: 5px 10px; border-radius: 10px; display: inline-block;">${statusText}</div>
         `;
         showToast(msg, "success", country.colors);
-        
-        inputField.value = ''; 
-        renderDashboard(); 
-        if(navigator.vibrate) navigator.vibrate([40, 40, 40]); 
-    });
+    } else {
+        let actionVerb = isBulkRemove ? "VERWIJDERD" : "TOEGEVOEGD";
+        let msgBody = validCodes.length === 1 ? `Nummer ${validCodes[0]}` : validCodes.join(', ');
+        showToast(`
+            <div style="font-size: 1.3rem; font-weight: 900; margin-bottom: 5px;">✅ ${validCodes.length} ${actionVerb}!</div>
+            <div style="font-size: 1rem; font-weight: 800; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 8px; display: inline-block;">${msgBody}</div>
+        `, "success", country.colors);
+    }
+    
+    inputField.value = ''; 
+    renderDashboard();
+    if(navigator.vibrate) navigator.vibrate([40, 40]);
 }
-// ---------------------------------------- //
 
 function openModal(prefix) {
     const countryData = collections.find(c => c.prefix === prefix);
@@ -310,10 +311,19 @@ function openModal(prefix) {
 
 function closeModal() { document.getElementById('modal').style.display = 'none'; renderDashboard(); }
 
+// Klikken in de Modal: OOK NIEUW VS DUBBEL FEEDBACK
 async function addSticker(code) {
-    allStickers[currentUser][code] = (allStickers[currentUser][code] || 0) + 1; updateStickerUI(code, allStickers[currentUser][code]);
-    if(navigator.vibrate) navigator.vibrate(50); await syncToSupabase(code, allStickers[currentUser][code]);
+    allStickers[currentUser][code] = (allStickers[currentUser][code] || 0) + 1; 
+    let newAmt = allStickers[currentUser][code];
+    updateStickerUI(code, newAmt);
+    if(navigator.vibrate) navigator.vibrate(50); 
+    
+    let statusText = newAmt === 1 ? '🌟 NIEUWE STICKER!' : `🔄 DUBBEL (${newAmt}x)`;
+    showToast(`${code}: ${statusText}`, "success");
+    
+    await syncToSupabase(code, newAmt);
 }
+
 async function removeSticker(event, code) {
     event.stopPropagation(); 
     allStickers[currentUser][code] = Math.max((allStickers[currentUser][code] || 0) - 1, 0);
@@ -341,9 +351,11 @@ function updateStickerUI(code, amount) {
     else { badge.style.display = 'none'; }
 }
 
+// --- SLIM VERDEELCENTRUM (Magazijn Logica) --- //
 function openDistributeCenter() {
     let html = '';
-    let groups = { both: [], lou: [], oli: [], nobody: [] };
+    // We hebben nu 5 categorieën in plaats van 4!
+    let groups = { bothEnough: [], bothConflict: [], lou: [], oli: [], nobody: [] };
 
     for (let code in allStickers['De Stapel']) {
         let amt = allStickers['De Stapel'][code];
@@ -363,7 +375,10 @@ function openDistributeCenter() {
 
             let item = { code, name: pName, flag, amt };
 
-            if (needsLou && needsOli) groups.both.push(item);
+            if (needsLou && needsOli) {
+                if (amt >= 2) groups.bothEnough.push(item);   // Genoeg voor allebei
+                else groups.bothConflict.push(item);          // Oei, ruzie! Maar 1 beschikbaar
+            }
             else if (needsLou) groups.lou.push(item);
             else if (needsOli) groups.oli.push(item);
             else groups.nobody.push(item);
@@ -372,10 +387,13 @@ function openDistributeCenter() {
 
     const renderGroup = (title, items, color, type) => {
         if (items.length === 0) return '';
-        let res = `<div class="trade-block" style="border-left: 4px solid ${color};"><h3 style="color: ${color};">${title} (${items.length})</h3><div class="trade-codes">`;
+        let res = `<div class="trade-block" style="border-left: 4px solid ${color}; border-color: ${color};"><h3 style="color: ${color};">${title} (${items.length})</h3><div class="trade-codes">`;
         items.forEach(item => {
             let btnHTML = '';
-            if (type === 'both') {
+            
+            if (type === 'bothEnough') {
+                btnHTML = `<button class="btn-instant-trade" style="background: linear-gradient(135deg, var(--color-1), var(--color-3)); width: 100%;" onclick="claimFromPileBoth('${item.code}')">Geef aan BEIDEN!</button>`;
+            } else if (type === 'bothConflict') {
                 btnHTML = `<div style="display:flex; gap:5px;"><button class="btn-instant-trade" style="background:var(--color-1);" onclick="claimFromPile('${item.code}', 'Lou & Noé')">L&N</button><button class="btn-instant-trade" style="background:var(--color-3);" onclick="claimFromPile('${item.code}', 'Oliver')">Oli</button></div>`;
             } else if (type === 'lou') {
                 btnHTML = `<button class="btn-instant-trade" style="background:var(--color-1);" onclick="claimFromPile('${item.code}', 'Lou & Noé')">Geef L&N</button>`;
@@ -385,18 +403,19 @@ function openDistributeCenter() {
                 btnHTML = `<span class="trade-status-box give">Echte Dubbele</span>`;
             }
 
-            res += `<div class="trade-chip-wrapper"><div class="trade-item-left"><div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div><span class="trade-num-badge">${item.code}</span><span class="trade-player-name">${item.name} <span style="font-size:0.7rem; color:#94a3b8;">(${item.amt}x)</span></span></div>${btnHTML}</div>`;
+            res += `<div class="trade-chip-wrapper"><div class="trade-item-left"><div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div><span class="trade-num-badge">${item.code}</span><span class="trade-player-name">${item.name} <span style="font-size:0.7rem; color:var(--text-secondary);">(${item.amt}x in Stapel)</span></span></div>${btnHTML}</div>`;
         });
         res += `</div></div>`;
         return res;
     };
 
-    html += renderGroup('Beiden nodig!', groups.both, '#ef4444', 'both');
-    html += renderGroup('Enkel Lou & Noé nodig', groups.lou, userColors['Lou & Noé'], 'lou');
-    html += renderGroup('Enkel Oliver nodig', groups.oli, userColors['Oliver'], 'oli');
-    html += renderGroup('Niemand nodig (Echte Dubbele)', groups.nobody, '#94a3b8', 'nobody');
+    html += renderGroup('Beiden nodig (Genoeg voor allebei!)', groups.bothEnough, '#10b981', 'bothEnough');
+    html += renderGroup('Beiden nodig (Slechts 1 beschikbaar!)', groups.bothConflict, '#e11d48', 'bothConflict');
+    html += renderGroup('Enkel Lou & Noé', groups.lou, userColors['Lou & Noé'], 'lou');
+    html += renderGroup('Enkel Oliver', groups.oli, userColors['Oliver'], 'oli');
+    html += renderGroup('Niemand nodig (Echte Dubbele)', groups.nobody, '#c4b5b8', 'nobody');
 
-    if (html === '') html = `<div style="text-align:center; padding: 40px 20px; color: #94a3b8; font-weight: 800;">De stapel is leeg! Begin met scannen.</div>`;
+    if (html === '') html = `<div style="text-align:center; padding: 40px 20px; color: var(--text-secondary); font-weight: 800;">De stapel is leeg! Begin met scannen.</div>`;
 
     document.getElementById('distribute-content').innerHTML = html; document.getElementById('distribute-modal').style.display = 'block';
 }
@@ -412,7 +431,31 @@ async function claimFromPile(code, targetUser) {
     await Promise.all([ syncToSupabase(code, allStickers['De Stapel'][code] || 0, 'De Stapel'), syncToSupabase(code, allStickers[targetUser][code], targetUser) ]);
     let prefix = code === '00' ? 'FWC' : code.split(' ')[0]; let country = collections.find(c => c.prefix === prefix);
     if(typeof confetti === 'function' && country) { confetti({ particleCount: 100, spread: 60, origin: { y: 0.8 }, colors: country.colors }); }
-    showToast(`✅ ${code} geplakt in het album van ${targetUser}!`, "success"); openDistributeCenter(); renderDashboard();
+    showToast(`✅ ${code} geplakt bij ${targetUser}!`, "success"); openDistributeCenter(); renderDashboard();
+}
+
+async function claimFromPileBoth(code) {
+    let pileAmt = allStickers['De Stapel'][code];
+    if (!pileAmt || pileAmt < 2) return;
+    
+    // Haal er 2 uit de stapel
+    allStickers['De Stapel'][code] -= 2; 
+    if (allStickers['De Stapel'][code] === 0) delete allStickers['De Stapel'][code];
+    
+    // Geef ze aan beide
+    allStickers['Lou & Noé'][code] = (allStickers['Lou & Noé'][code] || 0) + 1;
+    allStickers['Oliver'][code] = (allStickers['Oliver'][code] || 0) + 1;
+    
+    if(navigator.vibrate) navigator.vibrate([40, 40]);
+    await Promise.all([ 
+        syncToSupabase(code, allStickers['De Stapel'][code] || 0, 'De Stapel'), 
+        syncToSupabase(code, allStickers['Lou & Noé'][code], 'Lou & Noé'),
+        syncToSupabase(code, allStickers['Oliver'][code], 'Oliver')
+    ]);
+    
+    let prefix = code === '00' ? 'FWC' : code.split(' ')[0]; let country = collections.find(c => c.prefix === prefix);
+    if(typeof confetti === 'function' && country) { confetti({ particleCount: 200, spread: 100, origin: { y: 0.8 }, colors: country.colors }); }
+    showToast(`✅ ${code} geplakt bij L&N én Oliver!`, "success"); openDistributeCenter(); renderDashboard();
 }
 
 let currentListTab = 'doubles';
@@ -438,9 +481,9 @@ function renderListContent() {
                 countryItems.push(`<div class="list-item"><div class="list-item-info"><div class="trade-mini-flag" style="background-image: url('${country.flagUrl}');"></div><span class="trade-num-badge" style="min-width: 50px;">${code}</span><span class="trade-player-name" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${pName}</span></div><div class="list-controls"><button class="btn-list-ctrl" onclick="updateStickerFromList('${code}', -1)">-</button><span class="list-count" id="list-cnt-${code.replace(' ', '-')}">${amt}x</span><button class="btn-list-ctrl" onclick="updateStickerFromList('${code}', 1)">+</button></div></div>`);
             }
         }
-        if (countryItems.length > 0) { html += `<div style="margin: 15px 15px 8px 15px; font-weight: 900; color: var(--text-secondary); text-transform: uppercase; font-size: 0.9rem;">${country.name}</div><div style="padding: 0 15px;">` + countryItems.join('') + `</div>`; }
+        if (countryItems.length > 0) { html += `<div style="margin: 15px 15px 8px 15px; font-weight: 900; color: var(--color-1); text-transform: uppercase; font-size: 0.9rem;">${country.name}</div><div style="padding: 0 15px;">` + countryItems.join('') + `</div>`; }
     });
-    if (count === 0) { html = `<div style="text-align:center; padding: 40px 20px; color: #94a3b8; font-weight: 800;">Geen stickers in deze lijst...</div>`; }
+    if (count === 0) { html = `<div style="text-align:center; padding: 40px 20px; color: var(--text-secondary); font-weight: 800;">Geen stickers in deze lijst...</div>`; }
     document.getElementById('list-content').innerHTML = html;
 }
 async function updateStickerFromList(code, change) {
@@ -534,7 +577,7 @@ function openTradeCenter() {
             }
         });
         tradeHTML += `
-            <div class="trade-block" style="border-left: 4px solid ${userColors[ou]};"><h3 style="color: ${userColors[ou]};">Ruilen met ${ou}</h3><div style="margin-bottom: 16px;"><strong style="font-size: 0.95rem;">Jij zoekt, ${ou} heeft dubbel (${get.length}):</strong><div class="trade-codes" style="margin-top: 8px;">${get.length === 0 ? '<span style="color:#94a3b8; font-size:0.8rem;">Niets wat jij mist...</span>' : get.map(item => `<div class="trade-chip-wrapper"><div class="trade-item-left"><div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div><span class="trade-num-badge">${item.num}</span><span class="trade-player-name">${item.name} <span style="font-size:0.75rem; color:var(--text-secondary);">${item.page}</span></span></div><span class="trade-status-box get">Jij Mist</span></div>`).join('')}</div></div><div><strong style="font-size: 0.95rem;">${ou} zoekt, jij hebt dubbel (${give.length}):</strong><div class="trade-codes" style="margin-top: 8px;">${give.length === 0 ? '<span style="color:#94a3b8; font-size:0.8rem;">Geen dubbele voor ${ou}...</span>' : give.map(item => `<div class="trade-chip-wrapper"><div class="trade-item-left"><div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div><span class="trade-num-badge">${item.num}</span><span class="trade-player-name">${item.name} <span style="font-size:0.75rem; color:var(--text-secondary);">${item.page}</span></span></div><button class="btn-instant-trade" onclick="executeInstantTrade('${item.code}', '${ou}')">⚡ Ruil</button></div>`).join('')}</div></div></div>`;
+            <div class="trade-block" style="border-left: 4px solid ${userColors[ou]};"><h3 style="color: ${userColors[ou]};">Ruilen met ${ou}</h3><div style="margin-bottom: 16px;"><strong style="font-size: 0.95rem;">Jij zoekt, ${ou} heeft dubbel (${get.length}):</strong><div class="trade-codes" style="margin-top: 8px;">${get.length === 0 ? '<span style="color:var(--text-secondary); font-size:0.8rem;">Niets wat jij mist...</span>' : get.map(item => `<div class="trade-chip-wrapper"><div class="trade-item-left"><div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div><span class="trade-num-badge">${item.num}</span><span class="trade-player-name">${item.name} <span style="font-size:0.75rem; color:var(--text-secondary);">${item.page}</span></span></div><span class="trade-status-box get">Jij Mist</span></div>`).join('')}</div></div><div><strong style="font-size: 0.95rem;">${ou} zoekt, jij hebt dubbel (${give.length}):</strong><div class="trade-codes" style="margin-top: 8px;">${give.length === 0 ? '<span style="color:var(--text-secondary); font-size:0.8rem;">Geen dubbele voor ${ou}...</span>' : give.map(item => `<div class="trade-chip-wrapper"><div class="trade-item-left"><div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div><span class="trade-num-badge">${item.num}</span><span class="trade-player-name">${item.name} <span style="font-size:0.75rem; color:var(--text-secondary);">${item.page}</span></span></div><button class="btn-instant-trade" onclick="executeInstantTrade('${item.code}', '${ou}')">⚡ Ruil</button></div>`).join('')}</div></div></div>`;
     });
     document.getElementById('trade-content').innerHTML = tradeHTML; document.getElementById('trade-modal').style.display = 'block';
 }
@@ -561,7 +604,7 @@ function openStatsCenter() {
     Object.keys(poulesMap).forEach(gName => {
         let pData = poulesMap[gName]; let sortedPouleUsers = [...realUsers].sort((a,b) => pData.usersOwned[b] - pData.usersOwned[a]);
         let leader = sortedPouleUsers[0]; let leaderScore = pData.usersOwned[leader]; let leaderPerc = Math.round((leaderScore / pData.totalStickers) * 100);
-        poulesHTML += `<div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed #f1f5f9;"><div style="font-size: 0.95rem; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;">${gName} <span style="font-size:0.75rem; color:var(--text-secondary);">(${pData.totalStickers} tot.)</span></div><div class="poule-row"><span style="color: ${userColors[leader]}; font-size:0.85rem;">🥇 ${leader}</span><div class="poule-mini-bar"><div style="height:100%; background:${userColors[leader]}; width:${(leaderScore/pData.totalStickers)*100}%;"></div></div><span>${leaderScore} st. (${leaderPerc}%)</span></div></div>`;
+        poulesHTML += `<div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed #f2e1e1;"><div style="font-size: 0.95rem; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;">${gName} <span style="font-size:0.75rem; color:var(--text-secondary);">(${pData.totalStickers} tot.)</span></div><div class="poule-row"><span style="color: ${userColors[leader]}; font-size:0.85rem;">🥇 ${leader}</span><div class="poule-mini-bar"><div style="height:100%; background:${userColors[leader]}; width:${(leaderScore/pData.totalStickers)*100}%;"></div></div><span>${leaderScore} st. (${leaderPerc}%)</span></div></div>`;
     });
     statsHTML += `<div class="stat-block"><h3>📊 Poule Ranglijst</h3>${poulesHTML}</div>`;
     document.getElementById('stats-content').innerHTML = statsHTML; document.getElementById('stats-modal').style.display = 'block';
