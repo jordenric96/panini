@@ -1,4 +1,4 @@
-// app.js - Girly Edition v28 (Smart Distribute & Add Feedback)
+// app.js - Girly Edition v28.1 (Smart Distribute per Land)
 
 const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co'; 
 const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; 
@@ -188,7 +188,6 @@ function toggleBulkMode() {
     }
 }
 
-// MULTI ADD + DUBBEL/NIEUW FEEDBACK
 async function processQuickAdd() {
     const inputField = document.getElementById('quick-add-input');
     let input = inputField.value.trim().toUpperCase();
@@ -240,7 +239,6 @@ async function processQuickAdd() {
         confetti({ particleCount: particles, spread: 100, origin: { y: 0.8 }, colors: country.colors });
     }
 
-    // NIEUW vs DUBBEL Feedback voor Snel Invoeren
     if (!isBulkRemove && validCodes.length === 1) {
         let code = validCodes[0];
         let newAmt = allStickers[currentUser][code];
@@ -311,7 +309,6 @@ function openModal(prefix) {
 
 function closeModal() { document.getElementById('modal').style.display = 'none'; renderDashboard(); }
 
-// Klikken in de Modal: OOK NIEUW VS DUBBEL FEEDBACK
 async function addSticker(code) {
     allStickers[currentUser][code] = (allStickers[currentUser][code] || 0) + 1; 
     let newAmt = allStickers[currentUser][code];
@@ -351,12 +348,18 @@ function updateStickerUI(code, amount) {
     else { badge.style.display = 'none'; }
 }
 
-// --- SLIM VERDEELCENTRUM (Magazijn Logica) --- //
+// --- SLIM VERDEELCENTRUM (Magazijn Logica - PER LAND) --- //
 function openDistributeCenter() {
     let html = '';
-    // We hebben nu 5 categorieën in plaats van 4!
-    let groups = { bothEnough: [], bothConflict: [], lou: [], oli: [], nobody: [] };
+    let globalNobody = []; // Hierin komen de "Echte Dubbele" die we helemaal onderaan zetten
+    let countryGroups = {};
 
+    // 1. Initialiseer lege mappen voor alle landen om de volgorde te bewaren
+    collections.forEach(c => {
+        countryGroups[c.prefix] = { bothEnough: [], bothConflict: [], lou: [], oli: [] };
+    });
+
+    // 2. Loop door de hele stapel en stop ze in de juiste landen-mappen
     for (let code in allStickers['De Stapel']) {
         let amt = allStickers['De Stapel'][code];
         if (amt > 0) {
@@ -375,24 +378,27 @@ function openDistributeCenter() {
 
             let item = { code, name: pName, flag, amt };
 
-            if (needsLou && needsOli) {
-                if (amt >= 2) groups.bothEnough.push(item);   // Genoeg voor allebei
-                else groups.bothConflict.push(item);          // Oei, ruzie! Maar 1 beschikbaar
+            if (!needsLou && !needsOli) {
+                globalNobody.push(item);
+            } else if (countryGroups[prefix]) {
+                if (needsLou && needsOli) {
+                    if (amt >= 2) countryGroups[prefix].bothEnough.push(item);
+                    else countryGroups[prefix].bothConflict.push(item);
+                }
+                else if (needsLou) countryGroups[prefix].lou.push(item);
+                else if (needsOli) countryGroups[prefix].oli.push(item);
             }
-            else if (needsLou) groups.lou.push(item);
-            else if (needsOli) groups.oli.push(item);
-            else groups.nobody.push(item);
         }
     }
 
-    const renderGroup = (title, items, color, type) => {
+    // Hulpfunctie om de rij met knoppen te genereren
+    const renderItems = (items, type) => {
         if (items.length === 0) return '';
-        let res = `<div class="trade-block" style="border-left: 4px solid ${color}; border-color: ${color};"><h3 style="color: ${color};">${title} (${items.length})</h3><div class="trade-codes">`;
+        let res = '<div class="trade-codes" style="margin-bottom: 12px;">';
         items.forEach(item => {
             let btnHTML = '';
-            
             if (type === 'bothEnough') {
-                btnHTML = `<button class="btn-instant-trade" style="background: linear-gradient(135deg, var(--color-1), var(--color-3)); width: 100%;" onclick="claimFromPileBoth('${item.code}')">Geef aan BEIDEN!</button>`;
+                btnHTML = `<button class="btn-instant-trade" style="background: linear-gradient(135deg, var(--color-1), var(--color-3)); width: 100%; padding: 6px;" onclick="claimFromPileBoth('${item.code}')">Aan BEIDEN</button>`;
             } else if (type === 'bothConflict') {
                 btnHTML = `<div style="display:flex; gap:5px;"><button class="btn-instant-trade" style="background:var(--color-1);" onclick="claimFromPile('${item.code}', 'Lou & Noé')">L&N</button><button class="btn-instant-trade" style="background:var(--color-3);" onclick="claimFromPile('${item.code}', 'Oliver')">Oli</button></div>`;
             } else if (type === 'lou') {
@@ -403,19 +409,57 @@ function openDistributeCenter() {
                 btnHTML = `<span class="trade-status-box give">Echte Dubbele</span>`;
             }
 
-            res += `<div class="trade-chip-wrapper"><div class="trade-item-left"><div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div><span class="trade-num-badge">${item.code}</span><span class="trade-player-name">${item.name} <span style="font-size:0.7rem; color:var(--text-secondary);">(${item.amt}x in Stapel)</span></span></div>${btnHTML}</div>`;
+            res += `<div class="trade-chip-wrapper" style="margin-bottom: 6px;"><div class="trade-item-left"><div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div><span class="trade-num-badge">${item.code}</span><span class="trade-player-name">${item.name} <span style="font-size:0.7rem; color:var(--text-secondary);">(${item.amt}x in Stapel)</span></span></div>${btnHTML}</div>`;
         });
-        res += `</div></div>`;
+        res += '</div>';
         return res;
     };
 
-    html += renderGroup('Beiden nodig (Genoeg voor allebei!)', groups.bothEnough, '#10b981', 'bothEnough');
-    html += renderGroup('Beiden nodig (Slechts 1 beschikbaar!)', groups.bothConflict, '#e11d48', 'bothConflict');
-    html += renderGroup('Enkel Lou & Noé', groups.lou, userColors['Lou & Noé'], 'lou');
-    html += renderGroup('Enkel Oliver', groups.oli, userColors['Oliver'], 'oli');
-    html += renderGroup('Niemand nodig (Echte Dubbele)', groups.nobody, '#c4b5b8', 'nobody');
+    const renderSubGroup = (title, items, color, type) => {
+        if (items.length === 0) return '';
+        return `<div style="margin-bottom: 6px;"><strong style="font-size: 0.8rem; color: ${color}; text-transform: uppercase; letter-spacing: 0.5px;">${title} (${items.length})</strong>${renderItems(items, type)}</div>`;
+    };
 
-    if (html === '') html = `<div style="text-align:center; padding: 40px 20px; color: var(--text-secondary); font-weight: 800;">De stapel is leeg! Begin met scannen.</div>`;
+    let hasAnyStickers = false;
+
+    // 3. Bouw de weergave Land per Land op
+    collections.forEach(country => {
+        let prefix = country.prefix;
+        let group = countryGroups[prefix];
+        if (!group) return;
+
+        let totalInCountry = group.bothEnough.length + group.bothConflict.length + group.lou.length + group.oli.length;
+        
+        if (totalInCountry > 0) {
+            hasAnyStickers = true;
+            html += `<div class="trade-block" style="border-left: 4px solid var(--color-1); border-color: #f9f0f0;">
+                <h3 style="color: var(--color-1); display: flex; align-items: center; gap: 8px; font-size: 1.2rem; margin-bottom: 12px; border-bottom: 1px dashed #f2e1e1; padding-bottom: 6px;">
+                    <img src="${country.flagUrl}" style="width: 28px; height: 18px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"> 
+                    ${country.name}
+                </h3>
+                <div style="padding-top: 5px;">`;
+            
+            html += renderSubGroup('✅ Beiden (Genoeg!)', group.bothEnough, '#10b981', 'bothEnough');
+            html += renderSubGroup('⚠️ Beiden (Slechts 1!)', group.bothConflict, '#e11d48', 'bothConflict');
+            html += renderSubGroup('Enkel Lou & Noé', group.lou, userColors['Lou & Noé'], 'lou');
+            html += renderSubGroup('Enkel Oliver', group.oli, userColors['Oliver'], 'oli');
+            
+            html += `</div></div>`;
+        }
+    });
+
+    // 4. Zet de Echte Dubbele helemaal onderaan in hun eigen grijze blok
+    if (globalNobody.length > 0) {
+        hasAnyStickers = true;
+        html += `<div class="trade-block" style="border-left: 4px solid #c4b5b8; border-color: #f2e1e1; margin-top: 20px;">
+            <h3 style="color: #c4b5b8; font-size: 1.1rem; border-bottom: 1px dashed #f2e1e1; padding-bottom: 6px;">Niemand nodig (Echte Dubbele) (${globalNobody.length})</h3>
+            <div style="padding-top: 5px;">
+                ${renderItems(globalNobody, 'nobody')}
+            </div>
+        </div>`;
+    }
+
+    if (!hasAnyStickers) html = `<div style="text-align:center; padding: 40px 20px; color: var(--text-secondary); font-weight: 800;">De stapel is leeg! Begin met scannen.</div>`;
 
     document.getElementById('distribute-content').innerHTML = html; document.getElementById('distribute-modal').style.display = 'block';
 }
@@ -437,12 +481,7 @@ async function claimFromPile(code, targetUser) {
 async function claimFromPileBoth(code) {
     let pileAmt = allStickers['De Stapel'][code];
     if (!pileAmt || pileAmt < 2) return;
-    
-    // Haal er 2 uit de stapel
-    allStickers['De Stapel'][code] -= 2; 
-    if (allStickers['De Stapel'][code] === 0) delete allStickers['De Stapel'][code];
-    
-    // Geef ze aan beide
+    allStickers['De Stapel'][code] -= 2; if (allStickers['De Stapel'][code] === 0) delete allStickers['De Stapel'][code];
     allStickers['Lou & Noé'][code] = (allStickers['Lou & Noé'][code] || 0) + 1;
     allStickers['Oliver'][code] = (allStickers['Oliver'][code] || 0) + 1;
     
@@ -577,7 +616,7 @@ function openTradeCenter() {
             }
         });
         tradeHTML += `
-            <div class="trade-block" style="border-left: 4px solid ${userColors[ou]};"><h3 style="color: ${userColors[ou]};">Ruilen met ${ou}</h3><div style="margin-bottom: 16px;"><strong style="font-size: 0.95rem;">Jij zoekt, ${ou} heeft dubbel (${get.length}):</strong><div class="trade-codes" style="margin-top: 8px;">${get.length === 0 ? '<span style="color:var(--text-secondary); font-size:0.8rem;">Niets wat jij mist...</span>' : get.map(item => `<div class="trade-chip-wrapper"><div class="trade-item-left"><div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div><span class="trade-num-badge">${item.num}</span><span class="trade-player-name">${item.name} <span style="font-size:0.75rem; color:var(--text-secondary);">${item.page}</span></span></div><span class="trade-status-box get">Jij Mist</span></div>`).join('')}</div></div><div><strong style="font-size: 0.95rem;">${ou} zoekt, jij hebt dubbel (${give.length}):</strong><div class="trade-codes" style="margin-top: 8px;">${give.length === 0 ? '<span style="color:var(--text-secondary); font-size:0.8rem;">Geen dubbele voor ${ou}...</span>' : give.map(item => `<div class="trade-chip-wrapper"><div class="trade-item-left"><div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div><span class="trade-num-badge">${item.num}</span><span class="trade-player-name">${item.name} <span style="font-size:0.75rem; color:var(--text-secondary);">${item.page}</span></span></div><button class="btn-instant-trade" onclick="executeInstantTrade('${item.code}', '${ou}')">⚡ Ruil</button></div>`).join('')}</div></div></div>`;
+            <div class="trade-block" style="border-left: 4px solid ${userColors[ou]}; border-color: ${userColors[ou]};"><h3 style="color: ${userColors[ou]};">Ruilen met ${ou}</h3><div style="margin-bottom: 16px;"><strong style="font-size: 0.95rem;">Jij zoekt, ${ou} heeft dubbel (${get.length}):</strong><div class="trade-codes" style="margin-top: 8px;">${get.length === 0 ? '<span style="color:var(--text-secondary); font-size:0.8rem;">Niets wat jij mist...</span>' : get.map(item => `<div class="trade-chip-wrapper"><div class="trade-item-left"><div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div><span class="trade-num-badge">${item.num}</span><span class="trade-player-name">${item.name} <span style="font-size:0.75rem; color:var(--text-secondary);">${item.page}</span></span></div><span class="trade-status-box get">Jij Mist</span></div>`).join('')}</div></div><div><strong style="font-size: 0.95rem;">${ou} zoekt, jij hebt dubbel (${give.length}):</strong><div class="trade-codes" style="margin-top: 8px;">${give.length === 0 ? '<span style="color:var(--text-secondary); font-size:0.8rem;">Geen dubbele voor ${ou}...</span>' : give.map(item => `<div class="trade-chip-wrapper"><div class="trade-item-left"><div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div><span class="trade-num-badge">${item.num}</span><span class="trade-player-name">${item.name} <span style="font-size:0.75rem; color:var(--text-secondary);">${item.page}</span></span></div><button class="btn-instant-trade" onclick="executeInstantTrade('${item.code}', '${ou}')">⚡ Ruil</button></div>`).join('')}</div></div></div>`;
     });
     document.getElementById('trade-content').innerHTML = tradeHTML; document.getElementById('trade-modal').style.display = 'block';
 }
