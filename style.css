@@ -226,3 +226,30 @@ h1, h2, h3 { font-weight: 900; margin-top: 0; text-align: center; }
     .print-doubles { color: #059669; }
     @page { margin: 1cm; }
 }
+
+/* --- FACEBOOK POSTER GENERATOR STYLING --- */
+.share-image-container {
+    position: absolute;
+    left: -9999px; /* Verberg het buiten beeld */
+    top: 0;
+    width: 850px; /* Mooi groot formaat voor scherpe resolutie */
+    background: #fcf9f8;
+    padding: 40px;
+    border-radius: 30px;
+    color: var(--text-primary);
+    font-family: 'Nunito', sans-serif;
+    box-sizing: border-box;
+}
+
+.share-title { text-align: center; color: var(--color-1); font-size: 2.8rem; margin-bottom: 5px; font-weight: 900; }
+.share-subtitle { text-align: center; color: var(--text-secondary); font-size: 1.4rem; font-weight: 800; margin-bottom: 30px; }
+
+.share-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+
+.share-country-block { background: white; padding: 15px 20px; border-radius: 16px; border: 2px solid #f2e1e1; box-shadow: 0 6px 20px rgba(229,152,155,0.08); }
+.share-country-title { font-size: 1.4rem; font-weight: 900; color: var(--color-1); margin-bottom: 10px; border-bottom: 2px dashed #f9f0f0; padding-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+.share-flag { width: 30px; height: 20px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); object-fit: cover;}
+
+.share-lists { font-size: 1.1rem; line-height: 1.5; }
+.share-missing { color: #e11d48; margin-bottom: 6px; }
+.share-doubles { color: #10b981; }
