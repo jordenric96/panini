@@ -666,3 +666,97 @@ function printList() {
     });
     html += `</div>`; document.getElementById('print-area').innerHTML = html; window.print();
 }
+
+// --- NIEUW: FOTO GENERATOR VOOR FACEBOOK --- //
+async function generateShareImage() {
+    // Check of html2canvas is ingeladen
+    if (typeof html2canvas === 'undefined') {
+        return showToast("❌ Foto module is nog aan het inladen, probeer opnieuw.", "error");
+    }
+
+    showToast("📸 Foto genereren, even geduld...", "success");
+
+    const container = document.getElementById('share-image-container');
+    
+    // Bouw de HTML voor de poster
+    let html = `
+        <h2 class="share-title">WK 2026 Ruillijst</h2>
+        <div class="share-subtitle">Album van ${currentUser}</div>
+        <div class="share-grid">
+    `;
+    
+    let sortedCollections = [...collections].sort((a, b) => a.name.localeCompare(b.name));
+    let hasItems = false;
+
+    sortedCollections.forEach(country => {
+        let missing = []; let doubles = [];
+        for (let i = 1; i <= country.count; i++) {
+            let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
+            let numDisplay = country.prefix === 'FWC' && i === 1 ? '00' : `${i}`; 
+            let amt = allStickers[currentUser][code] || 0;
+            
+            if (amt === 0) { 
+                missing.push(numDisplay); 
+            } else if (amt > 1) { 
+                // Echte dubbele aantallen tonen (doorstreep logica is hier niet nodig, compact is beter voor FB)
+                doubles.push(amt > 2 ? `${numDisplay} (${amt-1}x)` : numDisplay);
+            }
+        }
+        
+        if (missing.length > 0 || doubles.length > 0) {
+            hasItems = true;
+            html += `
+                <div class="share-country-block">
+                    <div class="share-country-title">
+                        <img src="${country.flagUrl}" class="share-flag"> 
+                        ${country.name} <span style="font-size: 1rem; color: #9c8488; margin-left: 5px;">(${country.prefix})</span>
+                    </div>
+                    <div class="share-lists">
+                        ${missing.length > 0 ? `<div class="share-missing"><strong>Zoekt:</strong> ${missing.join(', ')}</div>` : ''}
+                        ${doubles.length > 0 ? `<div class="share-doubles"><strong>Dubbel:</strong> ${doubles.join(', ')}</div>` : ''}
+                    </div>
+                </div>`;
+        }
+    });
+    
+    html += `</div>`;
+    
+    if (!hasItems) {
+        return showToast("❌ Je hebt nog geen stickers om te delen!", "error");
+    }
+
+    container.innerHTML = html;
+
+    // Wacht een fractie van een seconde tot alle vlaggetjes zijn ingeladen in de onzichtbare container
+    setTimeout(async () => {
+        try {
+            // Maak een Canvas (tekening) van het HTML blok
+            const canvas = await html2canvas(container, {
+                scale: 2, // 2 = Hoge Resolutie (scherp op FB)
+                backgroundColor: "#fcf9f8", // De roze crème kleur
+                useCORS: true // Verplicht om de vlag-afbeeldingen van internet te mogen laden in een canvas
+            });
+            
+            // Zet canvas om naar Data URL (PNG)
+            const imgData = canvas.toDataURL('image/png');
+            
+            // Maak een tijdelijke link om de download te forceren
+            const link = document.createElement('a');
+            let timestamp = new Date().toISOString().slice(0,10);
+            link.download = `Ruillijst_${currentUser.replace(/[^a-z0-9]/gi, '_')}_${timestamp}.png`;
+            link.href = imgData;
+            link.click(); // Klik automatisch!
+            
+            showToast("✅ Foto succesvol gedownload in je galerij/downloads!", "success");
+            
+            // Maak container weer leeg
+            container.innerHTML = '';
+        } catch (e) {
+            console.error("Canvas Fout: ", e);
+            showToast("❌ Fout bij maken van de foto.", "error");
+        }
+    }, 800); // 800ms wachten
+}
+
+
+
