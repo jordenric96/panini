@@ -227,51 +227,52 @@ h1, h2, h3 { font-weight: 900; margin-top: 0; text-align: center; }
     @page { margin: 1cm; }
 }
 
-/* --- FACEBOOK POSTER GENERATOR STYLING (ULTRA COMPACT v29.1) --- */
+/* --- FACEBOOK POSTER GENERATOR STYLING (VERSIE 30 - INLINE COMPACT) --- */
 .share-image-container {
     position: absolute;
     left: -9999px; /* Verberg het buiten beeld tijdens het bouwen */
     top: 0;
-    width: 900px; /* Breder formaat voor een perfecte liggende social media foto */
-    background: #fcf9f8; /* Crème achtergrond */
-    padding: 30px;
+    width: 1080px; /* Ideale breedte voor scherpe weergave op social media */
+    background: #fcf9f8; /* Jouw crème achtergrond */
+    padding: 45px;
     border-radius: 20px;
     color: var(--text-primary);
     font-family: 'Nunito', sans-serif;
     box-sizing: border-box;
 }
 
-.share-title { text-align: center; color: var(--color-1); font-size: 2.4rem; margin-bottom: 5px; font-weight: 900; }
-.share-subtitle { text-align: center; color: var(--text-secondary); font-size: 1.2rem; font-weight: 800; margin-bottom: 25px; }
+.share-header { text-align: center; margin-bottom: 35px; }
+.share-title { color: var(--color-1); font-size: 3rem; margin: 0 0 5px 0; font-weight: 900; }
+.share-subtitle { color: var(--text-secondary); font-size: 1.5rem; font-weight: 800; margin: 0; }
 
-.share-main-flex { display: flex; gap: 20px; align-items: flex-start; }
-
-.share-column {
-    flex: 1;
+.share-box {
     background: white;
-    padding: 20px;
+    border: 3px solid #f2e1e1;
     border-radius: 16px;
-    border: 2px solid #f2e1e1;
-    box-shadow: 0 4px 15px rgba(229,152,155,0.04);
+    padding: 30px;
+    margin-bottom: 25px;
+    box-shadow: 0 8px 25px rgba(229,152,155,0.08);
 }
-.share-column h3 {
-    font-size: 1.3rem;
-    font-weight: 900;
-    margin-top: 0;
-    margin-bottom: 15px;
-    padding-bottom: 8px;
-    border-bottom: 2px dashed #f2e1e1;
-    text-align: center;
-}
-.share-column-missing h3 { color: #e11d48; } /* Manco rood */
-.share-column-doubles h3 { color: #10b981; } /* Dubbel groen */
+.share-box-missing { border-color: #ffe4e6; }
+.share-box-doubles { border-color: #dcfce7; }
 
-.share-row {
-    font-size: 1.05rem;
-    line-height: 1.4;
-    margin-bottom: 4px;
-    padding: 4px 8px;
-    border-radius: 6px;
+.share-box h3 {
+    font-size: 1.8rem;
+    margin: 0 0 20px 0;
+    text-align: center;
+    padding-bottom: 12px;
 }
-.share-row:nth-child(even) { background: #fff8f5; } /* Subtiel zebra-effect voor leesbaarheid */
-.share-row b { color: var(--text-primary); font-weight: 900; margin-right: 6px; }
+.share-box-missing h3 { color: #e11d48; border-bottom: 3px dashed #ffe4e6; }
+.share-box-doubles h3 { color: #10b981; border-bottom: 3px dashed #dcfce7; }
+
+.share-text-content {
+    font-size: 1.4rem; /* Goed leesbaar op gsm's */
+    line-height: 1.9;
+}
+.share-country-chunk {
+    display: inline;
+}
+.share-country-chunk b {
+    color: var(--color-1);
+    font-weight: 900;
+}
