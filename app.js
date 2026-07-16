@@ -1,4 +1,4 @@
-// app.js - Girly Edition v28.1 (Smart Distribute per Land)
+// app.js - Ultimate Girly Edition v30 (Complete Versie met FB Poster)
 
 const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co'; 
 const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; 
@@ -348,18 +348,15 @@ function updateStickerUI(code, amount) {
     else { badge.style.display = 'none'; }
 }
 
-// --- SLIM VERDEELCENTRUM (Magazijn Logica - PER LAND) --- //
 function openDistributeCenter() {
     let html = '';
-    let globalNobody = []; // Hierin komen de "Echte Dubbele" die we helemaal onderaan zetten
+    let globalNobody = []; 
     let countryGroups = {};
 
-    // 1. Initialiseer lege mappen voor alle landen om de volgorde te bewaren
     collections.forEach(c => {
         countryGroups[c.prefix] = { bothEnough: [], bothConflict: [], lou: [], oli: [] };
     });
 
-    // 2. Loop door de hele stapel en stop ze in de juiste landen-mappen
     for (let code in allStickers['De Stapel']) {
         let amt = allStickers['De Stapel'][code];
         if (amt > 0) {
@@ -391,7 +388,6 @@ function openDistributeCenter() {
         }
     }
 
-    // Hulpfunctie om de rij met knoppen te genereren
     const renderItems = (items, type) => {
         if (items.length === 0) return '';
         let res = '<div class="trade-codes" style="margin-bottom: 12px;">';
@@ -408,7 +404,6 @@ function openDistributeCenter() {
             } else {
                 btnHTML = `<span class="trade-status-box give">Echte Dubbele</span>`;
             }
-
             res += `<div class="trade-chip-wrapper" style="margin-bottom: 6px;"><div class="trade-item-left"><div class="trade-mini-flag" style="background-image: url('${item.flag}');"></div><span class="trade-num-badge">${item.code}</span><span class="trade-player-name">${item.name} <span style="font-size:0.7rem; color:var(--text-secondary);">(${item.amt}x in Stapel)</span></span></div>${btnHTML}</div>`;
         });
         res += '</div>';
@@ -422,7 +417,6 @@ function openDistributeCenter() {
 
     let hasAnyStickers = false;
 
-    // 3. Bouw de weergave Land per Land op
     collections.forEach(country => {
         let prefix = country.prefix;
         let group = countryGroups[prefix];
@@ -448,7 +442,6 @@ function openDistributeCenter() {
         }
     });
 
-    // 4. Zet de Echte Dubbele helemaal onderaan in hun eigen grijze blok
     if (globalNobody.length > 0) {
         hasAnyStickers = true;
         html += `<div class="trade-block" style="border-left: 4px solid #c4b5b8; border-color: #f2e1e1; margin-top: 20px;">
@@ -667,9 +660,8 @@ function printList() {
     html += `</div>`; document.getElementById('print-area').innerHTML = html; window.print();
 }
 
-// --- NIEUW: FOTO GENERATOR VOOR FACEBOOK --- //
+// --- NIEUW: FOTO GENERATOR VOOR FACEBOOK (VERSIE 30 - INLINE COMPACT) --- //
 async function generateShareImage() {
-    // Check of html2canvas is ingeladen
     if (typeof html2canvas === 'undefined') {
         return showToast("❌ Foto module is nog aan het inladen, probeer opnieuw.", "error");
     }
@@ -678,85 +670,92 @@ async function generateShareImage() {
 
     const container = document.getElementById('share-image-container');
     
-    // Bouw de HTML voor de poster
-    let html = `
-        <h2 class="share-title">WK 2026 Ruillijst</h2>
-        <div class="share-subtitle">Album van ${currentUser}</div>
-        <div class="share-grid">
-    `;
-    
-    let sortedCollections = [...collections].sort((a, b) => a.name.localeCompare(b.name));
+    let missingChunks = [];
+    let doublesChunks = [];
     let hasItems = false;
 
+    let sortedCollections = [...collections].sort((a, b) => a.name.localeCompare(b.name));
+
     sortedCollections.forEach(country => {
-        let missing = []; let doubles = [];
+        let missingNums = []; 
+        let doublesNums = [];
+        
         for (let i = 1; i <= country.count; i++) {
             let code = country.prefix === 'FWC' && i === 1 ? '00' : country.prefix === 'FWC' ? `FWC ${i-1}` : `${country.prefix} ${i}`;
             let numDisplay = country.prefix === 'FWC' && i === 1 ? '00' : `${i}`; 
             let amt = allStickers[currentUser][code] || 0;
             
             if (amt === 0) { 
-                missing.push(numDisplay); 
+                missingNums.push(numDisplay); 
             } else if (amt > 1) { 
-                // Echte dubbele aantallen tonen (doorstreep logica is hier niet nodig, compact is beter voor FB)
-                doubles.push(amt > 2 ? `${numDisplay} (${amt-1}x)` : numDisplay);
+                doublesNums.push(amt > 2 ? `${numDisplay}(${amt-1}x)` : numDisplay);
             }
         }
         
-        if (missing.length > 0 || doubles.length > 0) {
+        if (missingNums.length > 0) {
             hasItems = true;
-            html += `
-                <div class="share-country-block">
-                    <div class="share-country-title">
-                        <img src="${country.flagUrl}" class="share-flag"> 
-                        ${country.name} <span style="font-size: 1rem; color: #9c8488; margin-left: 5px;">(${country.prefix})</span>
-                    </div>
-                    <div class="share-lists">
-                        ${missing.length > 0 ? `<div class="share-missing"><strong>Zoekt:</strong> ${missing.join(', ')}</div>` : ''}
-                        ${doubles.length > 0 ? `<div class="share-doubles"><strong>Dubbel:</strong> ${doubles.join(', ')}</div>` : ''}
-                    </div>
-                </div>`;
+            missingChunks.push(`<span class="share-country-chunk"><b>${country.prefix}:</b> ${missingNums.join(', ')}</span>`);
+        }
+        if (doublesNums.length > 0) {
+            hasItems = true;
+            doublesChunks.push(`<span class="share-country-chunk"><b>${country.prefix}:</b> ${doublesNums.join(', ')}</span>`);
         }
     });
-    
-    html += `</div>`;
     
     if (!hasItems) {
         return showToast("❌ Je hebt nog geen stickers om te delen!", "error");
     }
 
+    let html = `
+        <div class="share-header">
+            <h2 class="share-title">WK 2026 Ruillijst</h2>
+            <p class="share-subtitle">Album van ${currentUser} • ${new Date().toLocaleDateString('nl-BE')}</p>
+        </div>
+    `;
+    
+    if (missingChunks.length > 0) {
+        html += `
+            <div class="share-box share-box-missing">
+                <h3>❌ MANCO'S (Wij zoeken)</h3>
+                <div class="share-text-content">
+                    ${missingChunks.join(' <span style="color:#c4b5b8; margin:0 8px; font-weight: 800;">•</span> ')}
+                </div>
+            </div>
+        `;
+    }
+
+    if (doublesChunks.length > 0) {
+        html += `
+            <div class="share-box share-box-doubles">
+                <h3>✅ DUBBELS (Wij ruilen)</h3>
+                <div class="share-text-content">
+                    ${doublesChunks.join(' <span style="color:#c4b5b8; margin:0 8px; font-weight: 800;">•</span> ')}
+                </div>
+            </div>
+        `;
+    }
+    
     container.innerHTML = html;
 
-    // Wacht een fractie van een seconde tot alle vlaggetjes zijn ingeladen in de onzichtbare container
     setTimeout(async () => {
         try {
-            // Maak een Canvas (tekening) van het HTML blok
             const canvas = await html2canvas(container, {
-                scale: 2, // 2 = Hoge Resolutie (scherp op FB)
-                backgroundColor: "#fcf9f8", // De roze crème kleur
-                useCORS: true // Verplicht om de vlag-afbeeldingen van internet te mogen laden in een canvas
+                scale: 2, 
+                backgroundColor: "#fcf9f8" 
             });
             
-            // Zet canvas om naar Data URL (PNG)
             const imgData = canvas.toDataURL('image/png');
-            
-            // Maak een tijdelijke link om de download te forceren
             const link = document.createElement('a');
             let timestamp = new Date().toISOString().slice(0,10);
             link.download = `Ruillijst_${currentUser.replace(/[^a-z0-9]/gi, '_')}_${timestamp}.png`;
             link.href = imgData;
-            link.click(); // Klik automatisch!
+            link.click(); 
             
-            showToast("✅ Foto succesvol gedownload in je galerij/downloads!", "success");
-            
-            // Maak container weer leeg
-            container.innerHTML = '';
+            showToast("✅ Foto succesvol gedownload!", "success");
+            container.innerHTML = ''; 
         } catch (e) {
             console.error("Canvas Fout: ", e);
             showToast("❌ Fout bij maken van de foto.", "error");
         }
-    }, 800); // 800ms wachten
+    }, 500);
 }
-
-
-
