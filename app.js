@@ -1,4 +1,4 @@
-// app.js - Ultimate Girly Edition v30 (Complete Versie met FB Poster)
+// app.js - Ultimate Girly Edition v31 (Modal Navigation Update)
 
 const supabaseUrl = 'https://badovrzzxwbkxjgqkxjg.supabase.co'; 
 const supabaseKey = 'sb_publishable_qI0tAKHoKqgC1hn_oP6XzA_n3F61CbT'; 
@@ -12,6 +12,7 @@ let currentUser = '';
 let otherUsers = []; 
 let allStickers = { 'Lou & Noé': {}, 'Wesley': {}, 'Oliver': {}, 'De Stapel': {} };
 let isBulkRemove = false;
+let currentModalPrefix = ''; // Houdt bij welk land open staat
 
 function getRank(score) {
     if (score >= 980) return "Wereldkampioen! 🏆";
@@ -265,7 +266,25 @@ async function processQuickAdd() {
     if(navigator.vibrate) navigator.vibrate([40, 40]);
 }
 
+// --- NAVIGATIE MODAL LOGICA --- //
+function navigateModal(direction) {
+    if (!currentModalPrefix) return;
+    
+    let currentIndex = collections.findIndex(c => c.prefix === currentModalPrefix);
+    if (currentIndex === -1) return;
+
+    let newIndex = currentIndex + direction;
+    if (newIndex < 0) newIndex = collections.length - 1; 
+    if (newIndex >= collections.length) newIndex = 0; 
+
+    if(navigator.vibrate) navigator.vibrate(30);
+
+    openModal(collections[newIndex].prefix);
+}
+
 function openModal(prefix) {
+    currentModalPrefix = prefix; // Sla op welk land we open hebben
+    
     const countryData = collections.find(c => c.prefix === prefix);
     if (!countryData) return;
 
@@ -307,7 +326,7 @@ function openModal(prefix) {
     }
 }
 
-function closeModal() { document.getElementById('modal').style.display = 'none'; renderDashboard(); }
+function closeModal() { document.getElementById('modal').style.display = 'none'; currentModalPrefix = ''; renderDashboard(); }
 
 async function addSticker(code) {
     allStickers[currentUser][code] = (allStickers[currentUser][code] || 0) + 1; 
