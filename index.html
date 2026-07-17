@@ -12,11 +12,10 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
-    <!-- NIEUW: Bibliotheek om HTML naar een afbeelding om te zetten -->
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=29">
+    <link rel="stylesheet" href="style.css?v=31">
 </head>
 <body>
 
@@ -39,7 +38,6 @@
                 <button class="btn-action" id="btn-trade" onclick="openTradeCenter()" title="Ruilcentrum">🔄 Ruil</button>
                 <button class="btn-action" id="btn-distribute" onclick="openDistributeCenter()" title="Verdeelcentrum" style="display: none; background: linear-gradient(135deg, #f2b8b5, #e5989b); color: white;">📦 Verdeel</button>
                 <button class="btn-action" onclick="printList()" title="Print Lijst">🖨️ Print</button>
-                <!-- NIEUW: Download als foto knop -->
                 <button class="btn-action" onclick="generateShareImage()" title="Maak Foto voor Facebook">📸 Foto</button>
                 <button class="btn-action" onclick="openStatsCenter()" title="Statistieken">🏆</button>
                 <button class="btn-action" onclick="logout()" title="Uitloggen">🚪</button>
@@ -78,21 +76,26 @@
 
     <!-- Modals -->
     <div id="modal" class="modal-overlay">
-        <!-- Zelfde Modal Code als V28 -->
         <div class="modal-content">
             <div class="modal-header">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div class="modal-flag-wrapper">
+                <!-- Links: Vlag + Titel -->
+                <div style="display: flex; align-items: center; gap: 10px; flex: 1; overflow: hidden;">
+                    <div class="modal-flag-wrapper" style="min-width: 40px;">
                         <div class="flag-ring-1" id="flag-ring-1"></div>
                         <div class="flag-ring-2" id="flag-ring-2"></div>
                         <div class="flag-inner-circle" id="flag-inner-circle"></div>
                     </div>
-                    <div>
-                        <h2 id="modal-title" class="modal-title-text">Land</h2>
-                        <span class="modal-subtitle" id="modal-subtitle-text">Bolletjes = Anderen</span>
+                    <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        <h2 id="modal-title" class="modal-title-text" style="overflow: hidden; text-overflow: ellipsis;">Land</h2>
+                        <span class="modal-subtitle" id="modal-subtitle-text">Tik +1 • Badge -1</span>
                     </div>
                 </div>
-                <button class="btn-action" style="background: rgba(255,255,255,0.4); color: var(--text-primary);" onclick="closeModal()">✖</button>
+                <!-- Rechts: Pijltjes + Sluitknop -->
+                <div style="display: flex; gap: 4px; align-items: center;">
+                    <button class="btn-action btn-nav" onclick="navigateModal(-1)">◀</button>
+                    <button class="btn-action btn-nav" onclick="navigateModal(1)">▶</button>
+                    <button class="btn-action" style="background: rgba(255,255,255,0.4); color: var(--text-primary); margin-left: 5px;" onclick="closeModal()">✖</button>
+                </div>
             </div>
             <div class="sticker-grid" id="sticker-grid"></div>
         </div>
@@ -147,12 +150,10 @@
 
     <div id="toast" class="toast">Bericht hier</div>
     <div id="print-area"></div>
-    
-    <!-- NIEUW: Onzichtbare container voor het bouwen van de Facebook Poster -->
     <div id="share-image-container" class="share-image-container"></div>
 
-    <script src="countries.js?v=29"></script>
-    <script src="app.js?v=29"></script>
+    <script src="countries.js?v=31"></script>
+    <script src="app.js?v=31"></script>
     
     <script>
         if ('serviceWorker' in navigator) {
